@@ -29,12 +29,7 @@ class Piece:
 
 class Pawn(Piece):
     img = ('\u265F', '\u2659')
-
-    def get_moves(self, x, y):
-        moves = []
-        if self.color and y < 7 and self.get_color(x, y + 1) == Color.empty:
-            moves.append([x, y])
-        return moves
+    allowed_moves = 2
 
 
 class Rock(Piece):
