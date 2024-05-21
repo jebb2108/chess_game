@@ -31,6 +31,11 @@ class Pawn(Piece):
     img = ('\u265F', '\u2659')
     allowed_moves = 2
 
+    def __init__(self, x, y, color):
+        super().__init__(color)
+        self.x = x
+        self.y = y
+
 
 class Rock(Piece):
     img = ('\u265C', '\u2656')
