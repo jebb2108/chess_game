@@ -36,6 +36,64 @@ class Pawn(Piece):
         self.x = x
         self.y = y
 
+    def _move_pawn(self, board, from_where, to_where, direction):
+        if self.color and from_where[0] < 7 and board.get_color(from_where[0] + (direction * 1),
+                                                                from_where[1]) == Color.empty:
+            if self.allowed_moves >= (to_where[0] - from_where[0]) * direction:
+                board.board[to_where[0]][to_where[1]] = board.board[from_where[0]][from_where[1]]
+                board.board[from_where[0]][from_where[1]] = Empty()
+                self.y, self.x = to_where[0], to_where[1]
+                self.allowed_moves = 1
+                if ((self.color == 2 and from_where[0] == 6 and to_where[0] == 7)
+                        or (self.color == 1 and from_where[0] == 1 and to_where[0] == 0)):
+                    self.__turn_into_piece(board)
+                    return board
+                return board
+            else:
+                return print('You cannot move so far')
+        else:
+            return print('Your pawn is blocked.')
+
+    def _eat_by_pawn(self, board, from_where, to_where, direction):
+        if (to_where[0] - from_where[0]) * direction < 0 or (to_where[1] - from_where[1]) not in [1, -1]:
+            return print('You can`t go and eat the enemy piece with this distance')
+        else:
+            board.board[to_where[0]][to_where[1]] = board.board[from_where[0]][from_where[1]]
+            board.board[from_where[0]][from_where[1]] = Empty()
+            return board
+
+    def __turn_into_piece(self, board):
+        color = Color.white if self.color == 1 else Color.black
+        if self.color == 1 or 2:
+            new_piece = input('What piece would you like to have instead? '
+                              '"queen"/"rock"/"knight"/"bishop": ')
+            if new_piece == 'queen':
+                board.board[self.y][self.x] = Empty()
+                board.board[self.y][self.x] = Queen(color)
+                return board
+            elif new_piece == 'rock':
+                board.board[self.y][self.x] = Empty()
+                board.board[self.y][self.x] = Rock(color)
+                return board
+            elif new_piece == 'knight':
+                board.board[self.y][self.x] = Empty()
+                board.board[self.y][self.x] = Knight(color)
+                return board
+            elif new_piece == 'bishop':
+                board.board[self.y][self.x] = Empty()
+                board.board[self.y][self.x] = Bishop(color)
+                return board
+            else:
+                print('Incorrect input')
+                return False
+
+    @staticmethod
+    def _check_move(from_where, to_where, direction):
+        if (to_where[0] - from_where[0]) * direction < 0 or from_where[1] != to_where[1]:
+            print('You cannot move it backward')
+            return False
+        return True
+
 
 class Rock(Piece):
     img = ('\u265C', '\u2656')

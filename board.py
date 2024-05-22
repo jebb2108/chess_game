@@ -24,7 +24,17 @@ class Board:
     def get_color(self, x, y):
         return self.board[x][y].color
 
-    def get_moves(self, obj):
-        x, y = 0, 0
-        coords = []
-        pass
+    # noinspection PyProtectedMember
+    def change_its_position(self, obj, action, from_where, to_where, direction=None):
+        board = self
+        if isinstance(type(obj), type(Pawn)):
+            if action == 'move':
+                obj._check_move(from_where, to_where, direction)
+                obj._move_pawn(board, from_where, to_where, direction)
+
+            if action == 'eat':
+                obj._eat_by_pawn(board, from_where, to_where, direction)
+
+            return True
+
+        return print('Nothing changed')
