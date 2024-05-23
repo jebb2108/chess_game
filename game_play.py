@@ -32,6 +32,13 @@ class GamePlay(Board):
 
         return 'Operation went completely'
 
+    def move_rock(self, yx_from):
+        action = 'check'
+        rock = self.board[yx_from[0]][yx_from[1]]
+        # moves = self.get_moves()
+        # if yx_to in moves:
+        self.change_its_position(rock, action, yx_from)
+
 
 # Приказывает Python не гулять по библиотекам, а считать этот файл за главный.
 if __name__ == '__main__':
@@ -41,3 +48,7 @@ if __name__ == '__main__':
 
 # noinspection PyUnboundLocalVariable
 my_game.print_board()
+
+# my_game.move_rock([0, 0])
+my_game.move_rock([0, 7])
+# print(type(my_game.board[0][0].next))

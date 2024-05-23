@@ -22,12 +22,24 @@ class Empty(object):
         return False
 
 
+class ChainedArray(object):
+    allowed = True  # Будет полезным при дальнейшей работе с королем,
+                    # когда нужно будет отключать всем эту опцию
+
+    def __init__(self):
+        self.root = None
+        self.next = None
+
+
 class Piece:
     """ Класс шаблон для шахматной фигуры """
     img = None  # Начальная дефолтная переменная для каждой фигуры.
 
     def __init__(self, color):  # Каждая фигура должна иметь свой цвет.
+        self.all_moves = []
         self.color = color  # Программа должна явно указывать Белый или Черный.
+        self.root = ChainedArray().root
+        self.next = ChainedArray().next
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -43,6 +55,10 @@ class Pawn(Piece):
         super().__init__(color)  # Унаследование от родителя атрибутов.
         self.x = x  # Каждая фигура имеет свою координату.
         self.y = y
+        self.root = [y, x]
+
+    def _get_all_moves(self):
+        pass
 
     def _move_pawn(self, board, from_where, to_where, direction):
         """ Условия перемещения пешки и последующее отображение ее на доске """
@@ -137,6 +153,29 @@ class Rock(Piece):
         super().__init__(color)
         self.x = x
         self.y = y
+        self.root = [y, x]
+
+    def _get_rock_moves(self, board, current_position, moves=None):
+        if moves is None:
+            moves = []
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        for direction in directions:
+            new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
+            while self._is_valid(board, new_position):
+                if new_position[0] or new_position[1] == 7:
+                    break
+                moves.extend([new_position])
+                new_position = (new_position[0] + direction[0], new_position[1] + direction[1])
+
+        return print(moves)
+
+    def _is_valid(self, board, move):
+        if board.get_color(move[0], move[1]) == Color.empty:
+            return True
+        return False
+
+
+
 
 
 class Knight(Piece):

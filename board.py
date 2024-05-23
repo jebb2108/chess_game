@@ -34,10 +34,19 @@ class Board:
     def get_color(self, x, y):
         # Лишний метод для определения цвета
         # фигуры в заданных координатах доски.
-        return self.board[x][y].color
+        try:
+            color = self.board[x][y].color
+        except IndexError:
+            return None
+
+        return color
+
+    def get_moves(self, obj):
+        if isinstance(type(obj), type(Rock)):
+            obj.get_all_moves()
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj, action, from_where, to_where, direction=None):
+    def change_its_position(self, obj, action, from_where, to_where=None, direction=None):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
@@ -48,7 +57,7 @@ class Board:
 
         # Сверяет экземпляр с наименованием класса фигуры.
         # Выполняет перемещения фигуры в зависимости от ее характеристик.
-        if isinstance(type(obj), type(Pawn)):
+        if isinstance(obj, Pawn):
             # Указывает основные действия указанные выше уровнем.
             if action == 'move':
                 obj._check_move(from_where, to_where, direction)
@@ -59,6 +68,9 @@ class Board:
 
             # Возвращает True для последующего взаимодействия программы.
             return True
+        if isinstance(obj, Rock):
+            if action == 'check':
+                obj._get_rock_moves(board, (obj.y, obj.x))
 
         # В случае проблем выводит это сообщение.
         return print('Nothing changed')
