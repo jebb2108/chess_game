@@ -2,6 +2,8 @@
 с чем непосредственно взаимодействует пользователь. """
 
 from board import Board
+
+
 # from settings import Settings
 
 
@@ -15,21 +17,19 @@ class GamePlay(Board):
 
     def move_pawn(self, yx_from, yx_to):
         # Метод для перемещения пешки
-        action = 'move'  # Устанавливаю флажки на каждое действие.
         pawn = self.board[yx_from[0]][yx_from[1]]  # Передаю подконтрольный экземпляр переменной.
         direction = 1 if pawn.color == 2 else -1  # Устанавливаю направление в зависимости от цвета.
 
+        # Проверка на действие
+        if yx_from[1] == yx_to[1]:
+            action = 'move'  # Устанавливаю флажки на каждое действие.
+            self.change_its_position(pawn, action, yx_from, yx_to, direction)
         # С новыми переменными перехожу на уровень ниже
         # для манипулирования низко-уровненными данными.
-        self.change_its_position(pawn, action, yx_from, yx_to, direction)
-        return 'Operation went completely'
+        else:
+            action = 'eat'
+            self.change_its_position(pawn, action, yx_from, yx_to, direction)
 
-    def eat_by_pawn(self, yx_from, yx_to):
-        # Метод для поедания вражеской фигуры пешкой.
-        action = 'eat'
-        pawn = self.board[yx_from[0]][yx_from[1]]
-        direction = 1 if pawn.color == 2 else -1
-        self.change_its_position(pawn, action, yx_from, yx_to, direction)
         return 'Operation went completely'
 
 
@@ -37,10 +37,7 @@ class GamePlay(Board):
 if __name__ == '__main__':
     my_game = GamePlay()
 
-
 # Действия:
 
 # noinspection PyUnboundLocalVariable
 my_game.print_board()
-
-

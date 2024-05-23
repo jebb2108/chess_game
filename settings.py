@@ -34,8 +34,13 @@ class Settings:
         return self.all_pieces
 
     def _set_all_rocks(self):
-        xy1, xy2, xy3, xy4 = (0, 0), (0, 7), (7, 0), (7, 7)
+        xy1, xy2, xy3, xy4 = (0, 0), (7, 0), (0, 7), (7, 7)
         o_rock = Rock(xy1[0], xy1[1], Color.black)
+        self.all_pieces.append(o_rock)
         o_rock = Rock(xy2[0], xy2[1], Color.black)
+        self.all_pieces.append(o_rock)
         o_rock = Rock(xy3[0], xy3[1], Color.white)
+        self.all_pieces.append(o_rock)
         o_rock = Rock(xy4[0], xy4[1], Color.white)
+        self.all_pieces.append(o_rock)
+        return self.all_pieces
