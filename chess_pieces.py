@@ -17,6 +17,10 @@ class Empty(object):
     def __str__(self):
         return '.'
 
+    def _check_move(self, *args):
+        print('You cannot move an empty space')
+        return False
+
 
 class Piece:
     """ Класс шаблон для шахматной фигуры """
@@ -52,8 +56,9 @@ class Pawn(Piece):
             if self.allowed_moves >= (to_where[0] - from_where[0]) * direction:
                 # Если условие выполнено, то происходит перестановка экземпляров.
                 # Так же обновляю переменные этого экземпляра.
-                board.board[to_where[0]][to_where[1]] = board.board[from_where[0]][from_where[1]]
+                temp = board.board[from_where[0]][from_where[1]]
                 board.board[from_where[0]][from_where[1]] = Empty()
+                board.board[to_where[0]][to_where[1]] = temp
                 self.y, self.x = to_where[0], to_where[1]
                 self.allowed_moves = 1
                 # Последнее условие -- не находится ли пешка на краю доски?
@@ -118,12 +123,20 @@ class Pawn(Piece):
         if (to_where[0] - from_where[0]) * direction < 0 or from_where[1] != to_where[1]:
             print('You cannot move it backward')
             return False
+        if from_where == to_where:
+            print('Inappropriate command')
+            return False
 
         return True
 
 
 class Rock(Piece):
     img = ('\u265C', '\u2656')
+
+    def __init__(self, x, y, color):
+        super().__init__(color)
+        self.x = x
+        self.y = y
 
 
 class Knight(Piece):

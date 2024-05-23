@@ -4,6 +4,10 @@ from chess_pieces import *
 from settings import Settings
 
 
+class AbortTransaction(Exception):
+    pass
+
+
 class Board:
 
     def __init__(self):

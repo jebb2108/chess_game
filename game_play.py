@@ -42,8 +42,5 @@ if __name__ == '__main__':
 
 # noinspection PyUnboundLocalVariable
 my_game.print_board()
-my_game.move_pawn([1, 1], [2, 1])
-my_game.move_pawn([2, 1], [3, 1])
-my_game.move_pawn([3, 1], [4, 1])
-my_game.move_pawn([4, 1], [3, 1])
-my_game.print_board()
+
+
