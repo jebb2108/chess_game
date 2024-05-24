@@ -19,7 +19,7 @@ class Settings:
         # X представляет горизонтальную позицию.
         x = 0
         for b_pawn in range(7 + 1):
-            o_pawn = Pawn(x, 1, Color.black)  # o_pawn временная переменная
+            o_pawn = Pawn(1, x, Color.black)  # o_pawn временная переменная
                                                  # для каждого экземпляра.
             self.all_pieces.append(o_pawn)       # Затем присоединяет к списку.
             x += 1
@@ -28,13 +28,13 @@ class Settings:
     def _set_white_pawns(self):
         x = 0
         for w_pawn in range(7 + 1):
-            o_pawn = Pawn(x, 6, Color.white)
+            o_pawn = Pawn(6, x, Color.white)
             self.all_pieces.append(o_pawn)
             x += 1
         return self.all_pieces
 
     def _set_all_rocks(self):
-        xy1, xy2, xy3, xy4 = (0, 0), (7, 0), (0, 7), (7, 7)
+        xy1, xy2, xy3, xy4 = (0, 0), (0, 7), (7, 0), (7, 7)
         o_rock = Rock(xy1[0], xy1[1], Color.black)
         self.all_pieces.append(o_rock)
         o_rock = Rock(xy2[0], xy2[1], Color.black)

@@ -24,7 +24,8 @@ class Empty(object):
 
 class ChainedArray(object):
     allowed = True  # Будет полезным при дальнейшей работе с королем,
-                    # когда нужно будет отключать всем эту опцию
+
+    # когда нужно будет отключать всем эту опцию
 
     def __init__(self):
         self.root = None
@@ -38,8 +39,7 @@ class Piece:
     def __init__(self, color):  # Каждая фигура должна иметь свой цвет.
         self.all_moves = []
         self.color = color  # Программа должна явно указывать Белый или Черный.
-        self.root = ChainedArray().root
-        self.next = ChainedArray().next
+        self.enemy_color = None
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -51,10 +51,10 @@ class Pawn(Piece):
     img = ('\u265F', '\u2659')  # Кортеж из цветов.
     allowed_moves = 2  # Количество ходов для первого хода.
 
-    def __init__(self, x, y, color):
+    def __init__(self, y, x, color):
         super().__init__(color)  # Унаследование от родителя атрибутов.
-        self.x = x  # Каждая фигура имеет свою координату.
-        self.y = y
+        self.y = y  # Каждая фигура имеет свою координату.
+        self.x = x
         self.root = [y, x]
 
     def _get_all_moves(self):
@@ -149,33 +149,81 @@ class Pawn(Piece):
 class Rock(Piece):
     img = ('\u265C', '\u2656')
 
-    def __init__(self, x, y, color):
+    def __init__(self, y, x, color):
         super().__init__(color)
-        self.x = x
         self.y = y
+        self.x = x
         self.root = [y, x]
+        self.enemy_color = Color.white if self.color == 2 else Color.black
 
-    def _get_rock_moves(self, board, current_position, moves=None):
+    def _get_rock_moves(self, board: object, current_position: tuple, moves=None) -> list:
         if moves is None:
             moves = []
+
+        # Простой список с направлениями: вниз, вверх, вправо, влево.
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         for direction in directions:
-            new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
-            while self._is_valid(board, new_position):
-                if new_position[0] or new_position[1] == 7:
+            # Каждый раз устанавливает новое положение
+            # исходя из текущей, неизменной позиции фигуры.
+            new_position = (current_position[0] + direction[0],
+                            current_position[1] + direction[1])
+
+            # Цикл продолжает работать пока функция возвращает True.
+            while self._is_valid_move(board, new_position):
+                # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
+                # то происходит инвертирования значения в положительное e.g -1 --> 1.
+                if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
+                    # Проверяет, чтобы значение координаты не стало отрицательным
+                    # тогда проверка списка начинается с конца, а этого нельзя допустить
+                    # иначе произойдет бесконечный цикл.
                     break
-                moves.extend([new_position])
-                new_position = (new_position[0] + direction[0], new_position[1] + direction[1])
 
-        return print(moves)
+                # Вражеская фигура должна стать последней в списке возможных ходов.
+                elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
+                    moves.extend([new_position])
+                    break
 
-    def _is_valid(self, board, move):
-        if board.get_color(move[0], move[1]) == Color.empty:
-            return True
+                    # if enemy_piece:  # Здесь программа понимает, что нужно сделать исключение
+                #     #  и добавить это поле, как исключение, чтобы можно было сбить фигуру.
+                #     moves.extend([new_position])
+                #     enemy_piece = False
+                #     break
+
+                else:
+                    moves.extend([new_position])
+                    # Шаг завершен. Передаю новое значение этой переменной.
+                    new_position = (new_position[0] + direction[0],
+                                    new_position[1] + direction[1])
+
+        # Возвращает все ходы,
+        # необходимые для дальнейших операций.
+        return moves
+
+    def _is_valid_move(self, board: object, new_position: tuple) -> bool:
+        # Только два возможных условия истинности:
+        # либо это поле пустое, либо оно вражеское (последнее)
+        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
+                board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+            return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
+
         return False
 
+    def _move_rock(self, board: object, from_where: tuple, to_where: tuple) -> object:
+        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+        if to_where in self._get_rock_moves(board, from_where):
+            # Если да, то происходит перестановка.
+            temp = board.board[from_where[0]][from_where[1]]
+            board.board[from_where[0]][from_where[1]] = Empty()
+            board.board[to_where[0]][to_where[1]] = temp
 
+            # Задает новые координаты переменным экземпляра фигуры.
+            self.y = to_where[0]
+            self.x = to_where[1]
 
+            print('You successfully moved your rock')
+
+            # Возвращает измененную доску.
+            return board
 
 
 class Knight(Piece):
