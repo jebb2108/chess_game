@@ -15,28 +15,18 @@ class GamePlay(Board):
     #     super().__init__()
     #     self.settings = Settings()
 
-    def move_pawn(self, yx_from, yx_to):
+    def move_pawn(self, yx_from, to_where):
         # Метод для перемещения пешки
         pawn = self.board[yx_from[0]][yx_from[1]]  # Передаю подконтрольный экземпляр переменной.
-        direction = 1 if pawn.color == 2 else -1  # Устанавливаю направление в зависимости от цвета.
 
-        # Проверка на действие
-        if yx_from[1] == yx_to[1]:
-            action = 'move'  # Устанавливаю флажки на каждое действие.
-            self.change_its_position(pawn, action, yx_from, yx_to, direction)
-        # С новыми переменными перехожу на уровень ниже
-        # для манипулирования низко-уровненными данными.
-        else:
-            action = 'eat'
-            self.change_its_position(pawn, action, yx_from, yx_to, direction)
+        self.change_its_position(pawn, to_where)
 
         return 'Operation went completely'
 
-    def move_rock(self, yx_from, yx_to):
-        action = 'move'
+    def move_rock(self, yx_from, to_where):
         if self.get_class(yx_from) == 'class.Rock':
             rock = self.board[yx_from[0]][yx_from[1]]
-            self.change_its_position(rock, action, yx_from, yx_to)
+            self.change_its_position(rock, to_where)
         else:
             return print('Mistake brrooo!')
 
@@ -47,9 +37,7 @@ if __name__ == '__main__':
 
 # Действия:
 
-# noinspection PyUnboundLocalVariable
-my_game.print_board()
+# for inst in my_game.all:
+#     print(inst.moves, inst)
 
-my_game.move_rock([0, 0], [0, 3])
-my_game.print_board()
-
+print(my_game.board[0][7].moves)

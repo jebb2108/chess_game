@@ -13,34 +13,42 @@ class Settings:
         self.all_pieces = []  # Список для каждой из них вместе.
         self._set_black_pawns()
         self._set_white_pawns()
-        self._set_all_rocks()
+        self._set_black_rocks()
+        self._set_white_rocks()
 
     def _set_black_pawns(self):
         # X представляет горизонтальную позицию.
         x = 0
         for b_pawn in range(7 + 1):
             o_pawn = Pawn(1, x, Color.black)  # o_pawn временная переменная
-                                                 # для каждого экземпляра.
-            self.all_pieces.append(o_pawn)       # Затем присоединяет к списку.
+            o_pawn.back_or_forth = 1  # для каждого экземпляра.
+            o_pawn.enemy_color = Color.white
+            self.all_pieces.append(o_pawn)  # Затем присоединяет к списку.
             x += 1
-        return self.all_pieces
+        return None
 
     def _set_white_pawns(self):
         x = 0
         for w_pawn in range(7 + 1):
             o_pawn = Pawn(6, x, Color.white)
+            o_pawn.back_or_forth = -1
+            o_pawn.enemy_color = Color.black
             self.all_pieces.append(o_pawn)
             x += 1
-        return self.all_pieces
+        return None
 
-    def _set_all_rocks(self):
-        xy1, xy2, xy3, xy4 = (0, 0), (0, 7), (7, 0), (7, 7)
-        o_rock = Rock(xy1[0], xy1[1], Color.black)
-        self.all_pieces.append(o_rock)
-        o_rock = Rock(xy2[0], xy2[1], Color.black)
-        self.all_pieces.append(o_rock)
-        o_rock = Rock(xy3[0], xy3[1], Color.white)
-        self.all_pieces.append(o_rock)
-        o_rock = Rock(xy4[0], xy4[1], Color.white)
-        self.all_pieces.append(o_rock)
-        return self.all_pieces
+    def _set_black_rocks(self):
+        o_rock1 = Rock(0, 0, Color.black)
+        o_rock1.enemy_color = Color.white
+        o_rock2 = Rock(0, 7, Color.black)
+        o_rock2.enemy_color = Color.white
+        self.all_pieces.extend([o_rock1, o_rock2])
+        return None
+
+    def _set_white_rocks(self):
+        o_rock1 = Rock(7, 0, Color.white)
+        o_rock1.enemy_color = Color.black
+        o_rock2 = Rock(7, 7, Color.white)
+        o_rock2.enemy_color = Color.black
+        self.all_pieces.extend([o_rock1, o_rock2])
+        return None

@@ -10,6 +10,7 @@ class AbortTransaction(Exception):
 
 class Board:
 
+
     def __init__(self):
         # Создает доску в виде списка из вложенных списков.
         # Отдельным файлом инициализирует экземпляры
@@ -23,6 +24,7 @@ class Board:
         # Settings и внедряет его экземпляры в только что созданную доску.
         for obj in self.settings.all_pieces:
             self.board[obj.y][obj.x] = obj
+            obj._get_all_moves(self)
 
     def print_board(self):
         # Вывод доски на экран.
@@ -43,11 +45,11 @@ class Board:
         if isinstance(obj, King): return 'class.King'
         return 'Unknown type.'
 
-    def get_color(self, x, y):
+    def get_color(self, y, x):
         # Лишний метод для определения цвета
         # фигуры в заданных координатах доски.
         try:
-            color = self.board[x][y].color
+            color = self.board[y][x].color
         except IndexError:
             return None
 
@@ -58,7 +60,7 @@ class Board:
             obj.get_all_moves()
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj, action, from_where, to_where, direction=None):
+    def change_its_position(self, obj, to_where, back_or_forth=None):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
@@ -68,23 +70,17 @@ class Board:
         board = self
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
-        from_where, to_where = tuple(from_where), tuple(to_where)
+        to_where = tuple(to_where)
 
         # Сверяет экземпляр с наименованием класса фигуры.
         # Выполняет перемещения фигуры в зависимости от ее характеристик.
         if isinstance(obj, Pawn):
             # Указывает основные действия указанные выше уровнем.
-            if action == 'move':
-                obj._check_move(from_where, to_where, direction)
-                obj._move_pawn(board, from_where, to_where, direction)
-
-            if action == 'eat':
-                obj._eat_by_pawn(board, from_where, to_where, direction)
-
+            obj._move_pawn(board, to_where)
             # Возвращает True для последующего взаимодействия программы.
             return True
         if isinstance(obj, Rock):
-            obj._move_rock(board, from_where, to_where)
+            obj._move_rock(board, to_where)
 
         # В случае проблем выводит это сообщение.
         return True

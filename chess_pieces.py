@@ -17,19 +17,20 @@ class Empty(object):
     def __str__(self):
         return '.'
 
-    def _check_move(self, *args):
+    @staticmethod
+    def _check_move(*args):
         print('You cannot move an empty space')
         return False
 
 
-class ChainedArray(object):
-    allowed = True  # Будет полезным при дальнейшей работе с королем,
-
-    # когда нужно будет отключать всем эту опцию
-
-    def __init__(self):
-        self.root = None
-        self.next = None
+# class ChainedArray(object):
+#     allowed = True  # Будет полезным при дальнейшей работе с королем,
+#
+#     # когда нужно будет отключать всем эту опцию
+#
+#     def __init__(self):
+#         self.root = None
+#         self.next = None
 
 
 class Piece:
@@ -50,57 +51,123 @@ class Piece:
 class Pawn(Piece):
     """ Класс для пешки """
     img = ('\u265F', '\u2659')  # Кортеж из цветов.
-    allowed_moves = 2  # Количество ходов для первого хода.
 
     def __init__(self, y, x, color):
         super().__init__(color)  # Унаследование от родителя атрибутов.
         self.y = y  # Каждая фигура имеет свою координату.
         self.x = x
-        self.root = [y, x]
+        self.back_or_forth = None
 
-    def _get_all_moves(self):
-        pass
+        self.allowed_moves = 2
 
-    def _move_pawn(self, board, from_where, to_where, direction):
-        """ Условия перемещения пешки и последующее отображение ее на доске """
-        # Первое условие -- есть цвет (не ноль). Второе, фигура
-        # находится на доске. Третье, след-щее не является пустым.
-        if self.color and from_where[0] < 7 and board.get_color(from_where[0] + (direction * 1),
-                                                                from_where[1]) == Color.empty:
+    def _get_all_moves(self, board):
 
-            # Проверяет на сколько далеко пешка
-            # может ходить и направление перемещения.
-            if self.allowed_moves >= (to_where[0] - from_where[0]) * direction:
-                # Если условие выполнено, то происходит перестановка экземпляров.
-                # Так же обновляю переменные этого экземпляра.
-                temp = board.board[from_where[0]][from_where[1]]
-                board.board[from_where[0]][from_where[1]] = Empty()
-                board.board[to_where[0]][to_where[1]] = temp
-                self.y, self.x = to_where[0], to_where[1]
-                self.allowed_moves = 1
-                # Последнее условие -- не находится ли пешка на краю доски?
-                # В этом случае, запускает инкапсулированный метод превращения.
-                if ((self.color == 2 and from_where[0] == 6 and to_where[0] == 7)
-                        or (self.color == 1 and from_where[0] == 1 and to_where[0] == 0)):
-                    self.__turn_into_piece(board)
-                    return board
-                return board
+        self.moves.clear()
+
+        current_position, current_allowed_moves = (self.y, self.x), self.allowed_moves
+        directions, moves = [(1, 0), (1, 1), (1, -1)], []
+
+        for direction in directions:
+
+            new_position = (current_position[0] + (direction[0] * self.back_or_forth),
+                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[1]))
+
+            if direction == (1, 0):
+                if current_allowed_moves == 2:
+                    new_position = (self.y + (self.allowed_moves * self.back_or_forth), new_position[1])
+                    if self._is_valid_move(board, new_position):
+                        moves.extend([new_position])
+                        current_allowed_moves = 1
+                if current_allowed_moves == 1:
+                    new_position = (self.y + (direction[0] * self.back_or_forth), self.x + direction[1])
+                    if self._is_valid_move(board, new_position):
+                        moves.extend([new_position])
+
             else:
-                return print('You cannot move so far')
-        else:
-            return print('Your pawn is blocked.')
+                if self._is_valid_move(board, new_position):
+                    moves.extend([new_position])
 
-    def _eat_by_pawn(self, board, from_where, to_where, direction):
-        """ Метод для поедания вражеской фигуры """
+        self.moves.extend(moves)
+        return self.moves
 
-        # Исключительное условие передвижения с выкинутой ошибкой.  ТРЕБУЕТ ДОРАБОТКИ!
-        if (to_where[0] - from_where[0]) * direction < 0 or (to_where[1] - from_where[1]) not in [1, -1]:
-            return print('You can`t go and eat the enemy piece with this distance')
+    def _is_valid_move(self, board, new_position):
+        if self.x == new_position[1]:
+            if board.get_color(new_position[0], new_position[1]) == Color.empty:
+                return True
+            return False
         else:
-            # При выполненном условии, происходит типичная перестановка.
-            board.board[to_where[0]][to_where[1]] = board.board[from_where[0]][from_where[1]]
-            board.board[from_where[0]][from_where[1]] = Empty()
+            if board.get_color(new_position[0], new_position[1]) == self.enemy_color:
+                return True
+            return False
+
+    def _move_pawn(self, board, to_where):
+
+        from_where = (self.y, self.x)
+
+        self._check_move(from_where, to_where)
+        self._get_all_moves(board)
+
+        if to_where in self.moves:
+
+            if self.allowed_moves == 2:
+                self.allowed_moves = 1
+
+            temp = board.board[self.y][self.x]
+            board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
+
+            self.y, self.x = to_where[0], to_where[1]
+
+            self.moves = self._get_all_moves(board)
+            print('You successfully moved your pawn')
             return board
+
+        elif self.y in [0, 7]:
+            self.__turn_into_piece(board)
+            return board
+
+        return board
+
+    # def _move_pawn(self, board, from_where, to_where, direction):
+    #     """ Условия перемещения пешки и последующее отображение ее на доске """
+    #     # Первое условие -- есть цвет (не ноль). Второе, фигура
+    #     # находится на доске. Третье, след-щее не является пустым.
+    #     if self.color and from_where[0] < 7 and board.get_color(from_where[0] + (direction * 1),
+    #                                                             from_where[1]) == Color.empty:
+    #
+    #         # Проверяет на сколько далеко пешка
+    #         # может ходить и направление перемещения.
+    #         if self.allowed_moves >= (to_where[0] - from_where[0]) * direction:
+    #             # Если условие выполнено, то происходит перестановка экземпляров.
+    #             # Так же обновляю переменные этого экземпляра.
+    #             temp = board.board[from_where[0]][from_where[1]]
+    #             board.board[from_where[0]][from_where[1]] = Empty()
+    #             board.board[to_where[0]][to_where[1]] = temp
+    #             self.y, self.x = to_where[0], to_where[1]
+    #             self.allowed_moves = 1
+    #             # Последнее условие -- не находится ли пешка на краю доски?
+    #             # В этом случае, запускает инкапсулированный метод превращения.
+    #             if ((self.color == 2 and from_where[0] == 6 and to_where[0] == 7)
+    #                     or (self.color == 1 and from_where[0] == 1 and to_where[0] == 0)):
+    #                 self.__turn_into_piece(board)
+    #                 return board
+    #             return board
+    #         else:
+    #             return print('You cannot move so far')
+    #     else:
+    #         return print('Your pawn is blocked.')
+
+    # def _eat_by_pawn(self, board, from_where, to_where, direction):
+    #     """ Метод для поедания вражеской фигуры """
+    #
+    #     # Исключительное условие передвижения с выкинутой ошибкой.  ТРЕБУЕТ ДОРАБОТКИ!
+    #     if (to_where[0] - from_where[0]) * direction < 0 or (to_where[1] - from_where[1]) not in [1, -1]:
+    #         return print('You can`t go and eat the enemy piece with this distance')
+    #     else:
+    #         # При выполненном условии, происходит типичная перестановка.
+    #         board.board[to_where[0]][to_where[1]] = board.board[from_where[0]][from_where[1]]
+    #         board.board[from_where[0]][from_where[1]] = Empty()
+    #         return board
 
     def __turn_into_piece(self, board):
         """ Метод для превращения в выбранную
@@ -134,10 +201,9 @@ class Pawn(Piece):
                 print('Incorrect input')
                 return False
 
-    @staticmethod
-    def _check_move(from_where, to_where, direction):
+    def _check_move(self, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
-        if (to_where[0] - from_where[0]) * direction < 0 or from_where[1] != to_where[1]:
+        if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
             print('You cannot move it backward')
             return False
         if from_where == to_where:
@@ -154,18 +220,15 @@ class Rock(Piece):
         super().__init__(color)
         self.y = y
         self.x = x
-        self.root = [y, x]
         self.enemy_color = Color.white if self.color == 2 else Color.black
 
-    def _get_rock_moves(self, board: object, current_position: tuple, moves=None) -> list:
-
-        if moves is None:
-            moves = []
-
+    def _get_all_moves(self, board: object) -> list:
+        # Задает переменную с текущим координатами фигуры.
+        current_position = (self.y, self.x)
         # Обновляет переменную экземпляра с возможными ходами.
         self.moves.clear()
         # Простой список с направлениями: вниз, вверх, вправо, влево.
-        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        directions, moves = [(1, 0), (-1, 0), (0, 1), (0, -1)], []
         for direction in directions:
             # Каждый раз устанавливает новое положение
             # исходя из текущей, неизменной позиции фигуры.
@@ -212,22 +275,21 @@ class Rock(Piece):
 
         return False
 
-    def _move_rock(self, board: object, from_where: tuple, to_where: tuple) -> object:
+    def _move_rock(self, board: object, to_where: tuple) -> object:
         # Получает все возможные ходы фигуры.
-        self._get_rock_moves(board, from_where)
+        self._get_all_moves(board)
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
         if to_where in self.moves:
             # Если да, то происходит перестановка.
-            temp = board.board[from_where[0]][from_where[1]]
-            board.board[from_where[0]][from_where[1]] = Empty()
+            temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
 
             # Задает новые координаты переменным экземпляра фигуры.
-            self.y = to_where[0]
-            self.x = to_where[1]
+            self.y, self.x = to_where[0], to_where[1]
 
             # После сделанного хода, обновляет список возможных ходов.
-            self._get_rock_moves(board, to_where)
+            self.moves = self._get_all_moves(board)
             print('You successfully moved your rock')
 
             # Возвращает измененную доску.
