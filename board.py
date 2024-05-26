@@ -10,8 +10,8 @@ class AbortTransaction(Exception):
 
 class Board:
 
-
     def __init__(self):
+        self.all_moves = dict()
         # Создает доску в виде списка из вложенных списков.
         # Отдельным файлом инициализирует экземпляры
         # представляющие собой шахматные фигуры.
@@ -24,7 +24,12 @@ class Board:
         # Settings и внедряет его экземпляры в только что созданную доску.
         for obj in self.settings.all_pieces:
             self.board[obj.y][obj.x] = obj
-            obj._get_all_moves(self)
+        # В этой переменной программе хранит уникальные
+        # идентификаторы со всеми ходами фигуры в одном словаре.
+        for item in self.settings.all_pieces:
+            res = self.get_moves(item)
+            id_num = id(item)
+            self.all_moves[id_num] = res
 
     def print_board(self):
         # Вывод доски на экран.
@@ -55,9 +60,10 @@ class Board:
 
         return color
 
-    def get_moves(self, obj):
-        if isinstance(type(obj), type(Rock)):
-            obj.get_all_moves()
+    def get_moves(self, item):
+        board = self
+        res = item._get_all_moves(board)
+        return res
 
     # noinspection PyProtectedMember
     def change_its_position(self, obj, to_where, back_or_forth=None):

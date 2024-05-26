@@ -1,5 +1,6 @@
 """ Класс самого высокого уровня,
 с чем непосредственно взаимодействует пользователь. """
+from pprint import *
 
 from board import Board
 
@@ -37,7 +38,5 @@ if __name__ == '__main__':
 
 # Действия:
 
-# for inst in my_game.all:
-#     print(inst.moves, inst)
-
-print(my_game.board[0][7].moves)
+res = my_game.all_moves
+pprint(res, width=100)

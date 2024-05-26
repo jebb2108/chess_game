@@ -18,6 +18,10 @@ class Empty(object):
         return '.'
 
     @staticmethod
+    def _get_all_moves():
+        return None
+
+    @staticmethod
     def _check_move(*args):
         print('You cannot move an empty space')
         return False
