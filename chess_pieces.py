@@ -40,6 +40,7 @@ class Piece:
         self.all_moves = []
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.enemy_color = None
+        self.moves = []
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -157,9 +158,12 @@ class Rock(Piece):
         self.enemy_color = Color.white if self.color == 2 else Color.black
 
     def _get_rock_moves(self, board: object, current_position: tuple, moves=None) -> list:
+
         if moves is None:
             moves = []
 
+        # Обновляет переменную экземпляра с возможными ходами.
+        self.moves.clear()
         # Простой список с направлениями: вниз, вверх, вправо, влево.
         directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         for direction in directions:
@@ -195,22 +199,24 @@ class Rock(Piece):
                     new_position = (new_position[0] + direction[0],
                                     new_position[1] + direction[1])
 
-        # Возвращает все ходы,
-        # необходимые для дальнейших операций.
-        return moves
+        # Возвращает все возможные ходы в список.
+        self.moves.extend(moves)
+        return self.moves
 
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
         # Только два возможных условия истинности:
         # либо это поле пустое, либо оно вражеское (последнее)
         if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
-                board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
             return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
 
         return False
 
     def _move_rock(self, board: object, from_where: tuple, to_where: tuple) -> object:
+        # Получает все возможные ходы фигуры.
+        self._get_rock_moves(board, from_where)
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
-        if to_where in self._get_rock_moves(board, from_where):
+        if to_where in self.moves:
             # Если да, то происходит перестановка.
             temp = board.board[from_where[0]][from_where[1]]
             board.board[from_where[0]][from_where[1]] = Empty()
@@ -220,6 +226,8 @@ class Rock(Piece):
             self.y = to_where[0]
             self.x = to_where[1]
 
+            # После сделанного хода, обновляет список возможных ходов.
+            self._get_rock_moves(board, to_where)
             print('You successfully moved your rock')
 
             # Возвращает измененную доску.

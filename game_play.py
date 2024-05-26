@@ -50,3 +50,6 @@ if __name__ == '__main__':
 # noinspection PyUnboundLocalVariable
 my_game.print_board()
 
+my_game.move_rock([0, 0], [0, 3])
+my_game.print_board()
+
