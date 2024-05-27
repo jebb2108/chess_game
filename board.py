@@ -16,7 +16,7 @@ class Board:
         # Создает доску в виде списка из вложенных списков.
         # Отдельным файлом инициализирует экземпляры
         # представляющие собой шахматные фигуры.
-        self.board = [[Empty()] * 8 for y in range(8)]
+        self.board = [[Empty()] * 8 for _ in range(8)]
         self.settings = Settings()
         self._initialize()
 
@@ -28,16 +28,23 @@ class Board:
         # В этом методе программа создает
         # идентификаторы со всеми ходами фигуры в одном словаре.
         # Позже мне он понадобится, когда буду работать с королем.
-        self.make_moves_dict()
+        self._make_moves_dict()
 
-    def make_moves_dict(self):
+    def _make_moves_dict(self):
         """ Простой метод для создания словарика ходов. """
         board = self
         for item in self.settings.all_pieces:
             id_num = id(item)
             icon = item.img[item.color - 1]
-            res = item._get_all_moves(board), icon
+            res = item, item._get_all_moves(board), icon
             self.all_moves[id_num] = res
+
+    def _update_moves_dict(self):
+        board = self
+        for key, value in self.all_moves.items():
+            obj = value[0]
+            icon = obj.img[obj.color - 1]
+            self.all_moves[key] = (obj, obj._get_all_moves(board), icon)
 
     def print_board(self):
         # Вывод доски на экран.
@@ -92,3 +99,6 @@ class Board:
 
         if deleted_item_id is not None:
             del self.all_moves[deleted_item_id]
+
+        self._update_moves_dict()
+        return None

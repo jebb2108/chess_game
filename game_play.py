@@ -39,10 +39,18 @@ if __name__ == '__main__':
 # pprint(res, width=100)
 # pprint(my_game.all_moves, width=100)
 # #
+# pprint(my_game.all_moves, width=150)
+# res1 = my_game.all_moves
+#
 # my_game.move_pawn([6, 1], [4, 1])
 # my_game.move_rock([7, 0], [7, 1])
 # my_game.move_rock([7, 1], [5, 1])
 # my_game.move_rock([5, 1], [5, 7])
 # my_game.move_rock([5, 7], [1, 7])
+# #
+# # pprint(my_game.all_moves)
 #
-# pprint(my_game.all_moves)
+# pprint(my_game.all_moves, width=150)
+# res2 = my_game._update_moves_dict()
+#
+# print(res1 == res2)
