@@ -9,7 +9,7 @@ class AbortTransaction(Exception):
 
 
 class Board:
-
+    """ Класс доски, отвечает за расстановку всех сущностей на доске. """
     def __init__(self):
         self.all_moves = dict()
         # Создает доску в виде списка из вложенных списков.
@@ -24,11 +24,18 @@ class Board:
         # Settings и внедряет его экземпляры в только что созданную доску.
         for obj in self.settings.all_pieces:
             self.board[obj.y][obj.x] = obj
-        # В этой переменной программе хранит уникальные
+        # В этом методе программа создает
         # идентификаторы со всеми ходами фигуры в одном словаре.
+        # Позже мне он понадобится, когда буду работать с королем.
+        self.make_moves_dict()
+
+    def make_moves_dict(self):
+        """ Простой метод для создания словарика ходов. """
+        board = self
         for item in self.settings.all_pieces:
-            res = self.get_moves(item)
             id_num = id(item)
+            icon = item.img[item.color - 1]
+            res = item._get_all_moves(board), icon
             self.all_moves[id_num] = res
 
     def print_board(self):
@@ -51,19 +58,15 @@ class Board:
         return 'Unknown type.'
 
     def get_color(self, y, x):
-        # Лишний метод для определения цвета
+        # Простой метод для определения цвета
         # фигуры в заданных координатах доски.
         try:
             color = self.board[y][x].color
-        except IndexError:
+        except IndexError:  # Индекс выходит за пределы клеток.
             return None
 
+        # Возвращает цвет фигуры.
         return color
-
-    def get_moves(self, item):
-        board = self
-        res = item._get_all_moves(board)
-        return res
 
     # noinspection PyProtectedMember
     def change_its_position(self, obj, to_where, back_or_forth=None):
@@ -78,15 +81,14 @@ class Board:
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
 
-        # Сверяет экземпляр с наименованием класса фигуры.
-        # Выполняет перемещения фигуры в зависимости от ее характеристик.
+        # Сверяет экземпляр с нужным классом фигуры.
+        # Выполняет перемещение фигуры в зависимости от ее условий.
         if isinstance(obj, Pawn):
-            # Указывает основные действия указанные выше уровнем.
+            # Выполняет основные действия ниже уровнем.
             obj._move_pawn(board, to_where)
-            # Возвращает True для последующего взаимодействия программы.
-            return True
+
         if isinstance(obj, Rock):
             obj._move_rock(board, to_where)
 
-        # В случае проблем выводит это сообщение.
-        return True
+        self.make_moves_dict()
+        return None

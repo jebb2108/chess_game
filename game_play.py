@@ -1,42 +1,51 @@
-""" Класс самого высокого уровня,
-с чем непосредственно взаимодействует пользователь. """
 from pprint import *
-
 from board import Board
-
-
 # from settings import Settings
 
 
 class GamePlay(Board):
+    """ Класс самого высокого уровня,
+    с чем непосредственно взаимодействует пользователь. """
 
-    # Пока не используемый конструктор.
-
-    # def __init__(self):
-    #     super().__init__()
-    #     self.settings = Settings()
-
-    def move_pawn(self, yx_from, to_where):
+    def move_pawn(self, from_where, to_where):
         # Метод для перемещения пешки
-        pawn = self.board[yx_from[0]][yx_from[1]]  # Передаю подконтрольный экземпляр переменной.
-
-        self.change_its_position(pawn, to_where)
-
-        return 'Operation went completely'
-
-    def move_rock(self, yx_from, to_where):
-        if self.get_class(yx_from) == 'class.Rock':
-            rock = self.board[yx_from[0]][yx_from[1]]
-            self.change_its_position(rock, to_where)
+        # Проверка на правильность введенной команды.
+        if self.get_class(from_where) == 'class.Pawn':
+            pawn = self.board[from_where[0]][from_where[1]]  # Передаю подконтрольный экземпляр переменной.
+            self.change_its_position(pawn, to_where)
+            self.__auto_print()
         else:
-            return print('Mistake brrooo!')
+            return 'There was a mistake happened.'
+
+    def move_rock(self, from_where, to_where):
+        if self.get_class(from_where) == 'class.Rock':
+            rock = self.board[from_where[0]][from_where[1]]
+            self.change_its_position(rock, to_where)
+            self.__auto_print()
+        else:
+            return 'There was a mistake happened.'
+
+    def __auto_print(self):
+        my_game.print_board()
 
 
-# Приказывает Python не гулять по библиотекам, а считать этот файл за главный.
+# Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.
 if __name__ == '__main__':
     my_game = GamePlay()
 
+# noinspection PyUnboundLocalVariable
 # Действия:
 
-res = my_game.all_moves
-pprint(res, width=100)
+# res = my_game.all_moves
+# pprint(res, width=100)
+# pprint(my_game.all_moves, width=100)
+#
+# my_game.move_pawn([6, 1], [4, 1])
+# my_game.move_rock([7, 0], [7, 1])
+# my_game.move_rock([7, 1], [5, 1])
+# my_game.move_rock([5, 1], [5, 7])
+# my_game.move_rock([5, 7], [1, 7])
+#
+# pprint(my_game.all_moves, width=100)
+#
+# print(my_game.board[4][1].moves)
