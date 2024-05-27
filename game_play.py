@@ -1,4 +1,4 @@
-from pprint import *
+# from pprint import *
 from board import Board
 
 
@@ -12,7 +12,7 @@ class GamePlay(Board):
         if self.get_class(from_where) == 'class.Pawn':
             pawn = self.board[from_where[0]][from_where[1]]  # Передаю подконтрольный экземпляр переменной.
             self.change_its_position(pawn, to_where)
-            self.__auto_print()
+            self.auto_print()
         else:
             return 'There was a mistake happened.'
 
@@ -20,11 +20,12 @@ class GamePlay(Board):
         if self.get_class(from_where) == 'class.Rock':
             rock = self.board[from_where[0]][from_where[1]]
             self.change_its_position(rock, to_where)
-            self.__auto_print()
+            self.auto_print()
         else:
             return 'There was a mistake happened.'
 
-    def __auto_print(self):
+    @staticmethod
+    def auto_print():
         my_game.print_board()
 
 

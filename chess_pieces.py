@@ -23,7 +23,7 @@ class Empty(object):
         return None
 
     @staticmethod
-    def _check_move(*args):
+    def _check_move():
         print('You cannot move an empty space')
         return False
 
@@ -33,7 +33,6 @@ class Piece:
     img = None  # Начальная дефолтная переменная для каждой фигуры.
 
     def __init__(self, color):  # Каждая фигура должна иметь свой цвет.
-        self.all_moves = []
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.enemy_color = None
         self.moves = []
@@ -66,8 +65,8 @@ class Pawn(Piece):
         directions, moves = [(1, 0), (1, 1), (1, -1)], []
         for direction in directions:
             # Создает кортеж возможной позиции пешки для проверки условия.
-            new_position = (current_position[0] + (direction[0] * self.back_or_forth),
-                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[1]))
+            new_position = (current_position[0] + ((direction[0]) * self.back_or_forth),
+                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[1]))  # noqa
             # Значение позиции НЕ может быть отрицательным.
             # Иначе, клетка будет считаться с конца списка!
             # Тернарным выражением я убедился, что значение всегда положительное.
@@ -118,9 +117,7 @@ class Pawn(Piece):
             return False  # Условие не выполняется.
 
     def _move_pawn(self, board: object, to_where: tuple) -> int or None:
-        """ Метод приказывает переместить положение пешки.
-        :rtype: object
-        """
+        """ Метод приказывает переместить положение пешки. """
 
         # Создает кортеж с координатами фигуры.
         from_where = (self.y, self.x)
@@ -171,25 +168,26 @@ class Pawn(Piece):
         фигуру после достижения пешки крайнего поля."""
 
         # Запоминает цвет фигуры и кладет в переменную.
-        color = Color.white if self.color == 1 else Color.black
         if self.color == 1 or 2:
             response = input('Type what piece would you like to have instead? '
                              '"queen", "rock", "knight", or "bishop": ')
+
+            color = Color.white if self.color == 1 else Color.black
 
             # Сверка ответа.
             if response == 'queen':
                 board.board[self.y][self.x] = Empty()
                 board.board[self.y][self.x] = Queen(color)
                 return board
-            elif response == 'rock':
+            if response == 'rock':
                 board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Rock(color)
+                board.board[self.y][self.x] = Rock(color)  # noqa
                 return board
-            elif response == 'knight':
+            if response == 'knight':
                 board.board[self.y][self.x] = Empty()
                 board.board[self.y][self.x] = Knight(color)
                 return board
-            elif response == 'bishop':
+            if response == 'bishop':
                 board.board[self.y][self.x] = Empty()
                 board.board[self.y][self.x] = Bishop(color)
                 return board

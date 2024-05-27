@@ -36,7 +36,7 @@ class Board:
         for item in self.settings.all_pieces:
             id_num = id(item)
             icon = item.img[item.color - 1]
-            res = item, item._get_all_moves(board), icon
+            res = item, item._get_all_moves(board), icon  # noqa
             self.all_moves[id_num] = res
 
     def _update_moves_dict(self):
@@ -44,7 +44,7 @@ class Board:
         for key, value in self.all_moves.items():
             obj = value[0]
             icon = obj.img[obj.color - 1]
-            self.all_moves[key] = (obj, obj._get_all_moves(board), icon)
+            self.all_moves[key] = (obj, obj._get_all_moves(board), icon)  # noqa
 
     def print_board(self):
         # Вывод доски на экран.
@@ -77,7 +77,7 @@ class Board:
         return color
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj: object, to_where: list, back_or_forth=None):
+    def change_its_position(self, obj: object, to_where: list):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
