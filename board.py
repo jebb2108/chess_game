@@ -97,6 +97,12 @@ class Board:
         if isinstance(obj, Rock):
             deleted_item_id = obj._move_rock(board, to_where)
 
+        if isinstance(obj, Bishop):
+            deleted_item_id = obj._move_bishop(board, to_where)
+
+        if isinstance(obj, Queen):
+            deleted_item_id = obj._move_queen(board, to_where)
+
         if deleted_item_id is not None:
             del self.all_moves[deleted_item_id]
 

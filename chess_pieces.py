@@ -298,6 +298,84 @@ class Knight(Piece):
 class Bishop(Piece):
     img = ('\u265D', '\u2657')
 
+    def __init__(self, y, x, color):
+        super().__init__(color)
+        self.y = y
+        self.x = x
+        self.enemy_color = Color.white if self.color == 2 else Color.black
+
+    def _get_all_moves(self, board: object) -> list[Any]:
+        # Задает переменную с текущим координатами фигуры.
+        current_position = (self.y, self.x)
+        # Обновляет переменную экземпляра с возможными ходами.
+        self.moves.clear()
+        # Простой список с направлениями: вниз, вверх, вправо, влево.
+        directions, moves = [(1, 1), (-1, 1), (1, -1), (-1, -1)], []
+        for direction in directions:
+            # Каждый раз устанавливает новое положение
+            # исходя из текущей, неизменной позиции фигуры.
+            new_position = (current_position[0] + direction[0],
+                            current_position[1] + direction[1])
+
+
+            # Цикл продолжает работать пока функция возвращает True.
+            while self._is_valid_move(board, new_position):
+                # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
+                # то происходит инвертирования значения в положительное e.g -1 --> 1.
+                if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
+                    # Проверяет, чтобы значение координаты не стало отрицательным
+                    # тогда проверка списка начинается с конца, а этого нельзя допустить
+                    # иначе произойдет бесконечный цикл.
+                    break
+
+                # Вражеская фигура должна стать последней в списке возможных ходов.
+                elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
+                    moves.extend([new_position])
+                    break
+
+                else:
+                    moves.extend([new_position])
+                    # Шаг завершен. Передаю новое значение этой переменной.
+                    new_position = (new_position[0] + direction[0],
+                                    new_position[1] + direction[1])
+
+        # Возвращает все возможные ходы в список.
+        self.moves.extend(moves)
+        return self.moves
+
+    def _is_valid_move(self, board: object, new_position: tuple) -> bool:
+        # Только два возможных условия истинности:
+        # либо это поле пустое, либо оно вражеское (последнее)
+        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
+             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+            return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
+
+        return False
+
+    def _move_bishop(self, board: object, to_where: tuple) -> int or None:
+        # Получает все возможные ходы фигуры.
+        self._get_all_moves(board)
+
+        enemy_piece_id = None
+        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+        if to_where in self.moves:
+
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
+            # Если да, то происходит перестановка.
+            temp = board.board[self.y][self.x]
+            board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
+
+            # Задает новые координаты переменным экземпляра фигуры.
+            self.y, self.x = to_where[0], to_where[1]
+
+            # После сделанного хода, обновляет список возможных ходов.
+            self._get_all_moves(board)
+            return enemy_piece_id
+
 
 class King(Piece):
     img = ('\u265A', '\u2654')
@@ -305,3 +383,81 @@ class King(Piece):
 
 class Queen(Piece):
     img = ('\u265B', '\u2655')
+
+    def __init__(self, y, x, color):
+        super().__init__(color)
+        self.y = y
+        self.x = x
+        self.enemy_color = Color.white if self.color == 2 else Color.black
+
+    def _get_all_moves(self, board: object) -> list[Any]:
+        # Задает переменную с текущим координатами фигуры.
+        current_position = (self.y, self.x)
+        # Обновляет переменную экземпляра с возможными ходами.
+        self.moves.clear()
+        # Простой список с направлениями: вниз, вверх, вправо, влево.
+        directions, moves = [(1, 1), (-1, 1), (1, -1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)], []
+        for direction in directions:
+            # Каждый раз устанавливает новое положение
+            # исходя из текущей, неизменной позиции фигуры.
+            new_position = (current_position[0] + direction[0],
+                            current_position[1] + direction[1])
+
+
+            # Цикл продолжает работать пока функция возвращает True.
+            while self._is_valid_move(board, new_position):
+                # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
+                # то происходит инвертирования значения в положительное e.g -1 --> 1.
+                if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
+                    # Проверяет, чтобы значение координаты не стало отрицательным
+                    # тогда проверка списка начинается с конца, а этого нельзя допустить
+                    # иначе произойдет бесконечный цикл.
+                    break
+
+                # Вражеская фигура должна стать последней в списке возможных ходов.
+                elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
+                    moves.extend([new_position])
+                    break
+
+                else:
+                    moves.extend([new_position])
+                    # Шаг завершен. Передаю новое значение этой переменной.
+                    new_position = (new_position[0] + direction[0],
+                                    new_position[1] + direction[1])
+
+        # Возвращает все возможные ходы в список.
+        self.moves.extend(moves)
+        return self.moves
+
+    def _is_valid_move(self, board: object, new_position: tuple) -> bool:
+        # Только два возможных условия истинности:
+        # либо это поле пустое, либо оно вражеское (последнее)
+        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
+             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+            return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
+
+        return False
+
+    def _move_queen(self, board: object, to_where: tuple) -> int or None:
+        # Получает все возможные ходы фигуры.
+        self._get_all_moves(board)
+
+        enemy_piece_id = None
+        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+        if to_where in self.moves:
+
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
+            # Если да, то происходит перестановка.
+            temp = board.board[self.y][self.x]
+            board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
+
+            # Задает новые координаты переменным экземпляра фигуры.
+            self.y, self.x = to_where[0], to_where[1]
+
+            # После сделанного хода, обновляет список возможных ходов.
+            self._get_all_moves(board)
+            return enemy_piece_id

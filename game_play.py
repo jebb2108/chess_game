@@ -1,4 +1,6 @@
 # from pprint import *
+from pprint import pprint
+
 from board import Board
 
 
@@ -24,6 +26,23 @@ class GamePlay(Board):
         else:
             return 'There was a mistake happened.'
 
+    def move_bishop(self, from_where, to_where):
+        if self.get_class(from_where) == 'class.Bishop':
+            bishop = self.board[from_where[0]][from_where[1]]
+            self.change_its_position(bishop, to_where)
+            self.auto_print()
+        else:
+            return 'There was a mistake happened.'
+
+    def move_queen(self, from_where, to_where):
+        if self.get_class(from_where) == 'class.Queen':
+            queen = self.board[from_where[0]][from_where[1]]
+            self.change_its_position(queen, to_where)
+            self.auto_print()
+        else:
+            return 'There was a mistake happened.'
+
+
     @staticmethod
     def auto_print():
         my_game.print_board()
@@ -32,6 +51,14 @@ class GamePlay(Board):
 # Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.
 if __name__ == '__main__':
     my_game = GamePlay()
+
+my_game.print_board()
+my_game.move_bishop([0, 2], [1, 1])
+my_game.move_bishop([1, 1], [7, 7])
+my_game.move_bishop([7, 7], [6, 6])
+my_game.move_bishop([6, 6], [7, 5])
+
+# print(my_game.all_moves)
 
 # noinspection PyUnboundLocalVariable
 # Действия:
@@ -55,3 +82,5 @@ if __name__ == '__main__':
 # res2 = my_game._update_moves_dict()
 #
 # print(res1 == res2)
+
+pprint(my_game.all_moves, width=150)
