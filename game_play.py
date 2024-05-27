@@ -1,6 +1,5 @@
 from pprint import *
 from board import Board
-# from settings import Settings
 
 
 class GamePlay(Board):
@@ -39,13 +38,11 @@ if __name__ == '__main__':
 # res = my_game.all_moves
 # pprint(res, width=100)
 # pprint(my_game.all_moves, width=100)
-#
+# #
 # my_game.move_pawn([6, 1], [4, 1])
 # my_game.move_rock([7, 0], [7, 1])
 # my_game.move_rock([7, 1], [5, 1])
 # my_game.move_rock([5, 1], [5, 7])
 # my_game.move_rock([5, 7], [1, 7])
 #
-# pprint(my_game.all_moves, width=100)
-#
-# print(my_game.board[4][1].moves)
+# pprint(my_game.all_moves)

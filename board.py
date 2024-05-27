@@ -10,6 +10,7 @@ class AbortTransaction(Exception):
 
 class Board:
     """ Класс доски, отвечает за расстановку всех сущностей на доске. """
+
     def __init__(self):
         self.all_moves = dict()
         # Создает доску в виде списка из вложенных списков.
@@ -69,14 +70,14 @@ class Board:
         return color
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj, to_where, back_or_forth=None):
+    def change_its_position(self, obj: object, to_where: list, back_or_forth=None):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
-
         # Кладет экземпляр доски в переменную,
         # чтобы работать с ней на уровень ниже.
         board = self
+        deleted_item_id = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
@@ -85,10 +86,9 @@ class Board:
         # Выполняет перемещение фигуры в зависимости от ее условий.
         if isinstance(obj, Pawn):
             # Выполняет основные действия ниже уровнем.
-            obj._move_pawn(board, to_where)
-
+            deleted_item_id = obj._move_pawn(board, to_where)
         if isinstance(obj, Rock):
-            obj._move_rock(board, to_where)
+            deleted_item_id = obj._move_rock(board, to_where)
 
-        self.make_moves_dict()
-        return None
+        if deleted_item_id is not None:
+            del self.all_moves[deleted_item_id]

@@ -1,5 +1,5 @@
 """ Все шахматные фигуры, состояния и их поведение. """
-from typing import List, Any
+from typing import Any
 
 
 class Color(object):
@@ -117,11 +117,17 @@ class Pawn(Piece):
                 return True
             return False  # Условие не выполняется.
 
-    def _move_pawn(self, board: object, to_where: tuple) -> None:
-        """ Метод приказывает переместить положение пешки. """
+    def _move_pawn(self, board: object, to_where: tuple) -> int or None:
+        """ Метод приказывает переместить положение пешки.
+        :rtype: object
+        """
 
         # Создает кортеж с координатами фигуры.
         from_where = (self.y, self.x)
+
+        # В случае того, когда пешка съедает вражескую фигуру
+        # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
+        enemy_piece_id = None
 
         # Выполняет проверки.
         self._check_move(from_where, to_where)  # Проверка на заданное движение.
@@ -134,6 +140,10 @@ class Pawn(Piece):
             if self.allowed_moves == 2:
                 self.allowed_moves = 1
 
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
             # Манипулирование доской и перемещение пешки.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -144,7 +154,7 @@ class Pawn(Piece):
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
-            return None
+            return enemy_piece_id
 
         # Каждый раз проверяет, что пешки
         # находятся на ключевой позиции.
@@ -258,11 +268,18 @@ class Rock(Piece):
 
         return False
 
-    def _move_rock(self, board: object, to_where: tuple) -> object:
+    def _move_rock(self, board: object, to_where: tuple) -> int or None:
         # Получает все возможные ходы фигуры.
         self._get_all_moves(board)
+
+        enemy_piece_id = None
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
         if to_where in self.moves:
+
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
             # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -273,7 +290,7 @@ class Rock(Piece):
 
             # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board)
-            return board
+            return enemy_piece_id
 
 
 class Knight(Piece):
