@@ -36,6 +36,7 @@ class Piece:
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.enemy_color = None
         self.moves = []
+        self.enemy_color = 2 if Color.white else 1
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -66,7 +67,8 @@ class Pawn(Piece):
         for direction in directions:
             # Создает кортеж возможной позиции пешки для проверки условия.
             new_position = (current_position[0] + ((direction[0]) * self.back_or_forth),
-                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[1]))  # noqa
+                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[
+                                1]))  # noqa
             # Значение позиции НЕ может быть отрицательным.
             # Иначе, клетка будет считаться с конца списка!
             # Тернарным выражением я убедился, что значение всегда положительное.
@@ -298,7 +300,6 @@ class Knight(Piece):
         super().__init__(color)
         self.y = y
         self.x = x
-        self.enemy_color = Color.white if self.color == 2 else Color.black
 
     def _get_all_moves(self, board):
         current_position = (self.y, self.x)
@@ -353,7 +354,6 @@ class Bishop(Piece):
         super().__init__(color)
         self.y = y
         self.x = x
-        self.enemy_color = Color.white if self.color == 2 else Color.black
 
     def _get_all_moves(self, board: object) -> list[Any]:
         # Задает переменную с текущим координатами фигуры.
@@ -432,10 +432,6 @@ class Bishop(Piece):
             return enemy_piece_id
 
 
-class King(Piece):
-    img = ('\u265A', '\u2654')
-
-
 class Queen(Piece):
     img = ('\u265B', '\u2655')
 
@@ -443,7 +439,6 @@ class Queen(Piece):
         super().__init__(color)
         self.y = y
         self.x = x
-        self.enemy_color = Color.white if self.color == 2 else Color.black
 
     def _get_all_moves(self, board: object) -> list[Any]:
         # Задает переменную с текущим координатами фигуры.
@@ -457,7 +452,6 @@ class Queen(Piece):
             # исходя из текущей, неизменной позиции фигуры.
             new_position = (current_position[0] + direction[0],
                             current_position[1] + direction[1])
-
 
             # Цикл продолжает работать пока функция возвращает True.
             while self._is_valid_move(board, new_position):
@@ -498,6 +492,61 @@ class Queen(Piece):
 
     def _move_queen(self, board: object, to_where: tuple) -> int or None:
         # Получает все возможные ходы фигуры.
+        self._get_all_moves(board)
+
+        enemy_piece_id = None
+        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+        if to_where in self.moves:
+
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
+            # Если да, то происходит перестановка.
+            temp = board.board[self.y][self.x]
+            board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
+
+            # Задает новые координаты переменным экземпляра фигуры.
+            self.y, self.x = to_where[0], to_where[1]
+
+            # После сделанного хода, обновляет список возможных ходов.
+            self._get_all_moves(board)
+            return enemy_piece_id
+
+
+class King(Piece):
+    img = ('\u265A', '\u2654')
+
+    def __init__(self, y, x, color):
+        super().__init__(color)
+        self.y = y
+        self.x = x
+        self.safe_zone = (y, x)
+
+    def _get_all_moves(self, board):
+        current_position = (self.y, self.x)
+        self.moves.clear()
+        directions, moves = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)], []
+        for direction in directions:
+            new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
+            if new_position[0] < 0 or new_position[1] < 0:
+                continue
+            elif self.is_valid_move(board, new_position):
+                moves.extend([new_position])
+                continue
+
+        self.moves.extend(moves)
+        return moves
+
+    def is_valid_move(self, board, new_position):
+        if (board.get_color(new_position[0], new_position[1]) == Color.empty or
+                board.get_color(new_position[0], new_position[1]) == self.enemy_color):
+            return True
+        return False
+
+    def _move_king(self, board, to_where):
+
         self._get_all_moves(board)
 
         enemy_piece_id = None
