@@ -103,6 +103,9 @@ class Board:
         if isinstance(obj, Queen):
             deleted_item_id = obj._move_queen(board, to_where)
 
+        if isinstance(obj, Knight):
+            deleted_item_id = obj._move_knight(board, to_where)
+
         if deleted_item_id is not None:
             del self.all_moves[deleted_item_id]
 

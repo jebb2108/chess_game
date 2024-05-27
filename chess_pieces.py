@@ -294,6 +294,57 @@ class Rock(Piece):
 class Knight(Piece):
     img = ('\u265E', '\u2658')
 
+    def __init__(self, y, x, color):
+        super().__init__(color)
+        self.y = y
+        self.x = x
+        self.enemy_color = Color.white if self.color == 2 else Color.black
+
+    def _get_all_moves(self, board):
+        current_position = (self.y, self.x)
+        self.moves.clear()
+        directions, moves = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, -2), (1, 2), (-1, 2), (-1, -2)], []
+        for direction in directions:
+            new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
+            if new_position[0] < 0 or new_position[1] < 0:
+                continue
+            elif self.is_valid_move(board, new_position):
+                moves.extend([new_position])
+                continue
+
+        self.moves.extend(moves)
+        return moves
+
+    def is_valid_move(self, board, new_position):
+        if (board.get_color(new_position[0], new_position[1]) == Color.empty or
+                board.get_color(new_position[0], new_position[1]) == self.enemy_color):
+            return True
+        return False
+
+    def _move_knight(self, board, to_where):
+
+        self._get_all_moves(board)
+
+        enemy_piece_id = None
+        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+        if to_where in self.moves:
+
+            # Удаление вражеской фигуры из общего списка фигур.
+            if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+
+            # Если да, то происходит перестановка.
+            temp = board.board[self.y][self.x]
+            board.board[to_where[0]][to_where[1]] = temp
+            board.board[self.y][self.x] = Empty()
+
+            # Задает новые координаты переменным экземпляра фигуры.
+            self.y, self.x = to_where[0], to_where[1]
+
+            # После сделанного хода, обновляет список возможных ходов.
+            self._get_all_moves(board)
+            return enemy_piece_id
+
 
 class Bishop(Piece):
     img = ('\u265D', '\u2657')
@@ -317,7 +368,8 @@ class Bishop(Piece):
             new_position = (current_position[0] + direction[0],
                             current_position[1] + direction[1])
 
-
+            if new_position[0] < 0 or new_position[1] < 0:
+                break
             # Цикл продолжает работать пока функция возвращает True.
             while self._is_valid_move(board, new_position):
                 # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
@@ -331,6 +383,9 @@ class Bishop(Piece):
                 # Вражеская фигура должна стать последней в списке возможных ходов.
                 elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
                     moves.extend([new_position])
+                    break
+
+                elif new_position[0] < 0 or new_position[1] < 0:
                     break
 
                 else:
@@ -417,6 +472,9 @@ class Queen(Piece):
                 # Вражеская фигура должна стать последней в списке возможных ходов.
                 elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
                     moves.extend([new_position])
+                    break
+
+                elif new_position[0] < 0 or new_position[1] < 0:
                     break
 
                 else:

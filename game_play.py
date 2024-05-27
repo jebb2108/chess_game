@@ -26,6 +26,14 @@ class GamePlay(Board):
         else:
             return 'There was a mistake happened.'
 
+    def move_knight(self, from_where, to_where):
+        if self.get_class(from_where) == 'class.Knight':
+            knight = self.board[from_where[0]][from_where[1]]
+            self.change_its_position(knight, to_where)
+            self.auto_print()
+        else:
+            return 'There was a mistake happened.'
+
     def move_bishop(self, from_where, to_where):
         if self.get_class(from_where) == 'class.Bishop':
             bishop = self.board[from_where[0]][from_where[1]]
@@ -52,11 +60,10 @@ class GamePlay(Board):
 if __name__ == '__main__':
     my_game = GamePlay()
 
+
 my_game.print_board()
-my_game.move_bishop([0, 2], [1, 1])
-my_game.move_bishop([1, 1], [7, 7])
-my_game.move_bishop([7, 7], [6, 6])
-my_game.move_bishop([6, 6], [7, 5])
+
+
 
 # print(my_game.all_moves)
 
@@ -82,5 +89,17 @@ my_game.move_bishop([6, 6], [7, 5])
 # res2 = my_game._update_moves_dict()
 #
 # print(res1 == res2)
+#
+# pprint(my_game.all_moves, width=150)
 
-pprint(my_game.all_moves, width=150)
+# my_game.move_knight([0, 1], [2, 2])
+# pprint(my_game.all_moves)
+# my_game.move_knight([2, 2], [0, 3])
+# my_game.move_knight([2, 2], [4, 3])
+# my_game.move_knight([4, 3], [6, 2])
+# my_game.move_knight([6, 2], [7, 0])
+# my_game.move_knight([7, 0], [7, -1])
+# my_game.move_knight([7, 0], [6, 2])
+# my_game.move_knight([6, 2], [5, 4])
+# my_game.move_knight([5, 4], [7, 3])
+# my_game.move_knight([7, 3], [9, 2])

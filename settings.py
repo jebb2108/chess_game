@@ -15,6 +15,8 @@ class Settings:
         self._set_white_pawns()
         self._set_black_rocks()
         self._set_white_rocks()
+        self._set_black_knights()
+        self._set_white_knights()
         self._set_black_bishops()
         self._set_white_bishops()
         self._set_queens()
@@ -54,6 +56,22 @@ class Settings:
         o_rock2 = Rock(7, 7, Color.white)
         o_rock2.enemy_color = Color.black
         self.all_pieces.extend([o_rock1, o_rock2])
+        return None
+
+    def _set_black_knights(self):
+        o_knight1 = Knight(0, 1, Color.black)
+        o_knight1.enemy_color = Color.white
+        o_knight2 = Knight(0, 6, Color.black)
+        o_knight2.enemy_color = Color.white
+        self.all_pieces.extend([o_knight1, o_knight2])
+        return None
+
+    def _set_white_knights(self):
+        o_knight1 = Knight(7, 1, Color.white)
+        o_knight1.enemy_color = Color.black
+        o_knight2 = Knight(7, 6, Color.white)
+        o_knight2.enemy_color = Color.black
+        self.all_pieces.extend([o_knight1, o_knight2])
         return None
 
     def _set_black_bishops(self):
