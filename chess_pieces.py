@@ -36,7 +36,7 @@ class Piece:
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.enemy_color = None
         self.moves = []
-        self.enemy_color = 2 if Color.white else 1
+        self.enemy_color = 1 if self.color == Color.black else 2
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -129,7 +129,7 @@ class Pawn(Piece):
         enemy_piece_id = None
 
         # Выполняет проверки.
-        self._check_move(from_where, to_where)  # Проверка на заданное движение.
+        self._check_move(board, from_where, to_where)  # Проверка на заданное движение.
         self._get_all_moves(board)  # Получает все возможные ходы.
 
         # Проверяет, что заданный ход возможен.
@@ -153,7 +153,6 @@ class Pawn(Piece):
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
-            return enemy_piece_id
 
         # Каждый раз проверяет, что пешки
         # находятся на ключевой позиции.
@@ -161,9 +160,8 @@ class Pawn(Piece):
             # Превращение пешки в выбранную фигуру.
             self.__turn_into_piece(board)
 
-        # Возвращать ничего не нужно, т.к. в данном случае
-        # переменная доски это просто ссылка на экземпляр.
-        return None
+        # Возвращает id, если есть, иначе возвращает None.
+        return enemy_piece_id
 
     def __turn_into_piece(self, board):
         """ Метод для превращения в выбранную
@@ -200,11 +198,12 @@ class Pawn(Piece):
 
         return None
 
-    def _check_move(self, from_where, to_where):
+    def _check_move(self, board, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
-            print('You cannot move it backward')
-            return False
+            if board.get_color(to_where[0], to_where[1]) != self.enemy_color:
+                print('You cannot move it backward')
+                return False
         if from_where == to_where:
             print('Inappropriate command')
             return False
@@ -304,7 +303,8 @@ class Knight(Piece):
     def _get_all_moves(self, board):
         current_position = (self.y, self.x)
         self.moves.clear()
-        directions, moves = [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, -2), (1, 2), (-1, 2), (-1, -2)], []
+        directions, moves = [(2, 1), (2, -1), (-2, 1),
+                             (-2, -1), (1, -2), (1, 2), (-1, 2), (-1, -2)], []
         for direction in directions:
             new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
             if new_position[0] < 0 or new_position[1] < 0:
