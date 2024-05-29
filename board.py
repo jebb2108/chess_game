@@ -44,9 +44,13 @@ class Board:
 
     def print_board(self):
         # Вывод доски на экран.
-        res = ''
+        res = '\n   |=================|\n'
+        count = 9
         for y in range(8):
-            res += ''.join(map(str, self.board[y])) + '\n'
+            res += ' {} | '.format(count-1)
+            res += ' '.join(map(str, self.board[y])) + f' | {count-1}\n'
+            count -= 1
+        res += '   |=================|\n     A B C D E F G H\n'
         print(res)
 
     def get_class(self, coords: list):
