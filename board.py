@@ -4,10 +4,6 @@ from chess_pieces import *
 from settings import Settings
 
 
-class AbortTransaction(Exception):
-    pass
-
-
 class Board:
     """ Класс доски, отвечает за расстановку всех сущностей на доске. """
 
@@ -84,6 +80,8 @@ class Board:
         # Кладет экземпляр доски в переменную,
         # чтобы работать с ней на уровень ниже.
         board = self
+        # Если возвращает idшник фигуры, значит
+        # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
         deleted_item_id = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
@@ -105,8 +103,11 @@ class Board:
         if isinstance(obj, King):
             deleted_item_id = obj._move_king(board, to_where)
 
+        # Удаление экземпляра из общего словаря.
         if deleted_item_id is not None:
             del self.all_moves[deleted_item_id]
 
+        # Обновление всего, чтобы было затронуто перемещением.
         self._update_moves_dict()
+
         return None

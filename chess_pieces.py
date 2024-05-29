@@ -66,9 +66,10 @@ class Pawn(Piece):
         directions, moves = [(1, 0), (1, 1), (1, -1)], []
         for direction in directions:
             # Создает кортеж возможной позиции пешки для проверки условия.
-            new_position = (current_position[0] + ((direction[0]) * self.back_or_forth),
-                            (1 if current_position[1] + direction[1] < 0 else current_position[1] + direction[
-                                1]))  # noqa
+            new_position = (current_position[0] + ((direction[0]) * self.back_or_forth),  # noqa
+                            (1 if current_position[1] + direction[1] < 0
+                             else current_position[1] + direction[1]))  # noqa
+
             # Значение позиции НЕ может быть отрицательным.
             # Иначе, клетка будет считаться с конца списка!
             # Тернарным выражением я убедился, что значение всегда положительное.
@@ -79,7 +80,8 @@ class Pawn(Piece):
                 if current_allowed_moves == 2:
                     # Эта строка отвечает за направление движения и количество ходов.
                     # Последнее значение кортежа идет из предыдущей строки кода.
-                    new_position = (self.y + (self.allowed_moves * self.back_or_forth), new_position[1])
+                    new_position = (self.y + (self.allowed_moves * self.back_or_forth),
+                                    new_position[1])  # noqa
                     if self._is_valid_move(board, new_position):
                         moves.extend([new_position])
                         current_allowed_moves = 1
@@ -128,12 +130,14 @@ class Pawn(Piece):
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
         enemy_piece_id = None
 
-        # Выполняет проверки.
-        self._check_move(board, from_where, to_where)  # Проверка на заданное движение.
+        # Получает все возможные ходы.
         self._get_all_moves(board)  # Получает все возможные ходы.
 
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
+
+            # Проверка на заданное движение.
+            self._check_move(board, from_where, to_where)
 
             # Изменение динамического атрибута пешки.
             if self.allowed_moves == 2:
@@ -177,7 +181,7 @@ class Pawn(Piece):
             # Сверка ответа.
             if response == 'queen':
                 board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Queen(color)
+                board.board[self.y][self.x] = Queen(color)  # noqa
                 return board
             if response == 'rock':
                 board.board[self.y][self.x] = Empty()
@@ -185,11 +189,11 @@ class Pawn(Piece):
                 return board
             if response == 'knight':
                 board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Knight(color)
+                board.board[self.y][self.x] = Knight(color)  # noqa
                 return board
             if response == 'bishop':
                 board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Bishop(color)
+                board.board[self.y][self.x] = Bishop(color)  # noqa
                 return board
 
             else:  # При непредусмотренном ответе.
@@ -230,7 +234,7 @@ class Rock(Piece):
         for direction in directions:
             # Каждый раз устанавливает новое положение
             # исходя из текущей, неизменной позиции фигуры.
-            new_position = (current_position[0] + direction[0],
+            new_position = (current_position[0] + direction[0],  #noqa
                             current_position[1] + direction[1])
 
             # Цикл продолжает работать пока функция возвращает True.
@@ -323,26 +327,18 @@ class Knight(Piece):
         return False
 
     def _move_knight(self, board, to_where):
-
         self._get_all_moves(board)
-
         enemy_piece_id = None
-        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
         if to_where in self.moves:
 
-            # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
 
-            # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
 
-            # Задает новые координаты переменным экземпляра фигуры.
             self.y, self.x = to_where[0], to_where[1]
-
-            # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board)
             return enemy_piece_id
 
@@ -356,31 +352,24 @@ class Bishop(Piece):
         self.x = x
 
     def _get_all_moves(self, board: object) -> list[Any]:
-        # Задает переменную с текущим координатами фигуры.
+
         current_position = (self.y, self.x)
-        # Обновляет переменную экземпляра с возможными ходами.
         self.moves.clear()
-        # Простой список с направлениями: вниз, вверх, вправо, влево.
         directions, moves = [(1, 1), (-1, 1), (1, -1), (-1, -1)], []
+
         for direction in directions:
-            # Каждый раз устанавливает новое положение
-            # исходя из текущей, неизменной позиции фигуры.
+
             new_position = (current_position[0] + direction[0],
                             current_position[1] + direction[1])
 
             if new_position[0] < 0 or new_position[1] < 0:
                 break
-            # Цикл продолжает работать пока функция возвращает True.
+
             while self._is_valid_move(board, new_position):
-                # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
-                # то происходит инвертирования значения в положительное e.g -1 --> 1.
+
                 if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
-                    # Проверяет, чтобы значение координаты не стало отрицательным
-                    # тогда проверка списка начинается с конца, а этого нельзя допустить
-                    # иначе произойдет бесконечный цикл.
                     break
 
-                # Вражеская фигура должна стать последней в списке возможных ходов.
                 elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
                     moves.extend([new_position])
                     break
@@ -390,44 +379,34 @@ class Bishop(Piece):
 
                 else:
                     moves.extend([new_position])
-                    # Шаг завершен. Передаю новое значение этой переменной.
                     new_position = (new_position[0] + direction[0],
                                     new_position[1] + direction[1])
 
-        # Возвращает все возможные ходы в список.
         self.moves.extend(moves)
         return self.moves
 
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
-        # Только два возможных условия истинности:
-        # либо это поле пустое, либо оно вражеское (последнее)
         if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
              board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
-            return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
+            return True
 
         return False
 
     def _move_bishop(self, board: object, to_where: tuple) -> int or None:
-        # Получает все возможные ходы фигуры.
-        self._get_all_moves(board)
 
+        self._get_all_moves(board)
         enemy_piece_id = None
-        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+
         if to_where in self.moves:
 
-            # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
 
-            # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
 
-            # Задает новые координаты переменным экземпляра фигуры.
             self.y, self.x = to_where[0], to_where[1]
-
-            # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board)
             return enemy_piece_id
 
@@ -441,29 +420,25 @@ class Queen(Piece):
         self.x = x
 
     def _get_all_moves(self, board: object) -> list[Any]:
-        # Задает переменную с текущим координатами фигуры.
+
         current_position = (self.y, self.x)
-        # Обновляет переменную экземпляра с возможными ходами.
         self.moves.clear()
-        # Простой список с направлениями: вниз, вверх, вправо, влево.
-        directions, moves = [(1, 1), (-1, 1), (1, -1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)], []
+        directions, moves = [(1, 1), (-1, 1), (1, -1),
+                             (-1, -1), (1, 0), (-1, 0),
+                             (0, 1), (0, -1)], []
+
         for direction in directions:
-            # Каждый раз устанавливает новое положение
-            # исходя из текущей, неизменной позиции фигуры.
-            new_position = (current_position[0] + direction[0],
+
+            new_position = (current_position[0] + direction[0],  # noqa
                             current_position[1] + direction[1])
 
-            # Цикл продолжает работать пока функция возвращает True.
+            if new_position[0] < 0 or new_position[1] < 0:
+                continue
+
             while self._is_valid_move(board, new_position):
-                # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
-                # то происходит инвертирования значения в положительное e.g -1 --> 1.
                 if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
-                    # Проверяет, чтобы значение координаты не стало отрицательным
-                    # тогда проверка списка начинается с конца, а этого нельзя допустить
-                    # иначе произойдет бесконечный цикл.
                     break
 
-                # Вражеская фигура должна стать последней в списке возможных ходов.
                 elif board.get_color(new_position[0], new_position[1]) == self.enemy_color:
                     moves.extend([new_position])
                     break
@@ -473,44 +448,35 @@ class Queen(Piece):
 
                 else:
                     moves.extend([new_position])
-                    # Шаг завершен. Передаю новое значение этой переменной.
                     new_position = (new_position[0] + direction[0],
                                     new_position[1] + direction[1])
 
-        # Возвращает все возможные ходы в список.
         self.moves.extend(moves)
         return self.moves
 
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
-        # Только два возможных условия истинности:
-        # либо это поле пустое, либо оно вражеское (последнее)
         if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
              board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
-            return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
+            return True
 
         return False
 
     def _move_queen(self, board: object, to_where: tuple) -> int or None:
-        # Получает все возможные ходы фигуры.
-        self._get_all_moves(board)
 
+        self._get_all_moves(board)
         enemy_piece_id = None
-        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+
         if to_where in self.moves:
 
-            # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
 
-            # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
 
-            # Задает новые координаты переменным экземпляра фигуры.
-            self.y, self.x = to_where[0], to_where[1]
 
-            # После сделанного хода, обновляет список возможных ходов.
+            self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
             return enemy_piece_id
 
@@ -520,51 +486,54 @@ class King(Piece):
 
     def __init__(self, y, x, color):
         super().__init__(color)
-        self.y = y
-        self.x = x
-        self.safe_zone = (y, x)
+        self.y, self.x = y, x
+        self.safe_zone = (self.y, self.x)
+        self.under_attack = '{} king is safe'.format(['White', 'Black'][self.color-1])
 
     def _get_all_moves(self, board):
+
         current_position = (self.y, self.x)
         self.moves.clear()
-        directions, moves = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)], []
+        directions, moves = [(1, 0), (-1, 0), (0, 1),
+                             (0, -1), (1, 1), (1, -1),
+                             (-1, 1), (-1, -1)], []
+
         for direction in directions:
-            new_position = (current_position[0] + direction[0], current_position[1] + direction[1])
+            new_position = (current_position[0] + direction[0],
+                            current_position[1] + direction[1])
+
             if new_position[0] < 0 or new_position[1] < 0:
                 continue
+
             elif self.is_valid_move(board, new_position):
                 moves.extend([new_position])
-                continue
 
         self.moves.extend(moves)
         return moves
 
     def is_valid_move(self, board, new_position):
+
         if (board.get_color(new_position[0], new_position[1]) == Color.empty or
                 board.get_color(new_position[0], new_position[1]) == self.enemy_color):
             return True
+
         return False
 
     def _move_king(self, board, to_where):
 
         self._get_all_moves(board)
-
         enemy_piece_id = None
-        # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
+
         if to_where in self.moves:
 
-            # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
 
-            # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
 
-            # Задает новые координаты переменным экземпляра фигуры.
             self.y, self.x = to_where[0], to_where[1]
-
-            # После сделанного хода, обновляет список возможных ходов.
+            self.safe_zone = (self.y, self.x)
             self._get_all_moves(board)
             return enemy_piece_id
