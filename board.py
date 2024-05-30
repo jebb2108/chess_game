@@ -63,7 +63,7 @@ class Board:
         if isinstance(obj, Bishop): return 'class.Bishop'
         if isinstance(obj, Queen): return 'class.Queen'
         if isinstance(obj, King): return 'class.King'
-        return 'Unknown type.'
+        return False
 
     def get_color(self, y, x):
         # Простой метод для определения цвета
@@ -108,10 +108,18 @@ class Board:
             deleted_item_id = obj._move_king(board, to_where)
 
         # Удаление экземпляра из общего словаря.
-        if deleted_item_id is not None:
+
+        if deleted_item_id is not None and deleted_item_id > 1:
             del self.all_moves[deleted_item_id]
+            # Обновление всего, чтобы
+            # было затронуто перемещением.
+            self._update_moves_dict()
+            return True
 
-        # Обновление всего, чтобы было затронуто перемещением.
-        self._update_moves_dict()
+        elif deleted_item_id is not None:
+            self._update_moves_dict()
+            return True
 
-        return None
+
+
+        return False

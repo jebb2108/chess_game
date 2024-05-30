@@ -128,7 +128,7 @@ class Pawn(Piece):
 
         # В случае того, когда пешка съедает вражескую фигуру
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
-        enemy_piece_id = None
+        result = None
 
         # Получает все возможные ходы.
         self._get_all_moves(board)  # Получает все возможные ходы.
@@ -145,7 +145,7 @@ class Pawn(Piece):
 
             # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                result = id(board.board[to_where[0]][to_where[1]])
 
             # Манипулирование доской и перемещение пешки.
             temp = board.board[self.y][self.x]
@@ -155,17 +155,22 @@ class Pawn(Piece):
             # Изменение координаты экземпляра.
             self.y, self.x = to_where[0], to_where[1]
 
+            # Каждый раз проверяет, что пешки
+            # находятся на ключевой позиции.
+            if self.y in [0, 7]:
+                # Превращение пешки в выбранную фигуру.
+                self.__turn_into_piece(board)
+                return True
+
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
+            return True
 
-        # Каждый раз проверяет, что пешки
-        # находятся на ключевой позиции.
-        elif self.y in [0, 7]:
-            # Превращение пешки в выбранную фигуру.
-            self.__turn_into_piece(board)
+
+        return result
+
 
         # Возвращает id, если есть, иначе возвращает None.
-        return enemy_piece_id
 
     def __turn_into_piece(self, board):
         """ Метод для превращения в выбранную
