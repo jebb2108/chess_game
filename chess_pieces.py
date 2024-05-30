@@ -534,6 +534,7 @@ class King(Piece):
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
 
+
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()

@@ -155,19 +155,24 @@ class GamePlay(Board):
             print('This isn`t your turn. ')
             return False
 
-        # Создаю множество всех ходов
-        all_attack_moves = set(sum([value[1] for value in my_game.all_moves.values()], []))
 
-        # Текущие положения королей
-        b_king_safe_zone = my_game.all_moves[kings.black_king][0].safe_zone
-        w_king_safe_zone = my_game.all_moves[kings.white_king][0].safe_zone
 
         # Если нужно что-то проверить, то
         # программа никогда не будет работать с реальными данными,
         # поэтому она создает копию доски для всех проверок.
-        alternative_board = Board()
-        alternative_board.board = copy.copy(self.board)
-        alternative_board.all_moves = copy.copy(self.all_moves)
+        alternative_board = self.copy_object(self)
+
+        # Создаю множество всех ходов
+        all_attack_moves = set(sum([value[1] for value in alternative_board.all_moves.values()], []))
+
+        # Текущие положения королей
+        b_king = next((value[0] for value in alternative_board.all_moves.values()
+                                  if alternative_board.get_class([value[0].y, value[0].x]) == 'class.King' and value[0].color == 2), None)  # noqa
+        b_king_safe_zone = (b_king.y, b_king.x)
+
+        w_king = next((value[0] for value in alternative_board.all_moves.values()
+                                  if alternative_board.get_class([value[0].y, value[0].x]) == 'class.King' and value[0].color == 1), None)  # noqa
+        w_king_safe_zone = (w_king.y, w_king.x)
 
         # Проверка. Король уже находится под шахом?
         if b_king_safe_zone in all_attack_moves:
@@ -209,6 +214,11 @@ class GamePlay(Board):
         #     return False
         del alternative_board
         return True
+
+    @staticmethod
+    def copy_object(obj):
+        copied = copy.deepcopy(obj)
+        return copied
 
     @staticmethod
     def auto_print():

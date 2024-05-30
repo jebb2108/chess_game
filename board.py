@@ -110,9 +110,13 @@ class Board:
         # Удаление экземпляра из общего словаря.
 
         if deleted_item_id is not None and deleted_item_id > 1:
-            del self.all_moves[deleted_item_id]
-            # Обновление всего, чтобы
-            # было затронуто перемещением.
+            try:
+                del self.all_moves[deleted_item_id]
+                # Обновление всего, чтобы
+                # было затронуто перемещением.
+            except KeyError:
+                pass
+
             self._update_moves_dict()
             return True
 
