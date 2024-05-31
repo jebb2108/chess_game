@@ -128,7 +128,7 @@ class Pawn(Piece):
 
         # В случае того, когда пешка съедает вражескую фигуру
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
-        result = None
+        enemy_piece_tuple = None
 
         # Получает все возможные ходы.
         self._get_all_moves(board)  # Получает все возможные ходы.
@@ -145,9 +145,10 @@ class Pawn(Piece):
 
             # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                result = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
 
-            # Манипулирование доской и перемещение пешки.
+                # Манипулирование доской и перемещение пешки.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
@@ -160,14 +161,12 @@ class Pawn(Piece):
             if self.y in [0, 7]:
                 # Превращение пешки в выбранную фигуру.
                 self.__turn_into_piece(board)
-                return True
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
-            return True
 
 
-        return result
+        return enemy_piece_tuple
 
 
         # Возвращает id, если есть, иначе возвращает None.
@@ -280,15 +279,16 @@ class Rock(Piece):
         # Получает все возможные ходы фигуры.
         self._get_all_moves(board)
 
-        enemy_piece_id = None
+        enemy_piece_tuple = None
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
         if to_where in self.moves:
 
             # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
 
-            # Если да, то происходит перестановка.
+                # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
@@ -298,7 +298,7 @@ class Rock(Piece):
 
             # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board)
-            return enemy_piece_id
+            return enemy_piece_tuple
 
 
 class Knight(Piece):
@@ -333,11 +333,12 @@ class Knight(Piece):
 
     def _move_knight(self, board, to_where):
         self._get_all_moves(board)
-        enemy_piece_id = None
+        enemy_piece_tuple = None
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece]
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -345,7 +346,7 @@ class Knight(Piece):
 
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
-            return enemy_piece_id
+            return enemy_piece_tuple
 
 
 class Bishop(Piece):
@@ -400,12 +401,13 @@ class Bishop(Piece):
     def _move_bishop(self, board: object, to_where: tuple) -> int or None:
 
         self._get_all_moves(board)
-        enemy_piece_id = None
+        enemy_piece_tuple = None
 
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -413,7 +415,7 @@ class Bishop(Piece):
 
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
-            return enemy_piece_id
+            return enemy_piece_tuple
 
 
 class Queen(Piece):
@@ -469,12 +471,13 @@ class Queen(Piece):
     def _move_queen(self, board: object, to_where: tuple) -> int or None:
 
         self._get_all_moves(board)
-        enemy_piece_id = None
+        enemy_piece_tuple = None
 
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -483,7 +486,7 @@ class Queen(Piece):
 
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
-            return enemy_piece_id
+            return enemy_piece_tuple
 
 
 class King(Piece):
@@ -527,12 +530,13 @@ class King(Piece):
     def _move_king(self, board, to_where):
 
         self._get_all_moves(board)
-        enemy_piece_id = None
+        enemy_piece_tuple = None
 
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
-                enemy_piece_id = id(board.board[to_where[0]][to_where[1]])
+                enemy_piece = board.board[to_where[0]][to_where[1]]
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
 
 
             temp = board.board[self.y][self.x]
@@ -542,4 +546,5 @@ class King(Piece):
             self.y, self.x = to_where[0], to_where[1]
             self.safe_zone = (self.y, self.x)
             self._get_all_moves(board)
-            return enemy_piece_id
+
+            return enemy_piece_tuple

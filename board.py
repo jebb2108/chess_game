@@ -86,7 +86,7 @@ class Board:
         board = self
         # Если возвращает idшник фигуры, значит
         # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
-        deleted_item_id = None
+        deleted_item = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
@@ -95,35 +95,47 @@ class Board:
         # Выполняет перемещение фигуры в зависимости от ее условий.
         if isinstance(obj, Pawn):
             # Выполняет основные действия ниже уровнем.
-            deleted_item_id = obj._move_pawn(board, to_where)
+            deleted_item = obj._move_pawn(board, to_where)
         if isinstance(obj, Rock):
-            deleted_item_id = obj._move_rock(board, to_where)
+            deleted_item = obj._move_rock(board, to_where)
         if isinstance(obj, Knight):
-            deleted_item_id = obj._move_knight(board, to_where)
+            deleted_item = obj._move_knight(board, to_where)
         if isinstance(obj, Bishop):
-            deleted_item_id = obj._move_bishop(board, to_where)
+            deleted_item = obj._move_bishop(board, to_where)
         if isinstance(obj, Queen):
-            deleted_item_id = obj._move_queen(board, to_where)
+            deleted_item = obj._move_queen(board, to_where)
         if isinstance(obj, King):
-            deleted_item_id = obj._move_king(board, to_where)
+            deleted_item = obj._move_king(board, to_where)
 
         # Удаление экземпляра из общего словаря.
 
-        if deleted_item_id is not None and deleted_item_id > 1:
+        if deleted_item is not None and deleted_item[0] > 1:
             try:
-                del self.all_moves[deleted_item_id]
+                del self.all_moves[deleted_item[0]]
                 # Обновление всего, чтобы
                 # было затронуто перемещением.
             except KeyError:
                 pass
 
             self._update_moves_dict()
-            return True
+            return deleted_item[1]  # Id needed in moves_dict !!!
 
-        elif deleted_item_id is not None:
+        elif deleted_item is None:
             self._update_moves_dict()
             return True
 
 
 
         return False
+
+    def force_change(self, obj, to_where, from_where, if_deleted=None):
+
+        if if_deleted:
+            self.board[from_where[0]][from_where[1]] = obj
+            self.board[to_where[0]][to_where[1]] = if_deleted
+
+        else:
+            self.board[from_where[0]][from_where[1]] = obj
+            self.board[to_where[0]][to_where[1]] = Empty()
+
+        return True

@@ -1,4 +1,5 @@
 import copy
+from pprint import pprint
 
 from board import Board
 
@@ -40,6 +41,19 @@ class GamePlay(Board):
         self.message = 'Turn to play: '
 
     def start_game(self):
+
+        # Шорт каты:
+        obj1 = self.board[6][4]
+        obj2 = self.board[1][7]
+        self.change_its_position(obj1, [4, 4])
+        self.change_its_position(obj2, [3, 7])
+        self.change_its_position(obj1, [3, 4])
+        self.change_its_position(obj2, [4, 7])
+        self.change_its_position(obj1, [2, 4])
+        self.change_its_position(obj2, [5, 7])
+
+        # pprint(self.all_moves, width=150)
+
         while True:
             self.auto_print()
             print()
@@ -140,7 +154,7 @@ class GamePlay(Board):
     def move_king(self, from_where, to_where):
         king = self.board[from_where[0]][from_where[1]]
         if self._check_king(king, from_where, to_where):
-            if self.change_its_position(king, to_where) is not False:
+            if self.change_its_position(king, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
 
@@ -160,59 +174,49 @@ class GamePlay(Board):
         # Если нужно что-то проверить, то
         # программа никогда не будет работать с реальными данными,
         # поэтому она создает копию доски для всех проверок.
-        alternative_board = self.copy_object(self)
+        # alternative_board = self.copy_object(self)
+        #
+        # # Создаю множество всех ходов
+        all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
 
-        # Создаю множество всех ходов
-        all_attack_moves = set(sum([value[1] for value in alternative_board.all_moves.values()], []))
-
-        # Текущие положения королей
-        b_king = next((value[0] for value in alternative_board.all_moves.values()
-                                  if alternative_board.get_class([value[0].y, value[0].x]) == 'class.King' and value[0].color == 2), None)  # noqa
-        b_king_safe_zone = (b_king.y, b_king.x)
-
-        w_king = next((value[0] for value in alternative_board.all_moves.values()
-                                  if alternative_board.get_class([value[0].y, value[0].x]) == 'class.King' and value[0].color == 1), None)  # noqa
-        w_king_safe_zone = (w_king.y, w_king.x)
+        # b_king_safe_zone = self.all_moves[kings.black_king][0].safe_zone
+        # w_king_safe_zone = self.all_moves[kings.white_king][0].safe_zone
 
         # Проверка. Король уже находится под шахом?
-        if b_king_safe_zone in all_attack_moves:
+        if self.all_moves[kings.black_king][0].safe_zone in all_attack_moves:
             # Да. Значит изменяет положение фигуры в копии.
-            alternative_board.change_its_position(obj, to_where)
+            if_deleted = self.change_its_position(obj, to_where)
+            all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
             # Теперь король находится под шахом?
-            if b_king_safe_zone in set(sum([value[1] for value
-                                            in alternative_board.all_moves.values()], [])):
+            if self.all_moves[kings.black_king][0].safe_zone in all_attack_moves:
                 print('Black king is under attack!')
                 # Да. Сообщение игроку.
                 # Не дает сделать ход возвращая False
-                del alternative_board
+                self.force_change(obj, to_where, from_where, if_deleted)
+
                 return False
 
             else:
                 # Иначе, если король ушел из-под шаха,
                 # возвращает True и игрок делает свой ход.
-                del alternative_board
                 return True
 
         # То же самое для белого короля.
-        if w_king_safe_zone in all_attack_moves:
-            alternative_board.change_its_position(obj, to_where)
-            if w_king_safe_zone in set(sum([value[1] for value in
-                                            alternative_board.all_moves.values()], [])):
+        if self.all_moves[kings.white_king][0].safe_zone in all_attack_moves:
+            if_deleted = self.change_its_position(obj, to_where)
+
+            if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] for value in
+                                            self.all_moves.values()], [])):
                 print('White king is under attack!')
-                del alternative_board
+                self.force_change(obj, to_where, from_where, if_deleted)
+
                 return False
 
             else:
-                del alternative_board
                 return True
 
         # Не отработав ни одно
         # условие - все хорошо и можно делать ход.
-        # if [w_king_safe_zone, b_king_safe_zone] not in all_attack_moves:
-        #     return True
-        # else:
-        #     return False
-        del alternative_board
         return True
 
     @staticmethod
