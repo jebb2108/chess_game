@@ -206,7 +206,7 @@ class Pawn(Piece):
                 'bishop': Bishop,
             }
 
-            board[self.y][self.x] = piece_mapping[response](self.y, self.x, color)
+            board.board[self.y][self.x] = piece_mapping[response](self.y, self.x, color)
 
 
         return None
