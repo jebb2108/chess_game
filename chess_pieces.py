@@ -1,6 +1,8 @@
 """ Все шахматные фигуры, состояния и их поведение. """
 from typing import Any
 
+import board
+
 
 class Color(object):
     """ Цвет, состоящий из трех значений,
@@ -130,14 +132,14 @@ class Pawn(Piece):
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
         enemy_piece_tuple = None
 
+        # Проверка на заданное движение.
+        self._check_move(board, from_where, to_where)
+
         # Получает все возможные ходы.
         self._get_all_moves(board)  # Получает все возможные ходы.
 
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
-
-            # Проверка на заданное движение.
-            self._check_move(board, from_where, to_where)
 
             # Изменение динамического атрибута пешки.
             if self.allowed_moves == 2:
@@ -215,10 +217,10 @@ class Pawn(Piece):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
             if board.get_color(to_where[0], to_where[1]) != self.enemy_color:
-                print('You cannot move it backward')
+                board.make_msg('E: You cannot move backward')
                 return False
         if from_where == to_where:
-            print('Inappropriate command')
+            board.make_msg('E: You have to make a move')
             return False
 
         return True
@@ -566,3 +568,4 @@ class King(Piece):
             return enemy_piece_tuple
 
         return False
+

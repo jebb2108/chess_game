@@ -38,32 +38,20 @@ class GamePlay(Board):
     def __init__(self):
         super().__init__()
         self.whose_turn_it_is = WhoMoves()
-        self.message = 'Turn to play: white'
+        self.message = 'Press "q" to quit'
+        self.current_move_message = 'Turn to play: white'
         self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
         self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
 
 
     def start_game(self):
 
-        # Шорт каты:
-        # obj1 = self.board[6][4]
-        # obj2 = self.board[1][7]
-        # b_king = self.all_moves[kings.black_king][0]
-        # self.change_its_position(obj1, [4, 4])
-        # self.change_its_position(obj2, [3, 7])
-        # self.change_its_position(obj1, [3, 4])
-        # self.change_its_position(obj2, [4, 7])
-        # self.change_its_position(obj1, [2, 4])
-        # self.change_its_position(obj2, [5, 7])
-        # self.change_its_position(obj1, [1, 5])
-        # self.change_its_position(b_king, [1, 5])
+        self.print_board()
 
-        # pprint(self.all_moves, width=150)
         while True:
 
-            self.auto_print()
-            print('Press "q" to quit')
-            print('***', str(self.message), '***')
+            print(self.message)
+            print('***', str(self.current_move_message), '***')
             from_where_input = input('{}'.format(self.first_beginning_message))
             if from_where_input[0].lower() == 'q':
                 break
@@ -86,7 +74,8 @@ class GamePlay(Board):
                 from_where = self.settings.transcripts[from_where_input]
                 to_where = self.settings.transcripts[to_where_input]
             except KeyError:
-                print('You mistyped. Please try again.')
+                self.make_msg('E: You mistyped. Please try again')
+                self.print_board()
 
             else:
                 res = self.get_class(from_where)
@@ -108,8 +97,8 @@ class GamePlay(Board):
         elif res == 'class.King':
             self.move_king(from_where, to_where)
         else:
-            self.message='Wrong input'
-            return False
+            self.make_msg('Wrong input')
+            return self.print_board()
 
     def move_pawn(self, from_where: list, to_where: list):
         # Каждый этот метод по сути проверяет,
@@ -126,7 +115,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def move_rock(self, from_where, to_where):
         rock = self.board[from_where[0]][from_where[1]]
@@ -136,7 +125,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def move_knight(self, from_where, to_where):
         knight = self.board[from_where[0]][from_where[1]]
@@ -146,7 +135,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def move_bishop(self, from_where, to_where):
         bishop = self.board[from_where[0]][from_where[1]]
@@ -156,7 +145,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def move_queen(self, from_where, to_where):
         queen = self.board[from_where[0]][from_where[1]]
@@ -166,7 +155,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def move_king(self, from_where, to_where):
         king = self.board[from_where[0]][from_where[1]]
@@ -176,7 +165,7 @@ class GamePlay(Board):
                 self.auto_print()
                 return None
 
-        return print('Something went wrong processing your input.')
+        return self.print_board()
 
     def _check_king(self, obj: object, from_where: list, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
@@ -243,20 +232,20 @@ class GamePlay(Board):
         # условие - все хорошо и можно делать ход.
         return True
 
-    @staticmethod
-    def copy_object(obj):
-        copied = copy.deepcopy(obj)
-        return copied
+    def make_msg(self, e):
+        self.message = e
 
     def auto_print(self):
 
-        self.message = 'Turn to play: {}'.format(
+        self.message = 'Press "q" to quit'
+
+        self.current_move_message = 'Turn to play: {}'.format(
             'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+
+        self.print_board()
 
         self.first_beginning_message = self.first_beginning_message[:26]
         self.second_beginning_message = self.second_beginning_message[:33]
-
-        self.print_board()
 
 
 # Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.
