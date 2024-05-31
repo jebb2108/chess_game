@@ -183,15 +183,6 @@ class GamePlay(Board):
             print('This isn`t your turn. ')
             return False
 
-        # Если нужно что-то проверить, то
-        # программа никогда не будет работать с реальными данными,
-        # поэтому она создает копию доски для всех проверок.
-        # alternative_board = self.copy_object(self)
-        #
-
-        # b_king_safe_zone = self.all_moves[kings.black_king][0].safe_zone
-        # w_king_safe_zone = self.all_moves[kings.white_king][0].safe_zone
-
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
         if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1

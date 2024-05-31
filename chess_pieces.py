@@ -161,11 +161,22 @@ class Pawn(Piece):
             if self.y in [0, 7]:
 
                 # Вывод сообщения
-                response = input('Type what piece would you like to have instead? '
+                response = input('Which piece would you like to have instead? '
                                  '"queen", "rock", "knight", or "bishop": ')
 
+                # Проверка на правильность введенных данных.
+                while True:
+
+                    valid_responses = ['queen', 'rock', 'knight', 'bishop']
+
+                    if response in valid_responses:
+                        break
+
+                    else:
+                        response = input('Wrong input. Please try again: ')
+
                 # Превращение пешки в выбранную фигуру.
-                self.__turn_into_piece(board, response)
+                self._turn_into_piece(board, response)
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
@@ -179,7 +190,7 @@ class Pawn(Piece):
         # Возвращает id, если есть, иначе возвращает None.
 
 
-    def __turn_into_piece(self, board, response):
+    def _turn_into_piece(self, board, response):
         """ Метод для превращения в выбранную
         фигуру после достижения пешки крайнего поля."""
 
@@ -195,13 +206,8 @@ class Pawn(Piece):
                 'bishop': Bishop,
             }
 
-            if response in piece_mapping:
+            board[self.y][self.x] = piece_mapping[response](self.y, self.x, color)
 
-                board[self.y][self.x] = Empty()
-                board[self.y][self.x] = piece_mapping[response](color)
-
-            else:  # При непредусмотренном ответе.
-                raise ValueError('Incorrect input')
 
         return None
 
@@ -268,8 +274,8 @@ class Rock(Piece):
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
         # Только два возможных условия истинности:
         # либо это поле пустое, либо оно вражеское (последнее)
-        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
-             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+        if (board.get_color(new_position[0], new_position[1])
+                in [Color.empty, self.enemy_color]):
             return True  # Возвращает истинное значение, если поле пустое и не произошла ошибка.
 
         return False
@@ -329,8 +335,8 @@ class Knight(Piece):
         return moves
 
     def is_valid_move(self, board, new_position):
-        if (board.get_color(new_position[0], new_position[1]) == Color.empty or
-                board.get_color(new_position[0], new_position[1]) == self.enemy_color):
+        if (board.get_color(new_position[0], new_position[1])
+                in [Color.empty, self.enemy_color]):
             return True
         return False
 
@@ -397,8 +403,8 @@ class Bishop(Piece):
         return self.moves
 
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
-        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
-             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+        if (board.get_color(new_position[0], new_position[1])
+                in [Color.empty, self.enemy_color]):
             return True
 
         return False
@@ -470,8 +476,8 @@ class Queen(Piece):
         return self.moves
 
     def _is_valid_move(self, board: object, new_position: tuple) -> bool:
-        if ((board.get_color(new_position[0], new_position[1]) == Color.empty or
-             board.get_color(new_position[0], new_position[1]) == self.enemy_color)):
+        if (board.get_color(new_position[0], new_position[1])
+                in [Color.empty, self.enemy_color]):
             return True
 
         return False
@@ -531,8 +537,8 @@ class King(Piece):
 
     def is_valid_move(self, board, new_position):
 
-        if (board.get_color(new_position[0], new_position[1]) == Color.empty or
-                board.get_color(new_position[0], new_position[1]) == self.enemy_color):
+        if (board.get_color(new_position[0], new_position[1])
+                in [Color.empty, self.enemy_color]):
             return True
 
         return False
