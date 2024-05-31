@@ -164,9 +164,11 @@ class Pawn(Piece):
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
+            return enemy_piece_tuple
 
 
-        return enemy_piece_tuple
+        return False
+
 
 
         # Возвращает id, если есть, иначе возвращает None.
@@ -299,7 +301,11 @@ class Rock(Piece):
 
             # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board)
+
             return enemy_piece_tuple
+
+
+        return False
 
 
 class Knight(Piece):
@@ -348,6 +354,8 @@ class Knight(Piece):
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
             return enemy_piece_tuple
+
+        return False
 
 
 class Bishop(Piece):
@@ -416,7 +424,10 @@ class Bishop(Piece):
 
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
+
             return enemy_piece_tuple
+
+        return False
 
 
 class Queen(Piece):
@@ -489,6 +500,8 @@ class Queen(Piece):
             self._get_all_moves(board)
             return enemy_piece_tuple
 
+        return False
+
 
 class King(Piece):
     img = ('\u265A', '\u2654')
@@ -549,3 +562,5 @@ class King(Piece):
             self._get_all_moves(board)
 
             return enemy_piece_tuple
+
+        return False

@@ -56,10 +56,9 @@ class GamePlay(Board):
         self.change_its_position(b_king, [1, 5])
 
         # pprint(self.all_moves, width=150)
-
         while True:
+
             self.auto_print()
-            print()
             print('Press "q" to quit')
             print(self.message, 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
             from_where_input = input('What do you want to move: ')
@@ -67,6 +66,7 @@ class GamePlay(Board):
                 break
 
             elif from_where_input == 'h+':
+                # gen0 = [(move[0].y, move[0].x) for move in self.all_moves.values()]
                 gen1 = [move[1] for move in self.all_moves.values()]
                 gen2 = [move[2] for move in self.all_moves.values()]
                 for item in zip(gen1, gen2):
@@ -89,6 +89,7 @@ class GamePlay(Board):
                 res = self.get_class(from_where)
                 self.choose_action(res, from_where, to_where)
                 print()
+
 
     def choose_action(self, res, from_where, to_where):
         if res == 'class.Pawn':
@@ -119,7 +120,6 @@ class GamePlay(Board):
             if self.change_its_position(pawn, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
-                print('here...')
                 return None
 
         return print('Something went wrong processing your input.')
@@ -135,10 +135,9 @@ class GamePlay(Board):
         return print('Something went wrong processing your input.')
 
     def move_knight(self, from_where, to_where):
-        if self.get_class(from_where) == 'class.Knight':
-            knight = self.board[from_where[0]][from_where[1]]
-            if self._check_king(knight, from_where, to_where):
-                self.change_its_position(knight, to_where)
+        knight = self.board[from_where[0]][from_where[1]]
+        if self._check_king(knight, from_where, to_where):
+            if self.change_its_position(knight, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
                 return None
