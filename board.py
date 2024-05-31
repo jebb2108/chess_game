@@ -1,4 +1,5 @@
 """ Класс шахматной доски """
+import copy
 
 from chess_pieces import *
 from settings import Settings
@@ -83,7 +84,7 @@ class Board:
         чтобы работать с низко-уровненными условиями фигур. """
         # Кладет экземпляр доски в переменную,
         # чтобы работать с ней на уровень ниже.
-        board = self
+        board_inst = self
         # Если возвращает idшник фигуры, значит
         # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
         deleted_item = None
@@ -95,17 +96,17 @@ class Board:
         # Выполняет перемещение фигуры в зависимости от ее условий.
         if isinstance(obj, Pawn):
             # Выполняет основные действия ниже уровнем.
-            deleted_item = obj._move_pawn(board, to_where)
+            deleted_item = obj._move_pawn(board_inst, to_where)
         if isinstance(obj, Rock):
-            deleted_item = obj._move_rock(board, to_where)
+            deleted_item = obj._move_rock(board_inst, to_where)
         if isinstance(obj, Knight):
-            deleted_item = obj._move_knight(board, to_where)
+            deleted_item = obj._move_knight(board_inst, to_where)
         if isinstance(obj, Bishop):
-            deleted_item = obj._move_bishop(board, to_where)
+            deleted_item = obj._move_bishop(board_inst, to_where)
         if isinstance(obj, Queen):
-            deleted_item = obj._move_queen(board, to_where)
+            deleted_item = obj._move_queen(board_inst, to_where)
         if isinstance(obj, King):
-            deleted_item = obj._move_king(board, to_where)
+            deleted_item = obj._move_king(board_inst, to_where)
 
         # Удаление экземпляра из общего словаря.
 
@@ -124,7 +125,6 @@ class Board:
             else:
                 self._update_moves_dict()
                 return True
-
 
 
         return False

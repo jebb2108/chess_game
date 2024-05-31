@@ -173,7 +173,7 @@ class GamePlay(Board):
         piece_touched = my_game.get_color(from_where[0], from_where[1])
         # Проверяет, кому принадлежит ход.
         if my_game.whose_turn_it_is.current_move != piece_touched:
-            print('This isn`t your turn. ')
+            self.make_msg('This isn`t your turn')
             return False
 
         # Проверка. Черный король находится под шахом?
@@ -190,7 +190,7 @@ class GamePlay(Board):
                                                                          self.all_moves.values()], [])):
                 # Да. Сообщение игроку.
                 # Не дает сделать ход возвращая False
-                print('Black king is under attack!')
+                self.make_msg('Black king is under attack!')
 
                 if if_deleted is True:
                     if_deleted = None
@@ -216,7 +216,7 @@ class GamePlay(Board):
                                                                          else value[1] for value in
                                                                          self.all_moves.values()], [])):  # noqa
 
-                print('White king is under attack!')
+                self.make_msg('White king is under attack!')
 
                 if if_deleted is True:
                     if_deleted = None

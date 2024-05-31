@@ -184,7 +184,7 @@ class Pawn(Piece):
             self._get_all_moves(board)
             return enemy_piece_tuple
 
-
+        board.make_msg('You cannot move there')
         return False
 
 
@@ -192,7 +192,7 @@ class Pawn(Piece):
         # Возвращает id, если есть, иначе возвращает None.
 
 
-    def _turn_into_piece(self, board, response):
+    def _turn_into_piece(self, board: object, response):
         """ Метод для превращения в выбранную
         фигуру после достижения пешки крайнего поля."""
 
@@ -213,7 +213,7 @@ class Pawn(Piece):
 
         return None
 
-    def _check_move(self, board, from_where, to_where):
+    def _check_move(self, board: object, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
             if board.get_color(to_where[0], to_where[1]) != self.enemy_color:
@@ -308,7 +308,7 @@ class Rock(Piece):
 
             return enemy_piece_tuple
 
-
+        board.make_msg('You cannot move there')
         return False
 
 
@@ -342,7 +342,7 @@ class Knight(Piece):
             return True
         return False
 
-    def _move_knight(self, board, to_where):
+    def _move_knight(self, board: object, to_where):
         self._get_all_moves(board)
         enemy_piece_tuple = None
         if to_where in self.moves:
@@ -359,6 +359,7 @@ class Knight(Piece):
             self._get_all_moves(board)
             return enemy_piece_tuple
 
+        board.make_msg('You cannot move there')
         return False
 
 
@@ -431,6 +432,7 @@ class Bishop(Piece):
 
             return enemy_piece_tuple
 
+        board.make_msg('You cannot move there')
         return False
 
 
@@ -504,6 +506,7 @@ class Queen(Piece):
             self._get_all_moves(board)
             return enemy_piece_tuple
 
+        board.make_msg('You cannot move there')
         return False
 
 
@@ -537,7 +540,7 @@ class King(Piece):
         self.moves.extend(moves)
         return moves
 
-    def is_valid_move(self, board, new_position):
+    def is_valid_move(self, board: object, new_position):
 
         if (board.get_color(new_position[0], new_position[1])
                 in [Color.empty, self.enemy_color]):
@@ -567,5 +570,7 @@ class King(Piece):
 
             return enemy_piece_tuple
 
+
+        board.make_msg('You cannot move there')
         return False
 
