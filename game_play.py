@@ -45,12 +45,15 @@ class GamePlay(Board):
         # Шорт каты:
         obj1 = self.board[6][4]
         obj2 = self.board[1][7]
+        b_king = self.all_moves[kings.black_king][0]
         self.change_its_position(obj1, [4, 4])
         self.change_its_position(obj2, [3, 7])
         self.change_its_position(obj1, [3, 4])
         self.change_its_position(obj2, [4, 7])
         self.change_its_position(obj1, [2, 4])
         self.change_its_position(obj2, [5, 7])
+        self.change_its_position(obj1, [1, 5])
+        self.change_its_position(b_king, [1, 5])
 
         # pprint(self.all_moves, width=150)
 
@@ -62,6 +65,13 @@ class GamePlay(Board):
             from_where_input = input('What do you want to move: ')
             if from_where_input[0].lower() == 'q':
                 break
+
+            elif from_where_input == 'h+':
+                gen1 = [move[1] for move in self.all_moves.values()]
+                gen2 = [move[2] for move in self.all_moves.values()]
+                for item in zip(gen1, gen2):
+                    print(item)
+
             from_where_input = from_where_input[0].title() + from_where_input[1]
 
             to_where_input = input('To where do you want to move it: ')
@@ -120,6 +130,7 @@ class GamePlay(Board):
             if self.change_its_position(rock, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
+                return None
 
         return print('Something went wrong processing your input.')
 
@@ -130,6 +141,7 @@ class GamePlay(Board):
                 self.change_its_position(knight, to_where)
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
+                return None
 
         return print('Something went wrong processing your input.')
 
@@ -139,6 +151,7 @@ class GamePlay(Board):
             if self.change_its_position(bishop, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
+                return None
 
         return print('Something went wrong processing your input.')
 
@@ -148,6 +161,7 @@ class GamePlay(Board):
             if self.change_its_position(queen, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
+                return None
 
         return print('Something went wrong processing your input.')
 
@@ -157,6 +171,7 @@ class GamePlay(Board):
             if self.change_its_position(king, to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
+                return None
 
         return print('Something went wrong processing your input.')
 
@@ -169,29 +184,32 @@ class GamePlay(Board):
             print('This isn`t your turn. ')
             return False
 
-
-
         # Если нужно что-то проверить, то
         # программа никогда не будет работать с реальными данными,
         # поэтому она создает копию доски для всех проверок.
         # alternative_board = self.copy_object(self)
         #
-        # # Создаю множество всех ходов
-        all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
 
         # b_king_safe_zone = self.all_moves[kings.black_king][0].safe_zone
         # w_king_safe_zone = self.all_moves[kings.white_king][0].safe_zone
 
-        # Проверка. Король уже находится под шахом?
-        if self.all_moves[kings.black_king][0].safe_zone in all_attack_moves:
+        # Проверка. Черный король находится под шахом?
+        # Создаю множество ходов всех белых фигур.
+        if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
+                                                                     else value[1] for value in self.all_moves.values()], [])):
             # Да. Значит изменяет положение фигуры в копии.
             if_deleted = self.change_its_position(obj, to_where)
             all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
             # Теперь король находится под шахом?
-            if self.all_moves[kings.black_king][0].safe_zone in all_attack_moves:
-                print('Black king is under attack!')
+            if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
+                                                                         else value[1] for value in self.all_moves.values()], [])):
                 # Да. Сообщение игроку.
                 # Не дает сделать ход возвращая False
+                print('Black king is under attack!')
+
+                if if_deleted is True:
+                    if_deleted = None
+
                 self.force_change(obj, to_where, from_where, if_deleted)
 
                 return False
@@ -202,12 +220,20 @@ class GamePlay(Board):
                 return True
 
         # То же самое для белого короля.
-        if self.all_moves[kings.white_king][0].safe_zone in all_attack_moves:
+        # Создаю множество ходов всех черных фигур.
+        if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
+                                                                     else value[1] for value in self.all_moves.values()], [])):  # noqa
             if_deleted = self.change_its_position(obj, to_where)
 
-            if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] for value in
-                                            self.all_moves.values()], [])):
+            # Белый король теперь в опасности?
+            if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
+                                                                         else value[1] for value in self.all_moves.values()], [])): # noqa
+
                 print('White king is under attack!')
+
+                if if_deleted is True:
+                    if_deleted = None
+
                 self.force_change(obj, to_where, from_where, if_deleted)
 
                 return False
