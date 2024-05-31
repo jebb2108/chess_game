@@ -44,7 +44,7 @@ class Board:
 
     def print_board(self):
         # Вывод доски на экран.
-        res = '\n   |=================|\n'
+        res = '\n     A B C D E F G H\n   |=================|\n'
         count = 9
         for y in range(8):
             res += ' {} | '.format(count-1)

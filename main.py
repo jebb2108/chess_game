@@ -38,7 +38,10 @@ class GamePlay(Board):
     def __init__(self):
         super().__init__()
         self.whose_turn_it_is = WhoMoves()
-        self.message = 'Turn to play: '
+        self.message = 'Turn to play: white'
+        self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
+        self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
+
 
     def start_game(self):
 
@@ -60,8 +63,8 @@ class GamePlay(Board):
 
             self.auto_print()
             print('Press "q" to quit')
-            print(self.message, 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-            from_where_input = input('What do you want to move: ')
+            print('***', str(self.message), '***')
+            from_where_input = input('{}'.format(self.first_beginning_message))
             if from_where_input[0].lower() == 'q':
                 break
 
@@ -74,7 +77,7 @@ class GamePlay(Board):
 
             from_where_input = from_where_input[0].title() + from_where_input[1]
 
-            to_where_input = input('To where do you want to move it: ')
+            to_where_input = input('{}'.format(self.second_beginning_message))
             if to_where_input[0].lower() == 'q':
                 break
             to_where_input = to_where_input[0].title() + to_where_input[1]
@@ -90,8 +93,8 @@ class GamePlay(Board):
                 self.choose_action(res, from_where, to_where)
                 print()
 
-
     def choose_action(self, res, from_where, to_where):
+
         if res == 'class.Pawn':
             self.move_pawn(from_where, to_where)
         elif res == 'class.Rock':
@@ -105,7 +108,8 @@ class GamePlay(Board):
         elif res == 'class.King':
             self.move_king(from_where, to_where)
         else:
-            raise ValueError(f'Invalid class type: {res}')
+            self.message='Wrong input'
+            return False
 
     def move_pawn(self, from_where: list, to_where: list):
         # Каждый этот метод по сути проверяет,
@@ -186,13 +190,15 @@ class GamePlay(Board):
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
         if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
-                                                                     else value[1] for value in self.all_moves.values()], [])):
+                                                                     else value[1] for value in
+                                                                     self.all_moves.values()], [])):
             # Да. Значит изменяет положение фигуры в копии.
             if_deleted = self.change_its_position(obj, to_where)
             all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
             # Теперь король находится под шахом?
             if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
-                                                                         else value[1] for value in self.all_moves.values()], [])):
+                                                                         else value[1] for value in
+                                                                         self.all_moves.values()], [])):
                 # Да. Сообщение игроку.
                 # Не дает сделать ход возвращая False
                 print('Black king is under attack!')
@@ -212,12 +218,14 @@ class GamePlay(Board):
         # То же самое для белого короля.
         # Создаю множество ходов всех черных фигур.
         if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
-                                                                     else value[1] for value in self.all_moves.values()], [])):  # noqa
+                                                                     else value[1] for value in
+                                                                     self.all_moves.values()], [])):  # noqa
             if_deleted = self.change_its_position(obj, to_where)
 
             # Белый король теперь в опасности?
             if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
-                                                                         else value[1] for value in self.all_moves.values()], [])): # noqa
+                                                                         else value[1] for value in
+                                                                         self.all_moves.values()], [])):  # noqa
 
                 print('White king is under attack!')
 
@@ -240,9 +248,15 @@ class GamePlay(Board):
         copied = copy.deepcopy(obj)
         return copied
 
-    @staticmethod
-    def auto_print():
-        my_game.print_board()
+    def auto_print(self):
+
+        self.message = 'Turn to play: {}'.format(
+            'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+
+        self.first_beginning_message = self.first_beginning_message[:26]
+        self.second_beginning_message = self.second_beginning_message[:33]
+
+        self.print_board()
 
 
 # Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.
