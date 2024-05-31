@@ -43,17 +43,17 @@ class GamePlay(Board):
     def start_game(self):
 
         # Шорт каты:
-        obj1 = self.board[6][4]
-        obj2 = self.board[1][7]
-        b_king = self.all_moves[kings.black_king][0]
-        self.change_its_position(obj1, [4, 4])
-        self.change_its_position(obj2, [3, 7])
-        self.change_its_position(obj1, [3, 4])
-        self.change_its_position(obj2, [4, 7])
-        self.change_its_position(obj1, [2, 4])
-        self.change_its_position(obj2, [5, 7])
-        self.change_its_position(obj1, [1, 5])
-        self.change_its_position(b_king, [1, 5])
+        # obj1 = self.board[6][4]
+        # obj2 = self.board[1][7]
+        # b_king = self.all_moves[kings.black_king][0]
+        # self.change_its_position(obj1, [4, 4])
+        # self.change_its_position(obj2, [3, 7])
+        # self.change_its_position(obj1, [3, 4])
+        # self.change_its_position(obj2, [4, 7])
+        # self.change_its_position(obj1, [2, 4])
+        # self.change_its_position(obj2, [5, 7])
+        # self.change_its_position(obj1, [1, 5])
+        # self.change_its_position(b_king, [1, 5])
 
         # pprint(self.all_moves, width=150)
         while True:
@@ -94,18 +94,18 @@ class GamePlay(Board):
     def choose_action(self, res, from_where, to_where):
         if res == 'class.Pawn':
             self.move_pawn(from_where, to_where)
-        if res == 'class.Rock':
+        elif res == 'class.Rock':
             self.move_rock(from_where, to_where)
-        if res == 'class.Knight':
+        elif res == 'class.Knight':
             self.move_knight(from_where, to_where)
-        if res == 'class.Bishop':
+        elif res == 'class.Bishop':
             self.move_bishop(from_where, to_where)
-        if res == 'class.Queen':
+        elif res == 'class.Queen':
             self.move_queen(from_where, to_where)
-        if res == 'class.King':
+        elif res == 'class.King':
             self.move_king(from_where, to_where)
         else:
-            return False
+            raise ValueError(f'Invalid class type: {res}')
 
     def move_pawn(self, from_where: list, to_where: list):
         # Каждый этот метод по сути проверяет,

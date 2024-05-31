@@ -159,8 +159,13 @@ class Pawn(Piece):
             # Каждый раз проверяет, что пешки
             # находятся на ключевой позиции.
             if self.y in [0, 7]:
+
+                # Вывод сообщения
+                response = input('Type what piece would you like to have instead? '
+                                 '"queen", "rock", "knight", or "bishop": ')
+
                 # Превращение пешки в выбранную фигуру.
-                self.__turn_into_piece(board)
+                self.__turn_into_piece(board, response)
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board)
@@ -174,38 +179,29 @@ class Pawn(Piece):
         # Возвращает id, если есть, иначе возвращает None.
 
 
-    def __turn_into_piece(self, board):
+    def __turn_into_piece(self, board, response):
         """ Метод для превращения в выбранную
         фигуру после достижения пешки крайнего поля."""
 
         # Запоминает цвет фигуры и кладет в переменную.
-        if self.color == 1 or 2:
-            response = input('Type what piece would you like to have instead? '
-                             '"queen", "rock", "knight", or "bishop": ')
+        if self.color in [Color.white, Color.black]:
 
             color = Color.white if self.color == 1 else Color.black
 
-            # Сверка ответа.
-            if response == 'queen':
-                board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Queen(color)  # noqa
-                return board
-            if response == 'rock':
-                board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Rock(color)  # noqa
-                return board
-            if response == 'knight':
-                board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Knight(color)  # noqa
-                return board
-            if response == 'bishop':
-                board.board[self.y][self.x] = Empty()
-                board.board[self.y][self.x] = Bishop(color)  # noqa
-                return board
+            piece_mapping = {
+                'queen': Queen,
+                'rock': Rock,
+                'knight': Knight,
+                'bishop': Bishop,
+            }
+
+            if response in piece_mapping:
+
+                board[self.y][self.x] = Empty()
+                board[self.y][self.x] = piece_mapping[response](color)
 
             else:  # При непредусмотренном ответе.
-                print('Incorrect input')
-                return False
+                raise ValueError('Incorrect input')
 
         return None
 
