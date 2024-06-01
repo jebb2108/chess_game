@@ -59,12 +59,12 @@ class Board:
         # программу делает проверку на класс на этом уровне.
         obj = self.board[coords[0]][coords[1]]
         if isinstance(obj, Pawn): return 'class.Pawn'
-        if isinstance(obj, Rock): return 'class.Rock'
-        if isinstance(obj, Knight): return 'class.Knight'
-        if isinstance(obj, Bishop): return 'class.Bishop'
-        if isinstance(obj, Queen): return 'class.Queen'
-        if isinstance(obj, King): return 'class.King'
-        return False
+        elif isinstance(obj, Rock): return 'class.Rock'
+        elif isinstance(obj, Knight): return 'class.Knight'
+        elif isinstance(obj, Bishop): return 'class.Bishop'
+        elif isinstance(obj, Queen): return 'class.Queen'
+        elif isinstance(obj, King): return 'class.King'
+        elif isinstance(obj, Empty): return 'Empty'
 
     def get_color(self, y, x):
         # Простой метод для определения цвета
@@ -87,56 +87,76 @@ class Board:
         board_inst = self
         # Если возвращает idшник фигуры, значит
         # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
-        deleted_item = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
-
+        deleted_item = None
         # Сверяет экземпляр с нужным классом фигуры.
         # Выполняет перемещение фигуры в зависимости от ее условий.
         if isinstance(obj, Pawn):
             # Выполняет основные действия ниже уровнем.
             deleted_item = obj._move_pawn(board_inst, to_where)
-        if isinstance(obj, Rock):
+        elif isinstance(obj, Rock):
             deleted_item = obj._move_rock(board_inst, to_where)
-        if isinstance(obj, Knight):
+        elif isinstance(obj, Knight):
             deleted_item = obj._move_knight(board_inst, to_where)
-        if isinstance(obj, Bishop):
+        elif isinstance(obj, Bishop):
             deleted_item = obj._move_bishop(board_inst, to_where)
-        if isinstance(obj, Queen):
+        elif isinstance(obj, Queen):
             deleted_item = obj._move_queen(board_inst, to_where)
-        if isinstance(obj, King):
+        elif isinstance(obj, King):
             deleted_item = obj._move_king(board_inst, to_where)
 
+
+        if deleted_item is False:
+            self._update_moves_dict()
+            return False
+
         # Удаление экземпляра из общего словаря.
-
-        if deleted_item is not False:
-            if deleted_item is not None:
-                try:
-                    del self.all_moves[deleted_item[0]]
-                    # Обновление всего, чтобы
-                    # было затронуто перемещением.
-                except KeyError:
-                    pass
-
-                self._update_moves_dict()
-                return deleted_item[1]  # Id needed in moves_dict !!!
-
-            else:
-                self._update_moves_dict()
-                return True
+        print('deleted:', deleted_item)
+        if deleted_item is not None:
+            print('Success???')
+            try:
+                print('key', deleted_item[0])
+                del self.all_moves[deleted_item[0]]
+                # Обновление всего, чтобы
+                # было затронуто перемещением.
+            except KeyError:
+                print('Not really ...')
+                pass
 
 
-        return False
-
-    def force_change(self, obj, to_where, from_where, if_deleted=None):
-
-        if if_deleted:
-            self.board[from_where[0]][from_where[1]] = obj
-            self.board[to_where[0]][to_where[1]] = if_deleted
+            print('Kinda success')
+            self._update_moves_dict()
+            return deleted_item  # Id needed in moves_dict !!!
 
         else:
-            self.board[from_where[0]][from_where[1]] = obj
-            self.board[to_where[0]][to_where[1]] = Empty()
+            print('Is it true? ')
+            self._update_moves_dict()
+            return True
 
-        return True
+
+    def force_change(self, obj, to_where, from_where, removed_piece=None):
+        print('state1', obj.y, obj.x)
+        if type(removed_piece) is not bool:
+
+            self.board[from_where[0]][from_where[1]] = obj
+            self.board[to_where[0]][to_where[1]] = removed_piece
+            obj.y, obj.x = from_where[0],  from_where[1]
+            print('state1', obj.y, obj.x)
+            return True
+
+
+        else:
+
+            if from_where != to_where:
+
+                self.board[from_where[0]][from_where[1]] = obj
+                self.board[to_where[0]][to_where[1]] = Empty()
+                obj.y, obj.x = from_where[0], from_where[1]
+
+                return True
+
+            return False
+
+

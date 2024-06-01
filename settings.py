@@ -116,3 +116,4 @@ class Settings:
         white_king = King(7, 4, Color.white)
         self.all_pieces.extend([black_king, white_king])
         return None
+

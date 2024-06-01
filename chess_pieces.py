@@ -148,7 +148,7 @@ class Pawn(Piece):
             # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
 
                 # Манипулирование доской и перемещение пешки.
             temp = board.board[self.y][self.x]
@@ -187,10 +187,7 @@ class Pawn(Piece):
         board.make_msg('You cannot move there')
         return False
 
-
-
         # Возвращает id, если есть, иначе возвращает None.
-
 
     def _turn_into_piece(self, board: object, response):
         """ Метод для превращения в выбранную
@@ -198,7 +195,6 @@ class Pawn(Piece):
 
         # Запоминает цвет фигуры и кладет в переменную.
         if self.color in [Color.white, Color.black]:
-
             color = Color.white if self.color == 1 else Color.black
 
             piece_mapping = {
@@ -209,7 +205,6 @@ class Pawn(Piece):
             }
 
             board.board[self.y][self.x] = piece_mapping[response](self.y, self.x, color)
-
 
         return None
 
@@ -245,7 +240,7 @@ class Rock(Piece):
         for direction in directions:
             # Каждый раз устанавливает новое положение
             # исходя из текущей, неизменной позиции фигуры.
-            new_position = (current_position[0] + direction[0],  #noqa
+            new_position = (current_position[0] + direction[0],  # noqa
                             current_position[1] + direction[1])
 
             # Цикл продолжает работать пока функция возвращает True.
@@ -293,7 +288,7 @@ class Rock(Piece):
             # Удаление вражеской фигуры из общего списка фигур.
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
+                enemy_piece_tuple = (id(enemy_piece), enemy_piece, enemy_piece.moves)
 
                 # Если да, то происходит перестановка.
             temp = board.board[self.y][self.x]
@@ -344,12 +339,13 @@ class Knight(Piece):
 
     def _move_knight(self, board: object, to_where):
         self._get_all_moves(board)
+
         enemy_piece_tuple = None
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = [id(enemy_piece), enemy_piece]
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -421,7 +417,7 @@ class Bishop(Piece):
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -486,7 +482,7 @@ class Queen(Piece):
 
         return False
 
-    def _move_queen(self, board: object, to_where: tuple) -> int or None:
+    def _move_queen(self, board: object, to_where: tuple) -> dict or None:
 
         self._get_all_moves(board)
         enemy_piece_tuple = None
@@ -494,18 +490,22 @@ class Queen(Piece):
         if to_where in self.moves:
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
+
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
+
+
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
             board.board[self.y][self.x] = Empty()
 
-
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board)
+            print('was here')
             return enemy_piece_tuple
 
+        print('was here too')
         board.make_msg('You cannot move there')
         return False
 
@@ -517,12 +517,12 @@ class King(Piece):
         super().__init__(color)
         self.y, self.x = y, x
         self.safe_zone = (self.y, self.x)
-        self.under_attack = '{} king is safe'.format(['White', 'Black'][self.color-1])
 
     def _get_all_moves(self, board):
 
-        current_position = (self.y, self.x)
         self.moves.clear()
+
+        current_position = (self.y, self.x)
         directions, moves = [(1, 0), (-1, 0), (0, 1),
                              (0, -1), (1, 1), (1, -1),
                              (-1, 1), (-1, -1)], []
@@ -557,8 +557,7 @@ class King(Piece):
 
             if board.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board.board[to_where[0]][to_where[1]]
-                enemy_piece_tuple = (id(enemy_piece), enemy_piece)
-
+                enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
 
             temp = board.board[self.y][self.x]
             board.board[to_where[0]][to_where[1]] = temp
@@ -570,7 +569,5 @@ class King(Piece):
 
             return enemy_piece_tuple
 
-
         board.make_msg('You cannot move there')
         return False
-

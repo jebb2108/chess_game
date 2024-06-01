@@ -1,5 +1,4 @@
-import copy
-from pprint import pprint
+
 
 from board import Board
 
@@ -43,17 +42,18 @@ class GamePlay(Board):
         self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
         self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
 
-
     def start_game(self):
 
         self.print_board()
+
 
         while True:
 
             print(self.message)
             print('***', str(self.current_move_message), '***')
             from_where_input = input('{}'.format(self.first_beginning_message))
-            if from_where_input[0].lower() == 'q':
+            if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
+                print('\nThe session is over')
                 break
 
             elif from_where_input == 'h+':
@@ -66,106 +66,55 @@ class GamePlay(Board):
             from_where_input = from_where_input[0].title() + from_where_input[1]
 
             to_where_input = input('{}'.format(self.second_beginning_message))
-            if to_where_input[0].lower() == 'q':
+            if to_where_input[0].lower() == 'q' or len(to_where_input) < 2:
+                print('\nThe session is over')
                 break
+
             to_where_input = to_where_input[0].title() + to_where_input[1]
 
             try:
                 from_where = self.settings.transcripts[from_where_input]
                 to_where = self.settings.transcripts[to_where_input]
+
             except KeyError:
                 self.make_msg('E: You mistyped. Please try again')
                 self.print_board()
 
             else:
                 res = self.get_class(from_where)
-                self.choose_action(res, from_where, to_where)
+                self.move_piece(res, from_where, to_where)
                 print()
 
-    def choose_action(self, res, from_where, to_where):
 
-        if res == 'class.Pawn':
-            self.move_pawn(from_where, to_where)
-        elif res == 'class.Rock':
-            self.move_rock(from_where, to_where)
-        elif res == 'class.Knight':
-            self.move_knight(from_where, to_where)
-        elif res == 'class.Bishop':
-            self.move_bishop(from_where, to_where)
-        elif res == 'class.Queen':
-            self.move_queen(from_where, to_where)
-        elif res == 'class.King':
-            self.move_king(from_where, to_where)
-        else:
+
+    def move_piece(self, res, from_where, to_where):
+
+        if res == 'Empty':
             self.make_msg('Wrong input')
             return self.print_board()
 
-    def move_pawn(self, from_where: list, to_where: list):
-        # Каждый этот метод по сути проверяет,
-        # выбрал ли пользователь правильную команду.
-        # Передаю подконтрольный экземпляр переменной.
-        pawn = self.board[from_where[0]][from_where[1]]
-        # Следующие методы проверяет, находится ли король под шахом.
-        # Если нет или это не ход игрока с битым королем, то
-        # позволяет передвинуть фигуру ниже уровнем,
-        # затем ход передается другому и печатает доску.
-        if self._check_king(pawn, from_where, to_where):
-            if self.change_its_position(pawn, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
+        obj = self.board[from_where[0]][from_where[1]]
 
+        if self._check_king(obj, from_where, to_where):
+            res = self.change_its_position(obj,  to_where)
+            print('Result:', res)
+
+            if res:
+                if self.post_check_king(obj, from_where, to_where):
+                    print('level 2')
+                    self.whose_turn_it_is.change_turn()
+                    self.auto_print()
+                    return None
+                else:
+                    print('level 3')
+                    obj.moves.clear()
+                    self.force_change(obj, from_where, to_where)
+                    return None
+
+        print('level 0')
         return self.print_board()
 
-    def move_rock(self, from_where, to_where):
-        rock = self.board[from_where[0]][from_where[1]]
-        if self._check_king(rock, from_where, to_where):
-            if self.change_its_position(rock, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
 
-        return self.print_board()
-
-    def move_knight(self, from_where, to_where):
-        knight = self.board[from_where[0]][from_where[1]]
-        if self._check_king(knight, from_where, to_where):
-            if self.change_its_position(knight, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
-
-        return self.print_board()
-
-    def move_bishop(self, from_where, to_where):
-        bishop = self.board[from_where[0]][from_where[1]]
-        if self._check_king(bishop, from_where, to_where):
-            if self.change_its_position(bishop, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
-
-        return self.print_board()
-
-    def move_queen(self, from_where, to_where):
-        queen = self.board[from_where[0]][from_where[1]]
-        if self._check_king(queen, from_where, to_where):
-            if self.change_its_position(queen, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
-
-        return self.print_board()
-
-    def move_king(self, from_where, to_where):
-        king = self.board[from_where[0]][from_where[1]]
-        if self._check_king(king, from_where, to_where):
-            if self.change_its_position(king, to_where):
-                self.whose_turn_it_is.change_turn()
-                self.auto_print()
-                return None
-
-        return self.print_board()
 
     def _check_king(self, obj: object, from_where: list, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
@@ -178,59 +127,104 @@ class GamePlay(Board):
 
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
-        if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
-                                                                     else value[1] for value in
-                                                                     self.all_moves.values()], [])):
+        if self.is_under_attack('black'):
             # Да. Значит изменяет положение фигуры в копии.
-            if_deleted = self.change_its_position(obj, to_where)
-            all_attack_moves = set(sum([value[1] for value in self.all_moves.values()], []))
+            removed_piece = self.change_its_position(obj, to_where)
             # Теперь король находится под шахом?
-            if self.all_moves[kings.black_king][0].safe_zone in set(sum([value[1] if value[0].color == 1
-                                                                         else value[1] for value in
-                                                                         self.all_moves.values()], [])):
+            if self.is_under_attack('black'):
                 # Да. Сообщение игроку.
                 # Не дает сделать ход возвращая False
                 self.make_msg('Black king is under attack!')
 
-                if if_deleted is True:
-                    if_deleted = None
 
-                self.force_change(obj, to_where, from_where, if_deleted)
-
-                return False
+                if type(removed_piece) is not bool:
+                    self.force_change(obj, to_where, from_where, removed_piece)
+                    self.all_moves[removed_piece[0]] = (removed_piece[1], removed_piece[1].moves)
+                    return False
+                else:
+                    self.force_change(obj, to_where, from_where)
+                    return False
 
             else:
                 # Иначе, если король ушел из-под шаха,
                 # возвращает True и игрок делает свой ход.
-                return True
+                if type(removed_piece) is not bool:
+                    self.force_change(obj, to_where, from_where, removed_piece[1])
+
+                else:
+                    self.force_change(obj, to_where, from_where)
+                    return True
+
 
         # То же самое для белого короля.
         # Создаю множество ходов всех черных фигур.
-        if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
-                                                                     else value[1] for value in
-                                                                     self.all_moves.values()], [])):  # noqa
-            if_deleted = self.change_its_position(obj, to_where)
+        if self.is_under_attack('white'):
+
+            removed_piece = self.change_its_position(obj, to_where)
+            print(removed_piece)
 
             # Белый король теперь в опасности?
-            if self.all_moves[kings.white_king][0].safe_zone in set(sum([value[1] if value[0].color == 2
-                                                                         else value[1] for value in
-                                                                         self.all_moves.values()], [])):  # noqa
+            if self.is_under_attack('white'):  # noqa
 
                 self.make_msg('White king is under attack!')
 
-                if if_deleted is True:
-                    if_deleted = None
+                print(removed_piece)
 
-                self.force_change(obj, to_where, from_where, if_deleted)
+                if type(removed_piece) is not bool:
+                    self.force_change(obj, to_where, from_where, removed_piece)
+                    self.all_moves[removed_piece[0]] = (removed_piece[1], removed_piece[1].moves)
+                    return False
 
-                return False
+                elif self.get_class([obj.y, obj.x]) != 'class.King':
+                    self.force_change(obj, to_where, from_where, removed_piece)
+                    return False
+
+                else:
+                    return False
 
             else:
-                return True
+                # Иначе, если король ушел из-под шаха,
+                # возвращает True и игрок делает свой ход.
+                print('Moved on to real board change')
+                if type(removed_piece) is not bool:
+                    self.force_change(obj, to_where, from_where, removed_piece[1])
 
-        # Не отработав ни одно
-        # условие - все хорошо и можно делать ход.
+                else:
+                    self.force_change(obj, to_where, from_where)
+                    return True
+
         return True
+
+    def post_check_king(self, obj, from_where, to_where):
+
+        if self.is_under_attack('black') and obj.color == 2:
+            # obj.moves.clear()
+            # self.force_change(obj, to_where, from_where)
+            self.make_msg('Black king is under attack!')
+
+            return False
+
+        if self.is_under_attack('white') and obj.color == 1:
+            obj.moves.clear()
+            self.force_change(obj, to_where, from_where)
+            self.make_msg('White king is under attack!')
+
+            return False
+
+        return True
+
+    def is_under_attack(self, color):
+
+        if color == 'black':
+
+            return (self.all_moves[kings.black_king][0].safe_zone
+                    in set(sum([value[1] if value[0].color == 1 else value[1] for value in self.all_moves.values()], [])))
+
+        elif color == 'white':
+
+            return (self.all_moves[kings.white_king][0].safe_zone
+                    in set(sum([value[1] if value[0].color == 2 else value[1] for value in self.all_moves.values()], [])))
+
 
     def make_msg(self, e):
         self.message = e
