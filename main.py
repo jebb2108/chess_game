@@ -29,6 +29,9 @@ class King(Board):
         self.black_king = id(my_game.board[0][4])
         self.white_king = id(my_game.board[7][4])
 
+        # Временная переменная для всех значений возвращаемых фигур.
+        self.object_copies = list()
+
 
 class GamePlay(Board):
     """ Класс самого высокого уровня,
@@ -93,125 +96,154 @@ class GamePlay(Board):
             self.make_msg('Wrong input')
             return self.print_board()
 
-        obj = self.board[from_where[0]][from_where[1]]
+        piece = self.board[from_where[0]][from_where[1]]
 
-        if self._check_king(obj, from_where, to_where):
-            res = self.change_its_position(obj,  to_where)
-            print('Result:', res)
+        if self._check_king(piece, from_where, to_where):
+            print('level 1')
+            if self.post_check_king(piece, from_where, to_where):
+                print('level 2', kings.object_copies)
+                self.whose_turn_it_is.change_turn()
+                self.auto_print()
+                return None
 
-            if res:
-                if self.post_check_king(obj, from_where, to_where):
-                    print('level 2')
-                    self.whose_turn_it_is.change_turn()
-                    self.auto_print()
-                    return None
-                else:
-                    print('level 3')
-                    obj.moves.clear()
-                    self.force_change(obj, from_where, to_where)
-                    return None
 
-        print('level 0')
+        print('level 0. Operation went wrong.')
         return self.print_board()
 
 
 
     def _check_king(self, obj: object, from_where: list, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
+
         # Выявляет цвет затронутой фигуры.
         piece_touched = my_game.get_color(from_where[0], from_where[1])
         # Проверяет, кому принадлежит ход.
+
         if my_game.whose_turn_it_is.current_move != piece_touched:
             self.make_msg('This isn`t your turn')
             return False
 
+
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
         if self.is_under_attack('black'):
+
             # Да. Значит изменяет положение фигуры в копии.
             removed_piece = self.change_its_position(obj, to_where)
-            # Теперь король находится под шахом?
-            if self.is_under_attack('black'):
-                # Да. Сообщение игроку.
-                # Не дает сделать ход возвращая False
-                self.make_msg('Black king is under attack!')
+            kings.object_copies.append(removed_piece if type(removed_piece) is not None else())
+            print('Check. Level 1')
 
+            # Белый король теперь в опасности?
+            if self.is_under_attack('black'):  # noqa
 
-                if type(removed_piece) is not bool:
-                    self.force_change(obj, to_where, from_where, removed_piece)
-                    self.all_moves[removed_piece[0]] = (removed_piece[1], removed_piece[1].moves)
-                    return False
-                else:
-                    self.force_change(obj, to_where, from_where)
-                    return False
+                self.make_msg('White king is under attack!')
+
+                print('Check. Level 2. False')
+
+                self.force_change(obj, to_where, from_where,
+                                  kings.object_copies)
+
+                if kings.object_copies:
+                    self.all_moves[removed_piece[0]] = (kings.object_copies[-1], [])
+                    kings.object_copies.clear()
+
+                return False
+
 
             else:
-                # Иначе, если король ушел из-под шаха,
-                # возвращает True и игрок делает свой ход.
-                if type(removed_piece) is not bool:
-                    self.force_change(obj, to_where, from_where, removed_piece[1])
 
-                else:
-                    self.force_change(obj, to_where, from_where)
-                    return True
+
+                # Иначе, проверка пройдена.
+                # Переходит к следующему этапу.
+                return True
 
 
         # То же самое для белого короля.
-        # Создаю множество ходов всех черных фигур.
-        if self.is_under_attack('white'):
+        elif self.is_under_attack('white'):
 
-            removed_piece = self.change_its_position(obj, to_where)
-            print(removed_piece)
+            res = self.change_its_position(obj, to_where)
+            if res not in [False, None]:
+                removed_piece = res[1]
+                kings.object_copies.extend(removed_piece)
+
+            print(kings.object_copies)
+            print('Check. Level 1')
 
             # Белый король теперь в опасности?
             if self.is_under_attack('white'):  # noqa
 
                 self.make_msg('White king is under attack!')
 
-                print(removed_piece)
+                print('Check. Level 2. False', kings.object_copies)
 
-                if type(removed_piece) is not bool:
-                    self.force_change(obj, to_where, from_where, removed_piece)
-                    self.all_moves[removed_piece[0]] = (removed_piece[1], removed_piece[1].moves)
-                    return False
+                self.force_change(obj, to_where, from_where, kings.object_copies if kings.object_copies != [] else None)
 
-                elif self.get_class([obj.y, obj.x]) != 'class.King':
-                    self.force_change(obj, to_where, from_where, removed_piece)
-                    return False
+                if kings.object_copies:
+                    if not isinstance(kings.object_copies[-1], object):
+                        self.all_moves[res[0]] = (kings.object_copies[-1], [])
+                        kings.object_copies.clear()
 
-                else:
-                    return False
+                return False
 
-            else:
-                # Иначе, если король ушел из-под шаха,
-                # возвращает True и игрок делает свой ход.
-                print('Moved on to real board change')
-                if type(removed_piece) is not bool:
-                    self.force_change(obj, to_where, from_where, removed_piece[1])
 
-                else:
-                    self.force_change(obj, to_where, from_where)
-                    return True
 
-        return True
+        else:
+
+                # Иначе, проверка пройдена.
+                # Переходит к следующему этапу.
+                return True
+
+
+        # Сохраняю возвращенный элемент в переменную класса King.
+        temp_res = self.change_its_position(obj, to_where)
+        kings.object_copies.append(temp_res[1]) if type(temp_res) is not bool else None
+
+        # После первоначальной проверки, делаю ход
+        # и если ход позволяет, делаю ход изменяя доску.
+        if temp_res:
+
+                # Последняя проверка.
+                return True
+
+        # При отрицательном результате
+        # останавливается и выводит False.
+        return False
+
 
     def post_check_king(self, obj, from_where, to_where):
 
         if self.is_under_attack('black') and obj.color == 2:
-            # obj.moves.clear()
-            # self.force_change(obj, to_where, from_where)
+
+            # Ничего не вышло.
+            # Обновляю список ходов.
+            # Возвращаю ход
+            obj.moves.clear()
+            self.force_change(obj, to_where, from_where, kings.object_copies[-1] if kings.object_copies else None)
             self.make_msg('Black king is under attack!')
 
+            # Обновляет.
+            kings.object_copies.clear()
+
+            # Останавливает.
             return False
 
         if self.is_under_attack('white') and obj.color == 1:
+
+            # Те же проверки, но теперь с белым королем.
             obj.moves.clear()
-            self.force_change(obj, to_where, from_where)
+            self.force_change(obj, to_where, from_where, kings.object_copies[-1] if kings.object_copies else None)
             self.make_msg('White king is under attack!')
 
+            # Обновляет.
+            kings.object_copies.clear()
+
+            # Останавливает.
             return False
 
-        return True
+        # Очищает 'кэш' фигур.
+        if self.change_its_position(obj, to_where):
+            print('Done.')
+            return True
 
     def is_under_attack(self, color):
 

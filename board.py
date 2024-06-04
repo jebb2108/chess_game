@@ -137,13 +137,23 @@ class Board:
 
 
     def force_change(self, obj, to_where, from_where, removed_piece=None):
-        print('state1', obj.y, obj.x)
-        if type(removed_piece) is not bool:
 
+
+        print('Force change. State 1. Coords:', obj.y, obj.x)
+
+        if removed_piece is not None:
+
+            # Меняю местами позиции фигур как было до изменений.
             self.board[from_where[0]][from_where[1]] = obj
+            # Тернарное выражение просто на случай отсутствия копии.
             self.board[to_where[0]][to_where[1]] = removed_piece
+
             obj.y, obj.x = from_where[0],  from_where[1]
-            print('state1', obj.y, obj.x)
+
+            print('Removed piece type not bool. Coords:', obj.y, obj.x)
+
+            self._update_moves_dict()
+
             return True
 
 
@@ -152,11 +162,14 @@ class Board:
             if from_where != to_where:
 
                 self.board[from_where[0]][from_where[1]] = obj
-                self.board[to_where[0]][to_where[1]] = Empty()
+                self.board[to_where[0]][to_where[1]] = self.board[to_where[0]][to_where[1]]
                 obj.y, obj.x = from_where[0], from_where[1]
+
+                self._update_moves_dict()
 
                 return True
 
+            print('Mistake, coords are the same for some reason.')
             return False
 
 
