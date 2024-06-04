@@ -162,7 +162,7 @@ class Board:
             if from_where != to_where:
 
                 self.board[from_where[0]][from_where[1]] = obj
-                self.board[to_where[0]][to_where[1]] = self.board[to_where[0]][to_where[1]]
+                self.board[to_where[0]][to_where[1]] = Empty()
                 obj.y, obj.x = from_where[0], from_where[1]
 
                 self._update_moves_dict()
