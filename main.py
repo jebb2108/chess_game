@@ -104,7 +104,6 @@ class GamePlay(Board):
         piece = self.board[from_where[0]][from_where[1]]
 
         if self._check_king(piece, from_where, to_where):
-            print('level 1')
             self.whose_turn_it_is.change_turn()
             self.auto_print()
             self._update_moves_dict()
@@ -144,8 +143,6 @@ class GamePlay(Board):
 
                 self.make_msg('White king is under attack!')
 
-                print('Check. Level 2. False', kings.object_copies)
-
                 if kings.object_copies:
                     self.force_change(obj, to_where, from_where, kings.object_copies)
                     if not isinstance(kings.object_copies[-1], object):
@@ -174,15 +171,10 @@ class GamePlay(Board):
                 removed_piece = res[1]
                 kings.object_copies.extend([removed_piece])
 
-            print(kings.object_copies)
-            print('Check. Level 1')
-
             # Белый король теперь в опасности?
             if self.is_under_attack('white'):  # noqa
 
                 self.make_msg('White king is under attack!')
-
-                print('Check. Level 2. False', kings.object_copies)
 
 
                 if kings.object_copies:

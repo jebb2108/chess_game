@@ -29,19 +29,19 @@ class Board:
 
     def _make_moves_dict(self):
         """ Простой метод для создания словарика ходов. """
-        board = self
+        board_inst = self
         for item in self.settings.all_pieces:
             id_num = id(item)
             icon = item.img[item.color - 1]
-            res = item, item._get_all_moves(board), icon  # noqa
+            res = item, item._get_all_moves(board_inst), icon  # noqa
             self.all_moves[id_num] = res
 
     def _update_moves_dict(self):
-        board = self
+        board_inst = self
         for key, value in self.all_moves.items():
             obj = value[0]
             icon = obj.img[obj.color - 1]
-            self.all_moves[key] = (obj, obj._get_all_moves(board), icon)  # noqa
+            self.all_moves[key] = (obj, obj._get_all_moves(board_inst), icon)  # noqa
 
     def print_board(self):
         # Вывод доски на экран.
@@ -113,33 +113,24 @@ class Board:
             return False
 
         # Удаление экземпляра из общего словаря.
-        print('deleted:', deleted_item)
         if deleted_item is not None:
-            print('Success???')
             try:
-                print('key', deleted_item[0])
                 del self.all_moves[deleted_item[0]]
                 # Обновление всего, чтобы
                 # было затронуто перемещением.
             except KeyError:
-                print('Not really ...')
                 pass
 
 
-            print('Kinda success')
             self._update_moves_dict()
             return deleted_item  # Id needed in moves_dict !!!
 
         else:
-            print('Is it true? ')
             self._update_moves_dict()
             return True
 
 
     def force_change(self, obj, to_where, from_where, removed_piece=None):
-
-
-        print('Force change. State 1. Coords:', obj.y, obj.x)
 
         if removed_piece is not None:
 
@@ -149,8 +140,6 @@ class Board:
             self.board[to_where[0]][to_where[1]] = removed_piece
 
             obj.y, obj.x = from_where[0],  from_where[1]
-
-            print('Removed piece type not bool. Coords:', obj.y, obj.x)
 
             self._update_moves_dict()
 
@@ -169,7 +158,6 @@ class Board:
 
                 return True
 
-            print('Mistake, coords are the same for some reason.')
             return False
 
 
