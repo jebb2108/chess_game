@@ -1,5 +1,4 @@
 """ Класс шахматной доски """
-import copy
 
 from chess_pieces import *
 from settings import Settings
