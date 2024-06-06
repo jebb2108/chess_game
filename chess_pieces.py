@@ -1,8 +1,6 @@
 """ Все шахматные фигуры, состояния и их поведение. """
 from typing import Any
 
-import board
-
 
 class Color(object):
     """ Цвет, состоящий из трех значений,
