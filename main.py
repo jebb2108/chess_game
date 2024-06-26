@@ -98,7 +98,7 @@ class GamePlay(Board):
     def move_piece(self, res, from_where, to_where):
 
         if res == 'Empty':
-            self.make_msg('Wrong input')
+            self.make_msg('E: You cannot move an empty space')
             return self.print_board()
 
         piece = self.board[from_where[0]][from_where[1]]
@@ -110,7 +110,6 @@ class GamePlay(Board):
             return None
 
 
-        print('level 0. Operation went wrong.')
         return self.print_board()
 
 

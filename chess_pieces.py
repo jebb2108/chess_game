@@ -22,11 +22,6 @@ class Empty(object):
     def _get_all_moves():
         return None
 
-    @staticmethod
-    def _check_move():
-        print('You cannot move an empty space')
-        return False
-
 
 class Piece:
     """ Класс шаблон для шахматной фигуры """
@@ -130,7 +125,7 @@ class Pawn(Piece):
         enemy_piece_tuple = None
 
         # Проверка на заданное движение.
-        self._check_move(board_inst, from_where, to_where)
+        if not self._check_move(board_inst, from_where, to_where): return False
 
         # Получает все возможные ходы.
         self._get_all_moves(board_inst)  # Получает все возможные ходы.
@@ -181,7 +176,7 @@ class Pawn(Piece):
             self._get_all_moves(board_inst)
             return enemy_piece_tuple
 
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
         # Возвращает id, если есть, иначе возвращает None.
@@ -209,7 +204,7 @@ class Pawn(Piece):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
             if board_inst.get_color(to_where[0], to_where[1]) != self.enemy_color:
-                board_inst.make_msg('E: You cannot move backward')
+                board_inst.make_msg('E: You cannot move backwards')
                 return False
         if from_where == to_where:
             board_inst.make_msg('E: You have to make a move')
@@ -299,7 +294,7 @@ class Rock(Piece):
 
             return enemy_piece_tuple
 
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
 
@@ -350,7 +345,7 @@ class Knight(Piece):
             self._get_all_moves(board_inst)   # noqa
             return enemy_piece_tuple
 
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
 
@@ -422,7 +417,7 @@ class Bishop(Piece):
 
             return enemy_piece_tuple
 
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
 
@@ -495,11 +490,9 @@ class Queen(Piece):
 
             self.y, self.x = to_where[0], to_where[1]
             self._get_all_moves(board_inst)
-            print('was here')
             return enemy_piece_tuple
 
-        print('was here too')
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
 
@@ -562,5 +555,5 @@ class King(Piece):
 
             return enemy_piece_tuple
 
-        board_inst.make_msg('You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
