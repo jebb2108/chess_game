@@ -142,6 +142,9 @@ class Board:
 
             self._update_moves_dict()
 
+            if isinstance(obj, King):
+                obj.safe_zone = (obj.y, obj.x)
+
             return True
 
 
@@ -154,6 +157,9 @@ class Board:
                 obj.y, obj.x = from_where[0], from_where[1]
 
                 self._update_moves_dict()
+
+                if isinstance(obj, King):
+                    obj.safe_zone = (obj.y, obj.x)
 
                 return True
 

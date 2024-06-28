@@ -72,6 +72,11 @@ class GamePlay(Board):
                 print('\nThe session is over')
                 break
 
+            elif from_where_input == 'attack' or to_where_input == 'attack':
+                self.get_attacker()
+                self.print_board()
+                continue
+
             from_where_input = from_where_input[0].title() + from_where_input[1]
             to_where_input = to_where_input[0].title() + to_where_input[1]
 
@@ -92,6 +97,15 @@ class GamePlay(Board):
                 res = self.get_class(from_where)
                 self.move_piece(res, from_where, to_where)
                 print()
+
+    def get_attacker(self):
+        for piece in self.all_moves.values():
+            if self.all_moves[kings.white_king][0].safe_zone in piece[1] if piece[0].color != 1 else():
+                return self.make_msg(f'The white king is under attack by {piece[0]}')
+            if self.all_moves[kings.black_king][0].safe_zone in piece[1] if piece[0].color != 2 else():
+                return self.make_msg(f'The black king is under attack by {piece[0]}')
+
+        return self.make_msg('No one threatens the king')
 
 
 
@@ -138,9 +152,9 @@ class GamePlay(Board):
                 kings.object_copies.extend([removed_piece])
 
             # Черный король теперь в опасности?
-            if self.is_under_attack('white'):  # noqa
+            if self.is_under_attack('black'):  # noqa
 
-                self.make_msg('White king is under attack!')
+                self.make_msg('Black king is under attack!')
 
                 if kings.object_copies:
                     self.force_change(obj, to_where, from_where, kings.object_copies)
@@ -151,7 +165,6 @@ class GamePlay(Board):
                     return False
 
                 else:
-
                     self.force_change(obj, to_where, from_where)
                     return False
 
@@ -185,9 +198,7 @@ class GamePlay(Board):
                     return False
 
                 else:
-
                     self.force_change(obj, to_where, from_where)
-
                     return False
 
 
