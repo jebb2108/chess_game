@@ -134,8 +134,6 @@ class GamePlay(Board):
             if from_where[0] == to_where[0] and to_where[1] in [2, 6]:
                 if piece.is_not_changed and self.get_color(from_where[0], from_where[1]) != 0:
 
-                    print('Success')
-
                     return True
 
                 else:
