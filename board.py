@@ -76,6 +76,41 @@ class Board:
         # Возвращает цвет фигуры.
         return color
 
+    def castle_king(self, obj, to_where):
+
+
+        all_rock_coords = {
+            [0, 2]: [0, 0],
+            [0, 6]: [0, 7],
+            [7, 2]: [7, 0],
+            [7, 6]: [7, 7]
+        }
+
+        all_rock_possible_moves = {
+            [0, 0]: [0, 3],
+            [0, 7]: [0, 5],
+            [7, 0]: [7, 3],
+            [7, 7]: [7, 5]
+        }
+
+        rock_coords = all_rock_coords[to_where]
+        rock = self.board[rock_coords[0]][rock_coords[1]]
+        rock_possible_move = all_rock_possible_moves[rock_coords]
+        if self.get_class([rock.y, rock.x]) == 'class.Rock' and rock.is_not_changed:
+            if rock.moves in [[0, 3], [0, 5], [7, 3], [7, 5]]:
+
+                king_from_where, king_to_where = [obj.y, obj.x], to_where
+                print('Great!')
+
+                self.change_its_position(rock, rock_possible_move)
+                self.force_change(obj, king_from_where, king_to_where)
+                self._update_moves_dict()
+
+            return True
+
+        else:
+            return False
+
     # noinspection PyProtectedMember
     def change_its_position(self, obj: object, to_where: list):
         """ Важный метод, который берет экземпляр доски,

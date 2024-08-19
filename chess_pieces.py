@@ -218,6 +218,7 @@ class Rock(Piece):
 
     def __init__(self, y, x, color):
         super().__init__(color)
+        self.is_not_changed = True
         self.y, self.x = y, x
         self.enemy_color = Color.white if self.color == 2 else Color.black
 
@@ -291,6 +292,8 @@ class Rock(Piece):
 
             # После сделанного хода, обновляет список возможных ходов.
             self._get_all_moves(board_inst)
+
+            self.is_not_changed = False
 
             return enemy_piece_tuple
 
@@ -502,6 +505,7 @@ class King(Piece):
     def __init__(self, y, x, color):
         super().__init__(color)
         self.y, self.x = y, x
+        self.is_not_changed = True
         self.safe_zone = (self.y, self.x)
 
     def _get_all_moves(self, board_inst):
@@ -552,6 +556,10 @@ class King(Piece):
             self.y, self.x = to_where[0], to_where[1]
             self.safe_zone = (self.y, self.x)
             self._get_all_moves(board_inst)
+
+            # Не позволяет королю сделать
+            # рокировку после сделанного хода.
+            self.is_not_changed = False
 
             return enemy_piece_tuple
 
