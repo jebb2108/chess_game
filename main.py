@@ -53,7 +53,7 @@ class GamePlay(Board):
             print('***', str(self.current_move_message), '***')
             from_where_input = input('{}'.format(self.first_beginning_message))
             if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
-                print('\nThe session is over')
+                print('\nWhite wins!' if self.whose_turn_it_is.current_move == 2 else '\nBlack wins!')
                 break
 
             # Команда разработчика.
@@ -113,12 +113,17 @@ class GamePlay(Board):
 
         if self.check_castle(piece, from_where, to_where):
 
-            self.castle_king(piece, to_where)
+            if self.castle_king(piece, to_where):
 
-            self.whose_turn_it_is.change_turn()
-            self.auto_print()
-            self._update_moves_dict()
-            return None
+                self.whose_turn_it_is.change_turn()
+                self.auto_print('Castling your king`s successful')
+                self._update_moves_dict()
+                return None
+
+            else:
+
+                self.make_msg('Impossible to castle your king')
+                return self.print_board()
 
 
         elif self.check_king(piece, from_where, to_where):
@@ -135,10 +140,6 @@ class GamePlay(Board):
                 if piece.is_not_changed and self.get_color(from_where[0], from_where[1]) != 0:
 
                     return True
-
-                else:
-                    self.make_msg('E: Impossible to castle your king')
-                    return False
 
         return False
 
@@ -320,10 +321,10 @@ class GamePlay(Board):
         """ Подставляет сообщение об ошибке. """
         self.message = e
 
-    def auto_print(self):
+    def auto_print(self, message='Press "q" to quit'):
         """Вспомогательная функция для печати доски и коррекции сообщений."""
 
-        self.message = 'Press "q" to quit'
+        self.message = message
 
         self.current_move_message = 'Turn to play: {}'.format(
             'white' if self.whose_turn_it_is.current_move == 1 else 'black')

@@ -95,7 +95,12 @@ class Board:
 
         to_where = tuple(to_where)
         rock_coords = tuple(all_rock_coords[to_where])
+
+        if self.get_class(rock_coords) != 'class.Rock':
+            return False
+
         rock = self.board[rock_coords[0]][rock_coords[1]]
+
         rock_possible_move = all_rock_possible_moves[rock_coords]
 
         if self.get_class([rock.y, rock.x]) == 'class.Rock' and rock.is_not_changed:
@@ -110,9 +115,8 @@ class Board:
 
                     return True
 
-        else:
 
-            return False
+        return False
 
     # noinspection PyProtectedMember
     def change_its_position(self, obj: object, to_where: list):
