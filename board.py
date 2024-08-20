@@ -78,30 +78,39 @@ class Board:
 
     def castle_king(self, obj, to_where):
 
+        # Вытаскиваю из настроек нужные мне значения для рокировки.
         all_rock_coords = self.settings.get_rock_coords(True)
         all_rock_possible_moves = self.settings.get_rock_moves(True)
 
-        to_where = tuple(to_where)
-        rock_coords = all_rock_coords[to_where]
+        to_where = tuple(to_where)  # Словарные ключи могут быть только неизменными кортежами.
+        rock_coords = all_rock_coords[to_where]  # Вытаскиваю значение по ключу. Перевожу все в кортежи.
 
+        # Может быть только ладьею на заданной координате.
         if self.get_class(rock_coords) != 'class.Rock':
             return False
 
+        # Создаю переменную для экземпляра.
         rock = self.board[rock_coords[0]][rock_coords[1]]
 
-        rock_possible_move = all_rock_possible_moves[rock_coords]
+        # Может быть только один ход для ладьи в рокировке.
+        # Вытаскиваю значение по местонахождению.
+        rock_possible_move = all_rock_possible_moves[tuple(rock_coords)]
 
-        if self.get_class([rock.y, rock.x]) == 'class.Rock' and rock.is_not_changed:
+        # Условие, при котором ладья не может быть тронутой.
+        if rock.is_not_changed:
             for move in rock.moves:
+                # Ладье должна быть доступна клетка перед королем.
                 if list(move) in [[0, 3], [0, 5], [7, 3], [7, 5]]:
                     king_from_where, king_to_where = [obj.y, obj.x], to_where
 
+                    # Происходит перестановка фигур и обновление словаря ходов.
                     self.change_its_position(rock, rock_possible_move)
                     self.force_change(obj, king_from_where, king_to_where)
                     self._update_moves_dict()
 
                     return True
 
+        # Если условия не соблюдены, выводит False.
         return False
 
     # noinspection PyProtectedMember

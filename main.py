@@ -111,10 +111,12 @@ class GamePlay(Board):
 
         piece = self.board[from_where[0]][from_where[1]]  # object
 
+
+        # Проверяет, если игрок хочет провести рокировку.
         if self.check_castle(piece, from_where, to_where):
-
+            # Переходит на уровень ниже и пытается совершить ее.
             if self.castle_king(piece, to_where):
-
+                # В случае успеха, производит обновление терминала.
                 self.whose_turn_it_is.change_turn()
                 self.auto_print('Castling your king`s successful')
                 self._update_moves_dict()
@@ -122,10 +124,11 @@ class GamePlay(Board):
 
             else:
 
+                # Иначе, выводит сообщение об ошибке.
                 self.make_msg('Impossible to castle your king')
                 return self.print_board()
 
-
+        # Следующее условие -- совершает обычный ход
         elif self.check_king(piece, from_where, to_where):
             self.whose_turn_it_is.change_turn()
             self.auto_print()
@@ -135,9 +138,10 @@ class GamePlay(Board):
         return self.print_board()
 
     def check_castle(self, piece, from_where, to_where):
+        """ Простейшая проверка на возможную рокировку. """
         if self.get_class(from_where) == 'class.King':
             if from_where[0] == to_where[0] and to_where[1] in [2, 6]:
-                if piece.is_not_changed and self.get_color(from_where[0], from_where[1]) != 0:
+                if piece.is_not_changed:
 
                     return True
 
