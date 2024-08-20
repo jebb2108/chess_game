@@ -7,7 +7,6 @@ from chess_pieces import *
 
 
 class Settings:
-
     transcripts = {
 
         'A1': [7, 0], 'A2': [6, 0], 'A3': [5, 0], 'A4': [4, 0],
@@ -117,3 +116,28 @@ class Settings:
         self.all_pieces.extend([black_king, white_king])
         return None
 
+    @staticmethod
+    def get_rock_coords(option=None):
+
+        if option is not None:
+            all_rock_coords = {
+                (0, 2): [0, 0],
+                (0, 6): [0, 7],
+                (7, 2): [7, 0],
+                (7, 6): [7, 7]
+            }
+
+            return dict(all_rock_coords)
+
+    @staticmethod
+    def get_rock_moves(option=None):
+
+        if option is not None:
+            all_rock_possible_moves = {
+                (0, 0): [0, 3],
+                (0, 7): [0, 5],
+                (7, 0): [7, 3],
+                (7, 7): [7, 5]
+            }
+
+            return dict(all_rock_possible_moves)

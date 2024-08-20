@@ -30,6 +30,7 @@ class Piece:
     def __init__(self, color):  # Каждая фигура должна иметь свой цвет.
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.enemy_color = 1 if self.color == Color.black else 2
+        self.is_not_changed = True
         self.moves = []
 
 
@@ -218,7 +219,6 @@ class Rock(Piece):
 
     def __init__(self, y, x, color):
         super().__init__(color)
-        self.is_not_changed = True
         self.y, self.x = y, x
         self.enemy_color = Color.white if self.color == 2 else Color.black
 
@@ -371,11 +371,11 @@ class Bishop(Piece):
                             current_position[1] + direction[1])
 
             if new_position[0] < 0 or new_position[1] < 0:
-                break
+                continue
 
             while self._is_valid_move(board_inst, new_position):
 
-                if direction[0] + direction[1] < 0 and (new_position[0] < 0 or new_position[1] < 0):
+                if new_position[0] < 0 or new_position[1] < 0:
                     break
 
                 elif board_inst.get_color(new_position[0], new_position[1]) == self.enemy_color:
@@ -505,7 +505,6 @@ class King(Piece):
     def __init__(self, y, x, color):
         super().__init__(color)
         self.y, self.x = y, x
-        self.is_not_changed = True
         self.safe_zone = (self.y, self.x)
 
     def _get_all_moves(self, board_inst):

@@ -47,8 +47,8 @@ class Board:
         res = '\n     A B C D E F G H\n   |=================|\n'
         count = 9
         for y in range(8):
-            res += ' {} | '.format(count-1)
-            res += ' '.join(map(str, self.board[y])) + f' | {count-1}\n'
+            res += ' {} | '.format(count - 1)
+            res += ' '.join(map(str, self.board[y])) + f' | {count - 1}\n'
             count -= 1
         res += '   |=================|\n     A B C D E F G H\n'
         print(res)
@@ -78,23 +78,11 @@ class Board:
 
     def castle_king(self, obj, to_where):
 
-
-        all_rock_coords = {
-            (0, 2): [0, 0],
-            (0, 6): [0, 7],
-            (7, 2): [7, 0],
-            (7, 6): [7, 7]
-        }
-
-        all_rock_possible_moves = {
-            (0, 0): [0, 3],
-            (0, 7): [0, 5],
-            (7, 0): [7, 3],
-            (7, 7): [7, 5]
-        }
+        all_rock_coords = self.settings.get_rock_coords(True)
+        all_rock_possible_moves = self.settings.get_rock_moves(True)
 
         to_where = tuple(to_where)
-        rock_coords = tuple(all_rock_coords[to_where])
+        rock_coords = all_rock_coords[to_where]
 
         if self.get_class(rock_coords) != 'class.Rock':
             return False
@@ -106,7 +94,6 @@ class Board:
         if self.get_class([rock.y, rock.x]) == 'class.Rock' and rock.is_not_changed:
             for move in rock.moves:
                 if list(move) in [[0, 3], [0, 5], [7, 3], [7, 5]]:
-
                     king_from_where, king_to_where = [obj.y, obj.x], to_where
 
                     self.change_its_position(rock, rock_possible_move)
@@ -114,7 +101,6 @@ class Board:
                     self._update_moves_dict()
 
                     return True
-
 
         return False
 
@@ -148,7 +134,6 @@ class Board:
         elif isinstance(obj, King):
             deleted_item = obj._move_king(board_inst, to_where)
 
-
         if deleted_item is False:
             self._update_moves_dict()
             return False
@@ -162,14 +147,12 @@ class Board:
             except KeyError:
                 pass
 
-
             self._update_moves_dict()
             return deleted_item  # Id needed in moves_dict !!!
 
         else:
             self._update_moves_dict()
             return True
-
 
     def force_change(self, obj, to_where, from_where, removed_piece=None):
 
@@ -180,7 +163,7 @@ class Board:
             # Тернарное выражение просто на случай отсутствия копии.
             self.board[to_where[0]][to_where[1]] = removed_piece
 
-            obj.y, obj.x = from_where[0],  from_where[1]
+            obj.y, obj.x = from_where[0], from_where[1]
 
             self._update_moves_dict()
 
@@ -206,5 +189,3 @@ class Board:
                 return True
 
             return False
-
-
