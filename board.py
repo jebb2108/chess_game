@@ -22,7 +22,6 @@ class Board:
             self.all_moves = all_moves
             self.board = board
 
-
     def _initialize(self):
         # Одноразовый метод, принимающий вложенные параметры класса
         # Settings и внедряет его экземпляры в только что созданную доску.
@@ -211,11 +210,9 @@ class Board:
 
         if board.get_color(to_where[0], to_where[1]) == obj.enemy_color:
             enemy_piece = board.board[to_where[0]][to_where[1]]
-            # НЕ РАБОТАЕТ функция ID корректно непонятно по каким причинам.
+            # Исправлено.
             gen_id = next((item_id for item_id, item_obj in board.all_moves.items() if
-                           [enemy_piece.y, enemy_piece.x] == [item_obj[0].y, item_obj[0].x]), None)
-
-        
+                           id(enemy_piece) == id(item_obj[0])), None)
 
             del board.all_moves[gen_id]
 
@@ -238,14 +235,12 @@ class Board:
                 gen_key = next((key for key, value in board.all_moves.items()
                                 if id(item) == id(value[0])), None)
 
-
                 if gen_key is None:
                     raise Exception("Object not found")
 
                 items_moves = item._get_all_moves(board)
-                value = item, items_moves, item.img[item.color-1]
+                value = item, items_moves, item.img[item.color - 1]
 
-                board.all_moves[gen_key] = value # !!!! check it !!!!
-
+                board.all_moves[gen_key] = value  # !!!! check it !!!!
 
         return None
