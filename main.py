@@ -1,3 +1,7 @@
+import copy
+from pprint import *
+from typing import Any
+
 from board import Board
 
 
@@ -48,6 +52,8 @@ class GamePlay(Board):
         self.print_board()
 
         while True:
+
+            if not self.is_end_game(self.whose_turn_it_is.current_move): break
 
             print(self.message)
             print('***', str(self.current_move_message), '***')
@@ -103,6 +109,57 @@ class GamePlay(Board):
 
         return self.make_msg('No one threatens the king')
 
+    def is_end_game(self, color_indx):
+
+        color_in_word = 'white' if color_indx == 1 else 'black'
+
+        checkmate_status = False
+
+        if self.is_under_attack(color_in_word):
+            checkmate_status = True
+
+
+        while checkmate_status:
+
+            game_stats = copy.deepcopy(my_game)
+            board_copy = copy.copy(game_stats.board)
+            movies_copy = copy.copy(game_stats.all_moves)
+            new_board = Board(board_copy, movies_copy)
+
+            tmp = game_stats.get_moves(new_board, color_indx)
+
+
+            for piece, moves in tmp:
+
+                curr_pos = list([piece.y, piece.x])
+
+                for move in moves:
+                    # Функция, которая изменяет доску в новом экземпляре.
+                    new_board.change_board(new_board, piece, curr_pos, move)
+                    # Обновляет возможные ходы в словаре после перестановки
+                    new_board.update_enemy_pieces_moves(new_board, piece.enemy_color)
+
+                    if game_stats.is_under_attack(color_in_word, new_board.all_moves):
+                        new_board.change_board(new_board, piece, move, curr_pos)
+                        # new_board.update_left_pieces(new_board)
+                        # continue
+
+                    else:
+                        # tmp = [piece.img[piece.color - 1], move]
+                        # if tmp not in pieces_ls:
+                        #     pieces_ls.append(tmp)
+
+                        checkmate_status = False
+                        # del board_copy
+                        # return True
+
+            if checkmate_status is True:
+                print('\tCheckmate!')
+                return False
+
+
+        return True
+
     def move_piece(self, cls, from_where, to_where):
 
         if cls == 'Empty':
@@ -110,7 +167,6 @@ class GamePlay(Board):
             return self.print_board()
 
         piece = self.board[from_where[0]][from_where[1]]  # object
-
 
         # Проверяет, если игрок хочет провести рокировку.
         if self.check_castle(piece, from_where, to_where):
@@ -142,7 +198,6 @@ class GamePlay(Board):
         if self.get_class(from_where) == 'class.King':
             if from_where[0] == to_where[0] and to_where[1] in [2, 6]:
                 if piece.is_not_changed:
-
                     return True
 
         return False
@@ -306,20 +361,38 @@ class GamePlay(Board):
 
         # Позволяет пройти проверку.
 
-    def is_under_attack(self, color: str) -> [True or False]:
+    def is_under_attack(self, color: str, source=None) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
 
-        if color == 'black':
+        if source:
+
+            if color == 'black':
+
+                return (source[kings.black_king][0].safe_zone
+                        in set(sum([value[1] if value[0].color == 1 else value[1] for value in source.values()], [])))
+
+            elif color == 'white':
+
+                return (source[kings.white_king][0].safe_zone
+                        in set(sum([value[1] if value[0].color == 2 else value[1] for value in source.values()], [])))
+
+
+        elif color == 'black':
 
             return (self.all_moves[kings.black_king][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 1
-                                else value[1] for value in self.all_moves.values()], [])))
+                    in set(sum([value[1] if value[0].color == 1 else value[1] for value in self.all_moves.values()], [])))
 
         elif color == 'white':
 
             return (self.all_moves[kings.white_king][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 2
-                                else value[1] for value in self.all_moves.values()], [])))
+                    in set(sum([value[1] if value[0].color == 2 else value[1] for value in self.all_moves.values()], [])))
+
+
+    def get_moves(self, obj, color_indx):
+        gen_moves = [[move[0], list(move[1])] for move in obj.all_moves.values() if move[0].color == color_indx]
+        array = list(gen_moves)
+        return array
+
 
     def make_msg(self, e):
         """ Подставляет сообщение об ошибке. """
@@ -337,6 +410,7 @@ class GamePlay(Board):
 
         self.first_beginning_message = self.first_beginning_message[:26]
         self.second_beginning_message = self.second_beginning_message[:33]
+
 
 
 # Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.

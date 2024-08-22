@@ -7,14 +7,21 @@ from settings import Settings
 class Board:
     """ Класс доски, отвечает за расстановку всех сущностей на доске. """
 
-    def __init__(self):
+    def __init__(self, board=None, all_moves=None):
         self.all_moves = dict()
-        # Создает доску в виде списка из вложенных списков.
-        # Отдельным файлом инициализирует экземпляры
-        # представляющие собой шахматные фигуры.
-        self.board = [[Empty()] * 8 for _ in range(8)]
-        self.settings = Settings()
-        self._initialize()
+        if board is None:
+            # Если еще доска не создана, то:
+            # Создает доску в виде списка из вложенных списков.
+            # Отдельным файлом инициализирует экземпляры
+            # представляющие собой шахматные фигуры.
+            self.board = [[Empty()] * 8 for _ in range(8)]
+            self.settings = Settings()
+            self._initialize()
+
+        else:
+            self.all_moves = all_moves
+            self.board = board
+
 
     def _initialize(self):
         # Одноразовый метод, принимающий вложенные параметры класса
@@ -198,3 +205,47 @@ class Board:
                 return True
 
             return False
+
+    @staticmethod
+    def change_board(board, obj, from_where, to_where):
+
+        if board.get_color(to_where[0], to_where[1]) == obj.enemy_color:
+            enemy_piece = board.board[to_where[0]][to_where[1]]
+            # НЕ РАБОТАЕТ функция ID корректно непонятно по каким причинам.
+            gen_id = next((item_id for item_id, item_obj in board.all_moves.items() if
+                           [enemy_piece.y, enemy_piece.x] == [item_obj[0].y, item_obj[0].x]), None)
+
+        
+
+            del board.all_moves[gen_id]
+
+        board.board[from_where[0]][from_where[1]] = Empty()
+        board.board[to_where[0]][to_where[1]] = obj
+
+        obj.y, obj.x = to_where[0], to_where[1]
+
+        if isinstance(obj, King):
+            obj.safe_zone = (obj.y, obj.x)
+
+        return None
+
+    @staticmethod
+    def update_enemy_pieces_moves(board, color_indx=None):
+        array = sum(board.board, [])
+        for item in array:
+            if item.color > 0 and item.color == color_indx:
+
+                gen_key = next((key for key, value in board.all_moves.items()
+                                if id(item) == id(value[0])), None)
+
+
+                if gen_key is None:
+                    raise Exception("Object not found")
+
+                items_moves = item._get_all_moves(board)
+                value = item, items_moves, item.img[item.color-1]
+
+                board.all_moves[gen_key] = value # !!!! check it !!!!
+
+
+        return None
