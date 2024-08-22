@@ -124,6 +124,7 @@ class Board:
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
+
         # Кладет экземпляр доски в переменную,
         # чтобы работать с ней на уровень ниже.
         board_inst = self
@@ -132,12 +133,17 @@ class Board:
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
-        deleted_item = None
+        deleted_item, pawn_dirs = None, []
         # Сверяет экземпляр с нужным классом фигуры.
         # Выполняет перемещение фигуры в зависимости от ее условий.
-        if isinstance(obj, Pawn):
-            # Выполняет основные действия ниже уровнем.
-            deleted_item = obj._move_pawn(board_inst, to_where)
+
+        # Выполняет основные действия ниже уровнем.
+        if isinstance(obj, Pawn):  # ИСПРАВИТЬ ОШИБКУ!
+            try:
+                deleted_item, pawn_dirs = obj._move_pawn(board_inst, to_where)
+            except TypeError:
+                pass
+
         elif isinstance(obj, Rock):
             deleted_item = obj._move_rock(board_inst, to_where)
         elif isinstance(obj, Knight):
@@ -149,12 +155,16 @@ class Board:
         elif isinstance(obj, King):
             deleted_item = obj._move_king(board_inst, to_where)
 
-        if deleted_item is False:
+        if pawn_dirs:
+            for item in pawn_dirs:
+                item[0].memory.append(item)
+
+        elif deleted_item is False:
             self._update_moves_dict()
             return False
 
         # Удаление экземпляра из общего словаря.
-        if deleted_item is not None:
+        elif deleted_item is not None:
             try:
                 del self.all_moves[deleted_item[0]]
                 # Обновление всего, чтобы

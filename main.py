@@ -111,11 +111,9 @@ class GamePlay(Board):
 
     def is_end_game(self, color_indx):
 
-        color_in_word = 'white' if color_indx == 1 else 'black'
-
         checkmate_status = False
 
-        if self.is_under_attack(color_in_word):
+        if self.is_checked(color_indx):
             checkmate_status = True
 
 
@@ -139,7 +137,7 @@ class GamePlay(Board):
                     # Обновляет возможные ходы в словаре после перестановки
                     new_board.update_enemy_pieces_moves(new_board, piece.enemy_color)
 
-                    if game_stats.is_under_attack(color_in_word, new_board.all_moves):
+                    if game_stats.is_checked(color_indx, new_board.all_moves):
                         new_board.change_board(new_board, piece, move, curr_pos)
                         # new_board.update_left_pieces(new_board)
                         # continue
@@ -185,7 +183,7 @@ class GamePlay(Board):
                 return self.print_board()
 
         # Следующее условие -- совершает обычный ход
-        elif self.check_king(piece, from_where, to_where):
+        elif self.check_king(piece, from_where, to_where, piece.color):
             self.whose_turn_it_is.change_turn()
             self.auto_print()
             self._update_moves_dict()
@@ -202,7 +200,7 @@ class GamePlay(Board):
 
         return False
 
-    def check_king(self, obj: object, from_where: list, to_where: list) -> bool:
+    def check_king(self, obj: object, from_where: list, to_where: list, color_indx: int) -> bool:
         """ Важный метод для проверки шаха королю. """
 
         # Выявляет цвет затронутой фигуры.
@@ -215,66 +213,8 @@ class GamePlay(Board):
 
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
-        if self.is_under_attack('black'):
-
-            res = self.change_its_position(obj, to_where)
-
-            if res is False:
-                return False
-            elif res not in [True, None]:
-                removed_piece = res[1]
-                kings.object_copies.extend([removed_piece])
-
-            # Черный король теперь в опасности?
-            if self.is_under_attack('black'):  # noqa
-
-                self.make_msg('Black king is under attack!')
-
-                if kings.object_copies:
-                    self.force_change(obj, to_where, from_where, kings.object_copies)
-                    if not isinstance(kings.object_copies[-1], object):
-                        self.all_moves[res[0]] = (kings.object_copies[-1], [])
-                        kings.object_copies.clear()
-
-                    return False
-
-                else:
-                    self.force_change(obj, to_where, from_where)
-                    return False
-
-            return self.post_check_king(obj, from_where, to_where)  # noqa
-
-
-        # То же самое для белого короля.
-        elif self.is_under_attack('white'):
-
-            res = self.change_its_position(obj, to_where)
-
-            if res is False:
-                return False
-
-            elif res not in [True, None]:
-                removed_piece = res[1]
-                kings.object_copies.extend([removed_piece])
-
-            # Белый король теперь в опасности?
-            if self.is_under_attack('white'):  # noqa
-
-                self.make_msg('White king is under attack!')
-
-                if kings.object_copies:
-                    self.force_change(obj, to_where, from_where, kings.object_copies)
-                    if not isinstance(kings.object_copies[-1], object):
-                        self.all_moves[res[0]] = (kings.object_copies[-1], [])
-                        kings.object_copies.clear()
-
-                    return False
-
-                else:
-                    self.force_change(obj, to_where, from_where)
-                    return False
-
-            return self.post_check_king(obj, from_where, to_where)  # noqa
+        if self.is_checked(color_indx):
+            self.remains_checked(obj, from_where, to_where, color_indx)
 
         # Если шаха не зафиксировано,
         # программа пытается переместить фигуру на доске.
@@ -291,7 +231,7 @@ class GamePlay(Board):
 
             # Так как изменения на доске уже произошли,
             # проверяет, есть ли шах королю сейчас?
-            if self.post_check_king(obj, from_where, to_where):  # noqa
+            if self.post_check_king(obj, from_where, to_where, color_indx):  # noqa
 
                 # Проверка выполнена.
                 # Фигура остается в той же позиции
@@ -316,7 +256,7 @@ class GamePlay(Board):
 
             # Два возможных исхода после последней проверки.
             # Помните, что передвижение уже выполнено.
-            if self.post_check_king(obj, from_where, to_where):  # noqa
+            if self.post_check_king(obj, from_where, to_where, color_indx):  # noqa
                 return True
 
             else:
@@ -325,30 +265,17 @@ class GamePlay(Board):
                 self.force_change(obj, to_where, from_where)
                 return False
 
-    def post_check_king(self, obj, from_where, to_where):
+    def post_check_king(self, obj, from_where, to_where, color_indx):
         """ Проверка на шах уже после сделанного хода. """
 
-        if self.is_under_attack('black') and obj.color == 2:
+        if self.is_checked(color_indx):
 
             # Ничего не вышло.
             # Обновляю список ходов.
             # Возвращаю ход
             obj.moves.clear()
             self.force_change(obj, to_where, from_where, kings.object_copies[-1] if kings.object_copies else None)
-            self.make_msg('Black king is under attack!')
-
-            # Обновляет.
-            kings.object_copies.clear()
-
-            # Останавливает.
-            return False
-
-        elif self.is_under_attack('white') and obj.color == 1:
-
-            # Те же проверки, но теперь с белым королем.
-            obj.moves.clear()
-            self.force_change(obj, to_where, from_where, kings.object_copies[-1] if kings.object_copies else None)
-            self.make_msg('White king is under attack!')
+            self.make_msg(f'{('Black', 'White')[obj.color-1]} king is under attack!')
 
             # Обновляет.
             kings.object_copies.clear()
@@ -361,29 +288,60 @@ class GamePlay(Board):
 
         # Позволяет пройти проверку.
 
-    def is_under_attack(self, color: str, source=None) -> [True or False]:
+    def remains_checked(self, obj, from_where, to_where, color_indx):
+        # Король в опасности?
+        # if self.is_under_attack(color_indx):
+
+        res = self.change_its_position(obj, to_where)
+
+        if res is False:
+            return False
+
+        elif res not in [True, None]:
+            removed_piece = res[1]
+            kings.object_copies.extend([removed_piece])
+
+        # Король теперь в опасности?
+        if self.is_checked(color_indx):  # noqa
+
+            self.make_msg(f'{('White', 'Black')[color_indx-1]} king is under attack!')
+
+            if kings.object_copies:
+                self.force_change(obj, to_where, from_where, kings.object_copies)
+
+                if not isinstance(kings.object_copies[-1], object):
+                    self.all_moves[res[0]] = (kings.object_copies[-1], [])
+                    kings.object_copies.clear()
+
+                return False
+
+            else:
+                self.force_change(obj, to_where, from_where)
+                return False
+
+        return self.post_check_king(obj, from_where, to_where, color_indx)  # noqa
+
+
+    def is_checked(self, color_indx: int, source=None) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
 
+        color = 'white' if color_indx == 1 else 'black'
+
         if source:
-
             if color == 'black':
-
                 return (source[kings.black_king][0].safe_zone
                         in set(sum([value[1] if value[0].color == 1 else value[1] for value in source.values()], [])))
 
             elif color == 'white':
-
                 return (source[kings.white_king][0].safe_zone
                         in set(sum([value[1] if value[0].color == 2 else value[1] for value in source.values()], [])))
 
 
         elif color == 'black':
-
             return (self.all_moves[kings.black_king][0].safe_zone
                     in set(sum([value[1] if value[0].color == 1 else value[1] for value in self.all_moves.values()], [])))
 
         elif color == 'white':
-
             return (self.all_moves[kings.white_king][0].safe_zone
                     in set(sum([value[1] if value[0].color == 2 else value[1] for value in self.all_moves.values()], [])))
 

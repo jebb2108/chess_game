@@ -47,7 +47,8 @@ class Pawn(Piece):
         super().__init__(color)  # Унаследование от родителя атрибутов.
         self.y, self.x = y, x  # Каждая фигура имеет свою координату.
         self.back_or_forth = None
-
+        # Список вражеских фигур на съедение.
+        self.memory = []
         self.allowed_moves = 2
 
     def _get_all_moves(self, board_inst):
@@ -117,13 +118,13 @@ class Pawn(Piece):
 
     def _move_pawn(self, board_inst: object, to_where: tuple) -> int or None:
         """ Метод приказывает переместить положение пешки. """
-
         # Создает кортеж с координатами фигуры.
         from_where = (self.y, self.x)
 
         # В случае того, когда пешка съедает вражескую фигуру
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
-        enemy_piece_tuple = None
+        # Указатель вражеской пешке, если первая проходит битое поле.
+        enemy_piece_tuple, pawn_dirs = None, []
 
         # Проверка на заданное движение.
         if not self._check_move(board_inst, from_where, to_where): return False
@@ -131,12 +132,13 @@ class Pawn(Piece):
         # Получает все возможные ходы.
         self._get_all_moves(board_inst)  # Получает все возможные ходы.
 
+        # Воспроизводит память.
+        if self.memory:
+            ls_memory = list([move for move in self.memory])
+            self.moves.extend(ls_memory)
+
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
-
-            # Изменение динамического атрибута пешки.
-            if self.allowed_moves == 2:
-                self.allowed_moves = 1
 
             # Удаление вражеской фигуры из общего списка фигур.
             if board_inst.get_color(to_where[0], to_where[1]) == self.enemy_color:
@@ -150,6 +152,32 @@ class Pawn(Piece):
 
             # Изменение координаты экземпляра.
             self.y, self.x = to_where[0], to_where[1]
+
+            # Изменение динамического атрибута пешки.
+            if self.allowed_moves == 2:
+
+                new_position_on_side= (self.y, self.x+1)
+                if (self.x+1 >= 0
+                        and self._is_valid_move(board_inst, new_position_on_side)
+                        and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
+
+                    enemy_pawn = board_inst.board[self.y][self.x+1]
+                    res = list([enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
+                    pawn_dirs.append(res)
+
+
+                new_position_on_side = (self.y, self.x-1)
+                if (self.x - 1 >= 0
+                        and self._is_valid_move(board_inst, new_position_on_side)
+                        and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
+
+                    enemy_pawn = board_inst.board[self.y][self.x-1]
+                    res = list([enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
+                    pawn_dirs.append(res)
+
+                self.allowed_moves = 1
+
+
 
             # Каждый раз проверяет, что пешки
             # находятся на ключевой позиции.
@@ -175,7 +203,7 @@ class Pawn(Piece):
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board_inst)
-            return enemy_piece_tuple
+            return enemy_piece_tuple, pawn_dirs
 
         board_inst.make_msg('E: You cannot move there')
         return False
@@ -204,8 +232,8 @@ class Pawn(Piece):
     def _check_move(self, board_inst: object, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
-            if board_inst.get_color(to_where[0], to_where[1]) != self.enemy_color:
-                board_inst.make_msg('E: You cannot move backwards')
+            if board_inst.get_color(to_where[0], to_where[1]) != self.enemy_color and not self.memory:
+                board_inst.make_msg('E: You cannot move this way')
                 return False
         if from_where == to_where:
             board_inst.make_msg('E: You have to make a move')
