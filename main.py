@@ -113,7 +113,7 @@ class GamePlay(Board):
 
         checkmate_status = False
 
-        if self.is_checked(color_indx):
+        if self.is_checked(self, color_indx):
             checkmate_status = True
 
 
@@ -137,19 +137,12 @@ class GamePlay(Board):
                     # Обновляет возможные ходы в словаре после перестановки
                     new_board.update_enemy_pieces_moves(new_board, piece.enemy_color)
 
-                    if game_stats.is_checked(color_indx, new_board.all_moves):
+                    if game_stats.is_checked(new_board, color_indx):
                         new_board.change_board(new_board, piece, move, curr_pos)
-                        # new_board.update_left_pieces(new_board)
-                        # continue
 
                     else:
-                        # tmp = [piece.img[piece.color - 1], move]
-                        # if tmp not in pieces_ls:
-                        #     pieces_ls.append(tmp)
 
                         checkmate_status = False
-                        # del board_copy
-                        # return True
 
             if checkmate_status is True:
                 print('\tCheckmate!')
@@ -213,8 +206,11 @@ class GamePlay(Board):
 
         # Проверка. Черный король находится под шахом?
         # Создаю множество ходов всех белых фигур.
-        if self.is_checked(color_indx):
-            self.remains_checked(obj, from_where, to_where, color_indx)
+        if self.is_checked(self, color_indx):
+            if self.remains_checked(obj, from_where, to_where, color_indx):
+                return True
+            else:
+                return False
 
         # Если шаха не зафиксировано,
         # программа пытается переместить фигуру на доске.
@@ -268,14 +264,14 @@ class GamePlay(Board):
     def post_check_king(self, obj, from_where, to_where, color_indx):
         """ Проверка на шах уже после сделанного хода. """
 
-        if self.is_checked(color_indx):
+        if self.is_checked(self, color_indx):
 
             # Ничего не вышло.
             # Обновляю список ходов.
             # Возвращаю ход
             obj.moves.clear()
             self.force_change(obj, to_where, from_where, kings.object_copies[-1] if kings.object_copies else None)
-            self.make_msg(f'{('Black', 'White')[obj.color-1]} king is under attack!')
+            self.make_msg(f'{('White', 'Black')[obj.color-1]} king is under attack!')
 
             # Обновляет.
             kings.object_copies.clear()
@@ -302,9 +298,9 @@ class GamePlay(Board):
             kings.object_copies.extend([removed_piece])
 
         # Король теперь в опасности?
-        if self.is_checked(color_indx):  # noqa
+        if self.is_checked(self, color_indx):  # noqa
 
-            self.make_msg(f'{('White', 'Black')[color_indx-1]} king is under attack!')
+            self.make_msg(f'{('White', 'Black')[obj.color-1]} king is under attack!')
 
             if kings.object_copies:
                 self.force_change(obj, to_where, from_where, kings.object_copies)
@@ -320,30 +316,6 @@ class GamePlay(Board):
                 return False
 
         return self.post_check_king(obj, from_where, to_where, color_indx)  # noqa
-
-
-    def is_checked(self, color_indx: int, source=None) -> [True or False]:
-        """ Проверка, если король находится в зоне атаки вражеской фигуры. """
-
-        color = 'white' if color_indx == 1 else 'black'
-
-        if source:
-            if color == 'black':
-                return (source[kings.black_king][0].safe_zone
-                        in set(sum([value[1] if value[0].color == 1 else value[1] for value in source.values()], [])))
-
-            elif color == 'white':
-                return (source[kings.white_king][0].safe_zone
-                        in set(sum([value[1] if value[0].color == 2 else value[1] for value in source.values()], [])))
-
-
-        elif color == 'black':
-            return (self.all_moves[kings.black_king][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 1 else value[1] for value in self.all_moves.values()], [])))
-
-        elif color == 'white':
-            return (self.all_moves[kings.white_king][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 2 else value[1] for value in self.all_moves.values()], [])))
 
 
     def get_moves(self, obj, color_indx):
@@ -368,6 +340,21 @@ class GamePlay(Board):
 
         self.first_beginning_message = self.first_beginning_message[:26]
         self.second_beginning_message = self.second_beginning_message[:33]
+
+
+    @staticmethod
+    def is_checked(chessboard_inst, color_indx: int) -> [True or False]:
+        """ Проверка, если король находится в зоне атаки вражеской фигуры. """
+
+        color = 'white' if color_indx == 1 else 'black'
+
+        if color == 'black':
+            return (chessboard_inst.all_moves[kings.black_king][0].safe_zone
+                    in set(sum([value[1] if value[0].color == 1 else value[1] for value in chessboard_inst.all_moves.values()], [])))
+
+        elif color == 'white':
+            return (chessboard_inst.all_moves[kings.white_king][0].safe_zone
+                    in set(sum([value[1] if value[0].color == 2 else value[1] for value in chessboard_inst.all_moves.values()], [])))
 
 
 
