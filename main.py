@@ -162,9 +162,9 @@ class GamePlay(Board):
             if self.castle_king(piece, to_where):
                 # В случае успеха, производит обновление терминала.
                 self.whose_turn_it_is.change_turn()
-                self.auto_print('Castling your king went successful')
+                self.make_msg('Castling your king went successful')
                 self._update_moves_dict()
-                return None
+                return self.auto_print()
 
             else:
 
@@ -326,23 +326,14 @@ class GamePlay(Board):
         self.message = e
         self.default_message = False
 
-    def auto_print(self, given_message=None):
+    def auto_print(self):
         """Вспомогательная функция для печати доски и коррекции сообщений."""
 
         if not self.default_message:
-
-            if given_message:
-                self.message = given_message
-                self.current_move_message = 'Turn to play: {}'.format(
-                    'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-                self.print_board()
-                return None
-
-            else:
-                self.current_move_message = 'Turn to play: {}'.format(
-                    'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-                self.print_board()
-                return None
+            self.current_move_message = 'Turn to play: {}'.format(
+                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+            self.print_board()
+            return None
 
 
         else:
