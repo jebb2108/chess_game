@@ -80,7 +80,7 @@ class GamePlay(Board):
                 break
 
             elif from_where_input == 'attack' or to_where_input == 'attack':
-                self.get_attacker()
+                self.__get_attacker()
                 self.print_board()
                 continue
 
@@ -104,14 +104,6 @@ class GamePlay(Board):
                 self.move_piece(cls, from_where, to_where)
                 print()
 
-    def get_attacker(self):
-        for piece in self.all_moves.values():
-            if self.all_moves[kings.white_king][0].safe_zone in piece[1] if piece[0].color != 1 else ():
-                return self.make_msg(f'The white king is under attack by {piece[0]}')
-            if self.all_moves[kings.black_king][0].safe_zone in piece[1] if piece[0].color != 2 else ():
-                return self.make_msg(f'The black king is under attack by {piece[0]}')
-
-        return self.make_msg('No one threatens the king')
 
     def is_end_game(self, color_indx):
 
@@ -147,6 +139,7 @@ class GamePlay(Board):
                     else:
 
                         checkmate_status = False
+                        break
 
             if checkmate_status is True:
                 print('\tCheckmate!')
@@ -358,6 +351,15 @@ class GamePlay(Board):
                 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
             self.print_board()
             return None
+
+    def __get_attacker(self):
+        for piece in self.all_moves.values():
+            if self.all_moves[kings.white_king][0].safe_zone in piece[1] if piece[0].color != 1 else ():
+                return self.make_msg(f'The white king is under attack by {piece[0]}')
+            if self.all_moves[kings.black_king][0].safe_zone in piece[1] if piece[0].color != 2 else ():
+                return self.make_msg(f'The black king is under attack by {piece[0]}')
+
+        return self.make_msg('No one threatens the king')
 
     @staticmethod
     def is_checked(chessboard_inst, color_indx: int) -> [True or False]:
