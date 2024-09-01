@@ -156,8 +156,20 @@ class Board:
             deleted_item = obj._move_king(board_inst, to_where)
 
         if pawn_dirs:
+            count=-1
             for item in pawn_dirs:
-                item[0].memory.append(item)
+                count += 1
+                """
+                :params:
+                
+                0 - данный экземпляр пешки
+                1 - вражеская пешка, которая может атаковать
+                2 - координаты для возможного контр-нападения
+                
+                """
+                item[1].memory[count] = (item[0], item[2])
+
+
 
         elif deleted_item is False:
             self._update_moves_dict()

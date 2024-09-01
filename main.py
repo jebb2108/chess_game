@@ -165,7 +165,7 @@ class GamePlay(Board):
             if self.castle_king(piece, to_where):
                 # В случае успеха, производит обновление терминала.
                 self.whose_turn_it_is.change_turn()
-                self.auto_print('Castling your king`s successful')
+                self.message = self.auto_print('Castling your king went successful')
                 self._update_moves_dict()
                 return None
 
@@ -328,18 +328,38 @@ class GamePlay(Board):
         """ Подставляет сообщение об ошибке. """
         self.message = e
 
-    def auto_print(self, message='Press "q" to quit'):
+    def auto_print(self, given_message=None):
         """Вспомогательная функция для печати доски и коррекции сообщений."""
 
-        self.message = message
+        default_message = 'Press "q" to quit'
 
-        self.current_move_message = 'Turn to play: {}'.format(
-            'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+        if self.message != default_message:
+            self.message = default_message
+            self.current_move_message = 'Turn to play: {}'.format(
+                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+            self.print_board()
+            return None
 
-        self.print_board()
+        if given_message:
+            self.message = given_message
 
-        self.first_beginning_message = self.first_beginning_message[:26]
-        self.second_beginning_message = self.second_beginning_message[:33]
+            self.current_move_message = 'Turn to play: {}'.format(
+                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+
+            self.print_board()
+
+
+        else:
+
+            self.current_move_message = 'Turn to play: {}'.format(
+                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+
+            self.print_board()
+
+            self.first_beginning_message = self.first_beginning_message[:26]
+            self.second_beginning_message = self.second_beginning_message[:33]
+
+        return default_message
 
 
     @staticmethod

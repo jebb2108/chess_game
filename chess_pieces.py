@@ -1,4 +1,6 @@
 """ Все шахматные фигуры, состояния и их поведение. """
+import sys
+from sys import exception
 from typing import Any
 
 
@@ -38,6 +40,12 @@ class Piece:
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
         # кортеж белого и черного цвета фигуры.
 
+    @staticmethod
+    def raise_exception(error_message):
+        default_message = 'Please, report it by clicking the button bellow.'
+        print(error_message, default_message, sep='\n')
+        return sys.exit()
+
 
 class Pawn(Piece):
     """ Класс для пешки """
@@ -48,7 +56,7 @@ class Pawn(Piece):
         self.y, self.x = y, x  # Каждая фигура имеет свою координату.
         self.back_or_forth = None
         # Список вражеских фигур на съедение.
-        self.memory = []
+        self.memory = {}
         self.allowed_moves = 2
 
     def _get_all_moves(self, board_inst):
@@ -134,18 +142,35 @@ class Pawn(Piece):
 
         # Воспроизводит память.
         if self.memory:
-            ls_memory = list([move for move in self.memory])
-            self.moves.extend(ls_memory)
+            new_moves = list([move[1] for move in self.memory.values()])
+            self.moves.extend(new_moves)
 
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
 
-            # Удаление вражеской фигуры из общего списка фигур.
-            if board_inst.get_color(to_where[0], to_where[1]) == self.enemy_color:
+            if self.memory:
+                # Передаю переменной кортежа вражеской фигуры
+                # все значения для удаления из общего словаря фигур.
+                enemy_piece = next((enemy_pawn[0] for enemy_pawn in self.memory.values() if enemy_pawn[0].x == to_where[1]), None)
+                try:
+                    enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
+                except AttributeError:
+                    error_message = 'Problem emerged related to the internal issue.'
+                    self.raise_exception(error_message)
+
+                else:
+                    # Удаление вражеской фигуры с поля доски
+                    # перед непосредственным передвижением данной фигуры.
+                    board_inst.board[enemy_piece.y][enemy_piece.x] = Empty()
+                    board_inst.make_msg('Eaten in passing')
+                    self.memory.clear()
+
+            # Удаление вражеской фигуры из общего словаря фигур.
+            elif board_inst.get_color(to_where[0], to_where[1]) == self.enemy_color:
                 enemy_piece = board_inst.board[to_where[0]][to_where[1]]
                 enemy_piece_tuple = [id(enemy_piece), enemy_piece, enemy_piece.moves]
 
-                # Манипулирование доской и перемещение пешки.
+            # Манипулирование доской и перемещение пешки.
             temp = board_inst.board[self.y][self.x]
             board_inst.board[to_where[0]][to_where[1]] = temp
             board_inst.board[self.y][self.x] = Empty()
@@ -154,7 +179,7 @@ class Pawn(Piece):
             self.y, self.x = to_where[0], to_where[1]
 
             # Изменение динамического атрибута пешки.
-            if self.allowed_moves == 2:
+            if self.allowed_moves == 2 and from_where[1] == to_where[1]:
 
                 new_position_on_side= (self.y, self.x+1)
                 if (self.x+1 >= 0
@@ -162,7 +187,7 @@ class Pawn(Piece):
                         and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
 
                     enemy_pawn = board_inst.board[self.y][self.x+1]
-                    res = list([enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
+                    res = list([self, enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
                     pawn_dirs.append(res)
 
 
@@ -172,7 +197,7 @@ class Pawn(Piece):
                         and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
 
                     enemy_pawn = board_inst.board[self.y][self.x-1]
-                    res = list([enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
+                    res = list([self, enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
                     pawn_dirs.append(res)
 
                 self.allowed_moves = 1
