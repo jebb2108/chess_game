@@ -188,7 +188,7 @@ class Pawn(Piece):
 
                     enemy_pawn = board_inst.board[self.y][self.x+1]
                     res = list([self, enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
-                    pawn_dirs.append(res)
+                    board_inst.pawn_dirs.append(res)
 
 
                 new_position_on_side = (self.y, self.x-1)
@@ -198,7 +198,7 @@ class Pawn(Piece):
 
                     enemy_pawn = board_inst.board[self.y][self.x-1]
                     res = list([self, enemy_pawn, tuple([self.y - (1 * self.back_or_forth), self.x])])
-                    pawn_dirs.append(res)
+                    board_inst.pawn_dirs.append(res)
 
                 self.allowed_moves = 1
 
@@ -228,7 +228,7 @@ class Pawn(Piece):
 
             # Обновление списка возможных ходов.
             self._get_all_moves(board_inst)
-            return enemy_piece_tuple, pawn_dirs
+            return enemy_piece_tuple
 
         board_inst.make_msg('E: You cannot move there')
         return False

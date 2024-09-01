@@ -43,6 +43,7 @@ class GamePlay(Board):
         super().__init__()
         self.whose_turn_it_is = WhoMoves()
         self.message = 'Press "q" to quit'
+        self.default_message = True
         self.current_move_message = 'Turn to play: white'
         self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
         self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
@@ -56,6 +57,9 @@ class GamePlay(Board):
             if not self.is_end_game(self.whose_turn_it_is.current_move): break
 
             print(self.message)
+            if not self.default_message:
+                self.default_message = True
+
             print('***', str(self.current_move_message), '***')
             from_where_input = input('{}'.format(self.first_beginning_message))
             if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
@@ -165,7 +169,7 @@ class GamePlay(Board):
             if self.castle_king(piece, to_where):
                 # В случае успеха, производит обновление терминала.
                 self.whose_turn_it_is.change_turn()
-                self.message = self.auto_print('Castling your king went successful')
+                self.auto_print('Castling your king went successful')
                 self._update_moves_dict()
                 return None
 
@@ -327,40 +331,33 @@ class GamePlay(Board):
     def make_msg(self, e):
         """ Подставляет сообщение об ошибке. """
         self.message = e
+        self.default_message = False
 
     def auto_print(self, given_message=None):
         """Вспомогательная функция для печати доски и коррекции сообщений."""
 
-        default_message = 'Press "q" to quit'
+        if not self.default_message:
 
-        if self.message != default_message:
-            self.message = default_message
+            if given_message:
+                self.message = given_message
+                self.current_move_message = 'Turn to play: {}'.format(
+                    'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+                self.print_board()
+                return None
+
+            else:
+                self.current_move_message = 'Turn to play: {}'.format(
+                    'white' if self.whose_turn_it_is.current_move == 1 else 'black')
+                self.print_board()
+                return None
+
+
+        else:
+            self.message = 'Press "q" to press'
             self.current_move_message = 'Turn to play: {}'.format(
                 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
             self.print_board()
             return None
-
-        if given_message:
-            self.message = given_message
-
-            self.current_move_message = 'Turn to play: {}'.format(
-                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-
-            self.print_board()
-
-
-        else:
-
-            self.current_move_message = 'Turn to play: {}'.format(
-                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-
-            self.print_board()
-
-            self.first_beginning_message = self.first_beginning_message[:26]
-            self.second_beginning_message = self.second_beginning_message[:33]
-
-        return default_message
-
 
     @staticmethod
     def is_checked(chessboard_inst, color_indx: int) -> [True or False]:

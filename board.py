@@ -8,6 +8,7 @@ class Board:
     """ Класс доски, отвечает за расстановку всех сущностей на доске. """
 
     def __init__(self, board=None, all_moves=None):
+        self.pawn_dirs = []
         self.all_moves = dict()
         if board is None:
             # Если еще доска не создана, то:
@@ -130,19 +131,21 @@ class Board:
         board_inst = self
         # Если возвращает idшник фигуры, значит
         # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
+        deleted_item = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
-        deleted_item, pawn_dirs = None, []
+        # deleted_item, pawn_dirs = None, []
         # Сверяет экземпляр с нужным классом фигуры.
         # Выполняет перемещение фигуры в зависимости от ее условий.
 
         # Выполняет основные действия ниже уровнем.
         if isinstance(obj, Pawn):  # ИСПРАВИТЬ ОШИБКУ!
-            try:
-                deleted_item, pawn_dirs = obj._move_pawn(board_inst, to_where)
-            except TypeError:
-                pass
+            # try:
+            #     deleted_item, pawn_dirs = obj._move_pawn(board_inst, to_where)
+            # except TypeError:
+            #     pass
+            deleted_item = obj._move_pawn(board_inst, to_where)
 
         elif isinstance(obj, Rock):
             deleted_item = obj._move_rock(board_inst, to_where)
@@ -155,9 +158,9 @@ class Board:
         elif isinstance(obj, King):
             deleted_item = obj._move_king(board_inst, to_where)
 
-        if pawn_dirs:
+        if self.pawn_dirs:
             count=-1
-            for item in pawn_dirs:
+            for item in self.pawn_dirs:
                 count += 1
                 """
                 :params:
@@ -168,6 +171,7 @@ class Board:
                 
                 """
                 item[1].memory[count] = (item[0], item[2])
+                self.pawn_dirs.clear()
 
 
 
