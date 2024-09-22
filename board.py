@@ -63,14 +63,16 @@ class Board:
     def get_class(self, coords: list):
         # Из-за того, что не могу спуститься ниже,
         # программу делает проверку на класс на этом уровне.
+        class_mapping = {
+            Pawn: 'class.Pawn',
+            Rock: 'class.Rock',
+            Knight: 'class.Knight',
+            Bishop: 'class.Bishop',
+            Queen: 'class.Queen',
+            King: 'class.King'
+        }
         obj = self.board[coords[0]][coords[1]]
-        if isinstance(obj, Pawn): return 'class.Pawn'
-        elif isinstance(obj, Rock): return 'class.Rock'
-        elif isinstance(obj, Knight): return 'class.Knight'
-        elif isinstance(obj, Bishop): return 'class.Bishop'
-        elif isinstance(obj, Queen): return 'class.Queen'
-        elif isinstance(obj, King): return 'class.King'
-        elif isinstance(obj, Empty): return 'Empty'
+        return class_mapping.get(type(obj), 'Empty')
 
     def get_color(self, y, x):
         # Простой метод для определения цвета
@@ -121,7 +123,7 @@ class Board:
         return False
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj: object, to_where: list):
+    def change_its_position(self, obj: object, to_where: tuple):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
@@ -131,44 +133,20 @@ class Board:
         board_inst = self
         # Если возвращает idшник фигуры, значит
         # экземпляр был съеден и его не должно больше быть в общей свалке фигур.
-        deleted_item = None
 
         # Для перехода на нижний уровень я конвертирую все в кортежи.
         to_where = tuple(to_where)
-        # deleted_item, pawn_dirs = None, []
-        # Сверяет экземпляр с нужным классом фигуры.
-        # Выполняет перемещение фигуры в зависимости от ее условий.
 
-        # Выполняет основные действия ниже уровнем.
-        if isinstance(obj, Pawn):  # ИСПРАВИТЬ ОШИБКУ!
-            # try:
-            #     deleted_item, pawn_dirs = obj._move_pawn(board_inst, to_where)
-            # except TypeError:
-            #     pass
-            deleted_item = obj._move_pawn(board_inst, to_where)
-
-        elif isinstance(obj, Rock):
-            deleted_item = obj._move_rock(board_inst, to_where)
-        elif isinstance(obj, Knight):
-            deleted_item = obj._move_knight(board_inst, to_where)
-        elif isinstance(obj, Bishop):
-            deleted_item = obj._move_bishop(board_inst, to_where)
-        elif isinstance(obj, Queen):
-            deleted_item = obj._move_queen(board_inst, to_where)
-        elif isinstance(obj, King):
-            deleted_item = obj._move_king(board_inst, to_where)
+        # Выполняет перемещение фигуры ниже уровнем.
+        deleted_item = obj._move_object(board_inst, to_where)
 
         if self.pawn_dirs:
-            count=-1
-            for item in self.pawn_dirs:
-                count += 1
+            for count, item in enumerate(self.pawn_dirs):
                 """
                 :params:
-                
                 0 - данный экземпляр пешки
                 1 - вражеская пешка, которая может атаковать
                 2 - координаты для возможного контр-нападения
-                
                 """
                 item[1].memory[count] = (item[0], item[2])
                 self.pawn_dirs.clear()
@@ -181,12 +159,10 @@ class Board:
 
         # Удаление экземпляра из общего словаря.
         elif deleted_item is not None:
-            try:
+            if deleted_item[0] in self.all_moves:
                 del self.all_moves[deleted_item[0]]
                 # Обновление всего, чтобы
                 # было затронуто перемещением.
-            except KeyError:
-                pass
 
             self._update_moves_dict()
             return deleted_item  # Id needed in moves_dict !!!
@@ -195,41 +171,25 @@ class Board:
             self._update_moves_dict()
             return True
 
+
     def force_change(self, obj, to_where, from_where, removed_piece=None):
 
-        if removed_piece is not None:
-
-            # Меняю местами позиции фигур как было до изменений.
-            self.board[from_where[0]][from_where[1]] = obj
-            # Тернарное выражение просто на случай отсутствия копии.
-            self.board[to_where[0]][to_where[1]] = removed_piece
-
-            obj.y, obj.x = from_where[0], from_where[1]
-
-            self._update_moves_dict()
-
-            if isinstance(obj, King):
-                obj.safe_zone = (obj.y, obj.x)
-
-            return True
-
-
-        else:
-
-            if from_where != to_where:
-
+        if removed_piece is not None or from_where != to_where:
+            if removed_piece is not None:
+                self.board[from_where[0]][from_where[1]] = obj
+                self.board[to_where[0]][to_where[1]] = removed_piece
+            else:
                 self.board[from_where[0]][from_where[1]] = obj
                 self.board[to_where[0]][to_where[1]] = Empty()
-                obj.y, obj.x = from_where[0], from_where[1]
 
-                self._update_moves_dict()
+            obj.y, obj.x = from_where[0], from_where[1]
+            self._update_moves_dict()
+            if isinstance(obj, King):
+                obj.safe_zone = (obj.y, obj.x)
+            return True
 
-                if isinstance(obj, King):
-                    obj.safe_zone = (obj.y, obj.x)
+        return False
 
-                return True
-
-            return False
 
     @staticmethod
     def change_board(board, obj, from_where, to_where):

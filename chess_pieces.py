@@ -124,7 +124,7 @@ class Pawn(Piece):
                 return True
             return False  # Условие не выполняется.
 
-    def _move_pawn(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
         """ Метод приказывает переместить положение пешки. """
         # Создает кортеж с координатами фигуры.
         from_where = (self.y, self.x)
@@ -322,7 +322,7 @@ class Rock(Piece):
 
         return False
 
-    def _move_rock(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
         # Получает все возможные ходы фигуры.
         self._get_all_moves(board_inst)
 
@@ -383,7 +383,7 @@ class Knight(Piece):
             return True
         return False
 
-    def _move_knight(self, board_inst: object, to_where):
+    def _move_object(self, board_inst: object, to_where):
         self._get_all_moves(board_inst)  # noqa
 
         enemy_piece_tuple = None
@@ -453,7 +453,7 @@ class Bishop(Piece):
 
         return False
 
-    def _move_bishop(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
 
         self._get_all_moves(board_inst)
         enemy_piece_tuple = None
@@ -526,7 +526,7 @@ class Queen(Piece):
 
         return False
 
-    def _move_queen(self, board_inst: object, to_where: tuple) -> dict or None:
+    def _move_object(self, board_inst: object, to_where: tuple) -> dict or None:
 
         self._get_all_moves(board_inst)
         enemy_piece_tuple = None
@@ -590,7 +590,7 @@ class King(Piece):
 
         return False
 
-    def _move_king(self, board_inst, to_where):
+    def _move_object(self, board_inst, to_where):
 
         self._get_all_moves(board_inst)
         enemy_piece_tuple = None
