@@ -1,6 +1,3 @@
-iniconfig==2.0.0
-packaging==24.0
-pluggy==1.5.0
-pytest~=8.3.2
-
-pip~=24.0
+pygame==2.6.0
+pygame-ce==2.5.1
+pygwidgets==1.1.2
