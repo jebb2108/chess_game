@@ -3,6 +3,7 @@ class Settings:
     GRAY = (200, 200, 200)
     DARK_GRAY = (50, 50, 50)
     LIGHT_GRAY = (240, 240, 240)
+    FRAMES_PER_SECOND = 60
 
     def __init__(self):
 
@@ -26,3 +27,6 @@ class Settings:
         self.reg_button_loc = (750, 140)
         self.reg_button_width = 110
         self.reg_button_height = 30
+
+    def draw_pawns(self):
+        pass
