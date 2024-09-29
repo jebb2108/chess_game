@@ -1,25 +1,23 @@
 import os
-from fileinput import filename
 
 import pygame
 import pygwidgets
 import sys
-import json
+
+from authorization import *
 
 
 class Main:
-
     pygame.font.init()
 
     GRAY = (200, 200, 200)
     DARK_GRAY = (50, 50, 50)
     LIGHT_GRAY = (240, 240, 240)
-    FRAMES_PER_SECOND = 30
+    FRAMES_PER_SECOND = 60
     CLOCK = pygame.time.Clock()
     pygame.display.set_caption('chess game')
 
     active = True
-
 
     def __init__(self):
         self.background_image = pygame.image.load('images/background.png')
@@ -31,62 +29,71 @@ class Main:
 
         self.login_info = dict()
 
+        self.authorization = Authorization(self.screen)
+
         self.greeting_field = pygwidgets.DisplayText(self.screen, (685, 20), fontSize=35)
-
-        self.text_field = pygwidgets.DisplayText(self.screen, (685, 20),
-                                                 'Chess Game', fontSize=40)
-
-        self.input_field_login = pygwidgets.InputText(self.screen, (680, 60),
-                                                      width=180, fontSize=40,
-                                                      backgroundColor= Main.LIGHT_GRAY,
-                                                      textColor=Main.DARK_GRAY)
-
-        self.input_field_password = pygwidgets.InputText(self.screen, (680, 100),
-                                                         width=180, fontSize=40,
-                                                         backgroundColor= Main.LIGHT_GRAY,
-                                                         textColor=Main.DARK_GRAY)
-
-        self.login_button = pygwidgets.TextButton(self.screen, (680, 140),
-                                                  'log in', width=65, height=30)
-        self.reg_button = pygwidgets.TextButton(self.screen, (750, 140),
-                                                  'registration', width=110, height=30)
 
     def run_game(self):
         pygame.init()
+        while True:
 
-        while self.active:
-            for event in pygame.event.get():
+            self.check_events()
 
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            self.screen.fill(Main.GRAY)
+            self.update_screen()
+            self.CLOCK.tick(Main.FRAMES_PER_SECOND)
 
-                if not self.login_info:
 
-                    self.input_field_login.handleEvent(event)
-                    self.input_field_password.handleEvent(event)
-                    users_login= self.input_field_login.getValue()
-                    users_password= self.input_field_password.getValue()
+    def check_events(self):
 
-                    if users_login and users_password:
-                        if self.login_button.handleEvent(event):
-                            if self.check_password([users_login, users_password]):
-                                self.login_info = [
-                                    users_login,
-                                        users_password
-                                ]
+        for event in pygame.event.get():
 
-                if self.login_info:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            elif not self.login_info:
+                self.get_authorized(event)
+
+
+
+    def get_authorized(self, event):
+
+        self.authorization.login_input.handleEvent(event)
+        self.authorization.password_input.handleEvent(event)
+
+        users_login = self.authorization.login_input.getValue()
+        users_password = self.authorization.password_input.getValue()
+
+        if users_login and users_password:
+            if self.authorization.login_button.handleEvent(event):
+                if self.check_password([users_login, users_password]):
+                    self.login_info = [
+                        users_login,
+                        users_password
+                    ]
+
                     ls_name = self.login_info[0]
                     self.greeting_field.setValue(f'Hello, {ls_name.title()}!')
 
-            self.screen.fill(Main.GRAY)
+        return None
 
-            self.login_page()
+    def update_screen(self):
+        if self.login_info:
+            self.greeting_field.draw()
+            self.place_board()
+            return pygame.display.update()
 
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(self.background_image, (-150, 40))
+        self.authorization.show_authorization_window()
+        return pygame.display.update()
 
-            pygame.display.update()
-            self.CLOCK.tick(Main.FRAMES_PER_SECOND)
+    def place_board(self):
+        w_pawn = pygame.image.load('images/white_pawn1.png')
+        self.screen.blit(self.board_img, (10, 10))
+        self.screen.blit(w_pawn, (49, 440))
+        return None
 
     @staticmethod
     def check_password(input_info):
@@ -103,32 +110,6 @@ class Main:
         else:
             return False
 
-
-    def login_page(self):
-        if self.login_info:
-            self.greeting_field.draw()
-            self.place_board()
-            return
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(self.background_image, (-150, 40))
-        rect = pygame.draw.rect(self.screen, Main.DARK_GRAY, (660, 15, 220, 180), 0)
-        self.text_field.draw()
-        self.input_field_login.draw()
-        self.input_field_password.draw()
-        self.login_button.draw()
-        self.reg_button.draw()
-        return
-
-
-
-
-
-
-    def place_board(self):
-        w_pawn = pygame.image.load('images/white_pawn1.png')
-        self.screen.blit(self.board_img, (10, 10))
-        self.screen.blit(w_pawn, (49, 440))
-        return
 
 if __name__ == '__main__':
     this_chess = Main()
