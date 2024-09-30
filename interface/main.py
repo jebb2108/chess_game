@@ -4,8 +4,6 @@ import pygame
 import pygwidgets
 import sys
 
-from pygame import KEYDOWN
-
 from authorization import *
 from settings import *
 
@@ -32,15 +30,19 @@ class Main:
 
         self.greeting_field = pygwidgets.DisplayText(self.screen, (685, 20), fontSize=35)
 
+        self.login_awaiting_status = True
+        self.match_making_status = False
+        self.game_play_status = False
+
+
     def run_game(self):
         pygame.init()
-
         while True:
+
             self.check_events()
 
             self.screen.fill(self.settings.GRAY)
             self.update_screen()
-
             self.CLOCK.tick(self.settings.FRAMES_PER_SECOND)
 
     def check_events(self):
@@ -51,25 +53,37 @@ class Main:
                 pygame.quit()
                 sys.exit()
 
-            elif not self.login_info:
+            if self.login_awaiting_status:
                 self.get_authorized(event)
+                pass
+
+            elif self.match_making_status:
+                if self.return_to_authorization(event):
+                    self.login_awaiting_status = True
+                pass
+
+            elif self.game_play_status:
+                self.match_making_status = True
+                pass
 
     def get_authorized(self, event):
         self.authorization.login_input.handleEvent(event)
         self.authorization.password_input.handleEvent(event)
-        self.check_entered_values(event)
+        if self.check_entered_values(event):
+            self.match_making_status = True
         return None
 
     def update_screen(self):
-        if self.login_info:
+        if self.login_awaiting_status:
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(self.background_image, (-150, 40))
+            self.authorization.show_authorization_window()
+            return pygame.display.update()
+
+        elif self.match_making_status:
             self.greeting_field.draw()
             self.place_board()
             return pygame.display.update()
-
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(self.background_image, (-150, 40))
-        self.authorization.show_authorization_window()
-        return pygame.display.update()
 
     def place_board(self):
         w_pawn = pygame.image.load('images/white_pawn1.png')
@@ -91,8 +105,20 @@ class Main:
 
                     ls_name = self.login_info[0]
                     self.greeting_field.setValue(f'Hello, {ls_name.title()}!')
+                    self.login_awaiting_status = False
+                    return True
 
         return None
+
+    def return_to_authorization(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                self.authorization.login_input.setValue('')
+                self.authorization.password_input.setValue('')
+                self.match_making_status = False
+                return True
+
+        return False
 
     @staticmethod
     def check_password(input_info):
