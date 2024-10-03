@@ -5,6 +5,7 @@ import pygwidgets
 import sys
 
 from authorization import *
+from choose_match import *
 from settings import *
 
 
@@ -25,6 +26,7 @@ class Main:
 
         self.settings = Settings()
         self.authorization = Authorization(self.screen)
+        self.choice_of_match = ChooseMatch(self.screen)
 
         self.login_info = dict()
 
@@ -54,12 +56,16 @@ class Main:
                 sys.exit()
 
             if self.login_awaiting_status:
+                self.authorization.login_input.handleEvent(event)
+                self.authorization.password_input.handleEvent(event)
                 self.get_authorized(event)
                 pass
 
             elif self.match_making_status:
                 if self.return_to_authorization(event):
                     self.login_awaiting_status = True
+                self.choice_of_match.display_button.handleEvent(event)
+                self.choose_game(event)
                 pass
 
             elif self.game_play_status:
@@ -67,11 +73,17 @@ class Main:
                 pass
 
     def get_authorized(self, event):
-        self.authorization.login_input.handleEvent(event)
-        self.authorization.password_input.handleEvent(event)
-        if self.check_entered_values(event):
-            self.match_making_status = True
+        users_login = self.authorization.login_input.getValue()
+        users_password = self.authorization.password_input.getValue()
+        if users_login and users_password:
+            keys = pygame.key.get_pressed()
+            if self.check_entered_values(event, keys, users_login, users_password):
+                    self.match_making_status = True
+
         return None
+
+    def choose_game(self, event):
+        pass
 
     def update_screen(self):
         if self.login_awaiting_status:
@@ -81,38 +93,38 @@ class Main:
             return pygame.display.update()
 
         elif self.match_making_status:
-            self.greeting_field.draw()
+            # self.greeting_field.draw()
+            self.choice_of_match.show_options()
+            return pygame.display.update()
+
+
+        elif self.game_play_status:
             self.place_board()
             return pygame.display.update()
 
     def place_board(self):
+        """ Should be the most advanced method """
         w_pawn = pygame.image.load('images/white_pawn1.png')
         self.screen.blit(self.board_img, (10, 10))
         self.screen.blit(w_pawn, (49, 440))
         return None
 
-    def check_entered_values(self, event):
-        users_login = self.authorization.login_input.getValue()
-        users_password = self.authorization.password_input.getValue()
-        keys = pygame.key.get_pressed()
-        if users_login and users_password:
-            if self.authorization.login_button.handleEvent(event) or keys[pygame.K_RETURN]:
-                if self.check_password([users_login, users_password]):
-                    self.login_info = [
-                        users_login,
-                        users_password
-                    ]
+    def check_entered_values(self, event, keys, users_login, users_password):
+        if self.authorization.login_button.handleEvent(event) or keys[pygame.K_RETURN]:
+            if self.check_password([users_login, users_password]):
+                self.login_info = [
+                    users_login,
+                    users_password
+                ]
+                self.login_awaiting_status = False
+                return True
 
-                    ls_name = self.login_info[0]
-                    self.greeting_field.setValue(f'Hello, {ls_name.title()}!')
-                    self.login_awaiting_status = False
-                    return True
 
         return None
 
     def return_to_authorization(self, event):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:
+            if event.key == pygame.K_ESCAPE:
                 self.authorization.login_input.setValue('')
                 self.authorization.password_input.setValue('')
                 self.match_making_status = False
