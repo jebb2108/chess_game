@@ -230,7 +230,7 @@ class Pawn(Piece):
             self._get_all_moves(board_inst)
             return enemy_piece_tuple
 
-        board_inst.make_msg('E: You cannot move there')
+        # board_inst.make_msg('E: You cannot move there')
         return False
 
         # Возвращает id, если есть, иначе возвращает None.

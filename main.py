@@ -321,10 +321,11 @@ class GamePlay(Board):
         return array
 
 
-    def make_msg(self, e):
+    def make_msg(self, e=''):
         """ Подставляет сообщение об ошибке. """
         self.message = e
         self.default_message = False
+        pass
 
     def auto_print(self):
         """Вспомогательная функция для печати доски и коррекции сообщений."""
