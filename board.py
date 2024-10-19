@@ -27,7 +27,7 @@ class Board:
         # Одноразовый метод, принимающий вложенные параметры класса
         # Settings и внедряет его экземпляры в только что созданную доску.
         for obj in self.settings.all_pieces:
-            self.board[obj.y][obj.x] = obj
+            self.board[obj._get_y()][obj._get_x()] = obj
         # В этом методе программа создает
         # идентификаторы со всеми ходами фигуры в одном словаре.
         # Позже мне он понадобится, когда буду работать с королем.
@@ -110,7 +110,7 @@ class Board:
             for move in rock.moves:
                 # Ладье должна быть доступна клетка перед королем.
                 if list(move) in [[0, 3], [0, 5], [7, 3], [7, 5]]:
-                    king_from_where, king_to_where = [obj.y, obj.x], to_where
+                    king_from_where, king_to_where = [obj._get_y(), obj._get_x()], to_where
 
                     # Происходит перестановка фигур и обновление словаря ходов.
                     self.change_its_position(rock, rock_possible_move)
@@ -182,10 +182,10 @@ class Board:
                 self.board[from_where[0]][from_where[1]] = obj
                 self.board[to_where[0]][to_where[1]] = Empty()
 
-            obj.y, obj.x = from_where[0], from_where[1]
+            obj._set_loc((from_where[0], from_where[1]))
             self._update_moves_dict()
             if isinstance(obj, King):
-                obj.safe_zone = (obj.y, obj.x)
+                obj.safe_zone = (obj._get_y(), obj._get_x())
             return True
 
         return False
@@ -205,10 +205,10 @@ class Board:
         board.board[from_where[0]][from_where[1]] = Empty()
         board.board[to_where[0]][to_where[1]] = obj
 
-        obj.y, obj.x = to_where[0], to_where[1]
+        obj._set_loc((to_where[0], to_where[1]))
 
         if isinstance(obj, King):
-            obj.safe_zone = (obj.y, obj.x)
+            obj.safe_zone = (obj._get_y(), obj._get_x())
 
         return None
 
