@@ -57,34 +57,34 @@ class Piece:
     def _set_loc(self, loc):
         self.__loc = loc
 
-    def _generate_linear_moves(self, board_inst: object, array_dirs):
+    def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, moves = self.loc, list()
-        for dir in array_dirs:
+        for d1r in array_dirs:
             # Каждый раз устанавливает новое положение
             # исходя из текущей, неизменной позиции фигуры.
-            new_pos = (curr_pos[0] + dir[0],  # noqa
-                            curr_pos[1] + dir[1])
+            new_pos = (curr_pos[0] + d1r[0],  # noqa
+                            curr_pos[1] + d1r[1])
 
             # Цикл продолжает работать пока функция возвращает True.
-            while self.__is_valid_move(board_inst, new_pos):
+            while self._is_valid_move(board_inst, new_pos):
                 # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
                 # то происходит инвертирования значения в положительное e.g -1 --> 1.
-                if dir[0] + dir[1] < 0 and (new_pos[0] < 0 or new_pos[1] < 0):
+                if d1r[0] + d1r[1] < 0 and (new_pos[0] < 0 or new_pos[1] < 0):
                     # Проверяет, чтобы значение координаты не стало отрицательным
                     # тогда проверка списка начинается с конца, а этого нельзя допустить
                     # иначе произойдет бесконечный цикл.
                     break
 
                 # Вражеская фигура должна стать последней в списке возможных ходов.
-                elif board_inst.get_color(new_pos[0], new_pos[1]) == self.enemy_color:
+                elif board_inst.get_color(new_pos) == self.enemy_color:
                     moves.extend([new_pos])
                     break
 
                 else:
                     moves.extend([new_pos])
                     # Шаг завершен. Передаю новое значение этой переменной.
-                    new_pos = (new_pos[0] + dir[0],
-                                    new_pos[1] + dir[1])
+                    new_pos = (new_pos[0] + d1r[0],
+                                    new_pos[1] + d1r[1])
 
         return moves
 
@@ -92,6 +92,7 @@ class Piece:
         self.__check_enemy_for_removal(board_inst, to_where)
         self.__put_piece_on_board_into_loc(board_inst, to_where)
         self._set_loc((to_where[0], to_where[1]))
+        self.is_not_changed = False
         return None
 
     def __put_piece_on_board_into_loc(self, board_inst: object, to_where: tuple):
@@ -102,7 +103,7 @@ class Piece:
 
     def __check_enemy_for_removal(self, board_inst: object, to_where: tuple):
         """ Проверяет на наличие вражеской фигуры по заданной координате. """
-        if board_inst.get_color(to_where[0], to_where[1]) == self.enemy_color:
+        if board_inst.get_color(to_where) == self.enemy_color:
             enemy_piece = board_inst.board[to_where[0]][to_where[1]]
             self.enemy_to_delete = (id(enemy_piece), enemy_piece, enemy_piece.moves)
             return self.enemy_to_delete
@@ -110,10 +111,10 @@ class Piece:
         self.enemy_to_delete = None
         return None
 
-    def __is_valid_move(self, board_inst: object, new_position: tuple) -> bool:
+    def _is_valid_move(self, board_inst: object, new_pos: tuple) -> bool:
         # Только два возможных условия истинности:
         # либо это поле пустое, либо оно вражеское (последнее)
-        if (board_inst.get_color(new_position[0], new_position[1])
+        if (board_inst.get_color(new_pos)
                 in [Color.empty, self.enemy_color]):
             return True  # Возвращает истинное значение, если поле пустое
                          # и не произошла ошибка.
@@ -122,7 +123,6 @@ class Piece:
 
 
     def __str__(self):
-
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
                                                                 # кортеж белого и черного цвета фигуры.
 
@@ -146,20 +146,26 @@ class Pawn(Piece):
 
         super().__init__(loc, color)  # Унаследование от родителя атрибутов.
 
-    def _get_all_moves(self, board_inst):
-        """ Метод, который возвращает все возможные ходы пешки. """
-        # Обновляет список переменной экземпляра.
-        self.moves.clear()
+    def __repr__(self):
+        return (f'\tcolor for pawn: {self.img[self.color-1]},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'memory: {bool(self.memory)},\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'direction: {self.back_or_forth},\n'
+                f'allowed moves: {self.allowed_moves},\n'
+                f'all moves: {self.moves}')
 
-        # Сохраняет текущую позицию и кол-во ходов в отдельных переменных.
-        curr_pos, curr_allowed_moves = self.loc, self.allowed_moves
-        # Возможные ходы пешки и новый, временный список ходов.
-        moves = []
-        for dir in self.ways_to_go:
+    def _prep_moves(self, board_inst: object, array_dirs):
+        curr_pos, temp_moves = self.loc, list()
+        for d1r in array_dirs:
+            ternary_for_below_zero = (1 if curr_pos[1] + d1r[1] < 0
+                             else curr_pos[1]+d1r[1] )
             # Создает кортеж возможной позиции пешки для проверки условия.
-            new_pos = (curr_pos[0] + ((dir[0]) * self.back_or_forth),  # noqa
-                            (1 if curr_pos[1] + dir[1] < 0
-                             else curr_pos[1] + dir[1]))  # noqa
+            new_pos = tuple([ curr_pos[0] + ((d1r[0]) * self.back_or_forth),  # noqa
+                            ternary_for_below_zero ])  # noqa
 
             # Значение позиции НЕ может быть отрицательным.
             # Иначе, клетка будет считаться с конца списка!
@@ -167,51 +173,56 @@ class Pawn(Piece):
 
             # Есть два состояния: пешка ходит вперед и пешка съедает.
             # Под каждое состояние - свои условия.
-            if dir == (1, 0):
-                if curr_allowed_moves == 2:
-                    # Эта строка отвечает за направление движения и количество ходов.
-                    # Последнее значение кортежа идет из предыдущей строки кода.
-                    new_pos = (self._get_y() + (self.allowed_moves * self.back_or_forth),
-                                    new_pos[1])  # noqa
-                    if self._is_valid_move(board_inst, new_pos):
-                        moves.extend([new_pos])
-                        curr_allowed_moves = 1
 
-                if curr_allowed_moves == 1:
+            if d1r == (1, 0):
+                if self.allowed_moves == 2:
+                    # Эта строка отвечает за направление движения и количество ходов.
+                    new_pos = (self._get_y()+(1*self.back_or_forth), new_pos[1])
+
+                    if self._is_valid_move(board_inst, new_pos):
+
+                        temp_moves.append(new_pos)
+                        new_pos = (new_pos[0]+(1*self.back_or_forth), new_pos[1])
+
+                        if self._is_valid_move(board_inst, new_pos):
+                            temp_moves.append(new_pos)
+                            continue
+
+                if self.allowed_moves == 1:
                     # Тот же смысл, как и в прошлом комментарии.
                     # Только количество ходов изменилось на 1.
-                    new_pos = (self._get_y() + (dir[0] * self.back_or_forth),
-                                    self._get_x() + dir[1])
+                    new_pos = (self._get_y() + (d1r[0] * self.back_or_forth),
+                                    self._get_x() + d1r[1])
                     if self._is_valid_move(board_inst, new_pos):
-                        moves.extend([new_pos])
+                        temp_moves.append(new_pos)
 
             # Когда направление пешки уходит в сторону,
             # проверяет наличие вражеской фигуры в стороне.
             else:
-                if self._is_valid_move(board_inst, new_pos):
-                    moves.extend([new_pos])
+                # это не собственная фигура
+                if board_inst.get_color(new_pos) == self.enemy_color:
+                    temp_moves.append(new_pos)
 
+                if self.memory.get(new_pos, None) is not None:
+                    temp_moves.append(new_pos)
+
+
+
+
+        return temp_moves
+
+    def _get_all_moves(self, board_inst):
+        """ Метод, который возвращает все возможные ходы пешки. """
+        # Обновляет список переменной экземпляра.
+        self.moves.clear()
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
         # Обрати внимание, что в этом методе программа не меняет глобальные значения переменных пешки,
         # а только выводит список ходов конкретного экземпляра исходя из положения всех фигур на доске.
-        self.moves.extend(moves)
-
+        self.moves.extend(resulted_moves)
         # Передает эти ходы в общую свалку
         # всех ходов класса Board !!!
         return self.moves
 
-    def _is_valid_move(self, board_inst, new_position):
-        """ Метод для проверки состояния поля на доске."""
-        # Если заданная координата не меняется относительно оси X, значит
-        # пешка ходит вперед. Она не может занять вражескую позицию.
-        if self._get_x() == new_position[1]:
-            if board_inst.get_color(new_position[0], new_position[1]) == Color.empty:
-                return True
-            return False  # Условие не выполняется.
-        # Иначе, она съедает вражескую фигуру.
-        else:
-            if board_inst.get_color(new_position[0], new_position[1]) == self.enemy_color:
-                return True
-            return False  # Условие не выполняется.
 
     def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
         """ Метод приказывает переместить положение пешки. """
@@ -220,7 +231,6 @@ class Pawn(Piece):
         # В случае того, когда пешка съедает вражескую фигуру
         # сохраняю enemy_piece_id для нее, чтобы вернуть обратно в метод.
         # Указатель вражеской пешке, если первая проходит битое поле.
-        pawn_dirs = []
 
         # Проверка на заданное движение.
         if not self._check_move(board_inst, from_where, to_where): return False
@@ -228,23 +238,22 @@ class Pawn(Piece):
         # Получает все возможные ходы.
         self._get_all_moves(board_inst)  # Получает все возможные ходы.
 
-        # Воспроизводит память.
-        if self.memory:
-            new_moves = list([move[1] for move in self.memory.values()])
-            self.moves.extend(new_moves)
+        # # Воспроизводит память.
+        # if self.memory:
+        #     new_moves = list([move[1] for move in self.memory.values()])
+        #     self.moves.extend(new_moves)
 
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
 
             if self.memory:
-                # Передаю переменной кортежа вражеской фигуры
+                # Передаю переменную кортежа вражеской фигуры
                 # все значения для удаления из общего словаря фигур.
-                enemy_piece = next((enemy_pawn[0] for enemy_pawn in self.memory.values() if enemy_pawn[0]._get_x() == to_where[1]), None)
+                enemy_piece = self.memory[to_where]
                 try:
                     self.enemy_to_delete = [id(enemy_piece), enemy_piece, enemy_piece.moves]
-                except AttributeError:
-                    error_message = 'Problem emerged related to the internal issue.'
-                    self.raise_exception(error_message)
+                except ValueError:
+                    raise exception('Problem emerged related to the Value Error.')
 
                 else:
                     # Удаление вражеской фигуры с поля доски
@@ -253,40 +262,64 @@ class Pawn(Piece):
                     board_inst.make_msg('Eaten in passing')
                     self.memory.clear()
 
-            # Изменение динамического атрибута пешки.
-            self._check_by_passing_enemy_pawns(board_inst, from_where, to_where)
-            self._is_at_the_edge(board_inst)
+            self._check_enemy_pawns_passed_by(board_inst, to_where)
             self._finish_move(board_inst, to_where)
-            # Обновление списка возможных ходов.
+            self._is_at_the_edge(board_inst)
+
             self._get_all_moves(board_inst)
             return self.enemy_to_delete
 
-        # board_inst.make_msg('E: You cannot move there')
+        board_inst.make_msg('E: You cannot move there')
         return False
 
-    def _check_by_passing_enemy_pawns(self, board_inst: object, from_where: tuple, to_where: tuple):
-        if self.allowed_moves == 2 and (from_where[1] == to_where[1]):
+    def _is_valid_move(self, board_inst, new_pos: tuple) -> bool:
+        """ Метод для проверки состояния поля на доске."""
+        # Если заданная координата не меняется относительно оси X, значит
+        # пешка ходит вперед. Она не может занять вражескую позицию.
+        if self._get_x() == new_pos[1] and board_inst.get_color(new_pos) != Color.empty:
+            return False  # Условие не выполняется.
+        else:
+            if super()._is_valid_move(board_inst, new_pos):
+                return True
+            return False
 
-            new_position_on_side = (self._get_y(), self._get_x() + 1)
-            if (self._get_x() + 1 >= 0
-                    and self._is_valid_move(board_inst, new_position_on_side)
-                    and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
-                enemy_pawn = board_inst.board[self._get_y()][self._get_x() + 1]
-                res = list([self, enemy_pawn, tuple([self._get_y() - (1 * self.back_or_forth),
-                                                     self._get_x()])])
-                board_inst.pawn_dirs.append(res)
 
-            new_position_on_side = (self._get_y(), self._get_x() - 1)
-            if (self._get_x() - 1 >= 0
-                    and self._is_valid_move(board_inst, new_position_on_side)
-                    and board_inst.get_class(new_position_on_side) == 'class.Pawn'):
-                enemy_pawn = board_inst.board[self._get_y()][self._get_x() - 1]
-                res = list([self, enemy_pawn, tuple([self._get_y() - (1 * self.back_or_forth),
-                                                     self._get_x()])])
-                board_inst.pawn_dirs.append(res)
+    def _check_enemy_pawns_passed_by(self, board_inst: object, to_where: tuple):
+        """ Проверяет, если пешка, заданная пройти два хода вперед, имеет слева или справа вражескую пешку.
+            Затем программа заносит ее координаты в словарь memory вражеской пешке. """
+        curr_pos = self.loc
+        if self.allowed_moves == 2 and (curr_pos[1] == to_where[1]):
 
-            self.allowed_moves = 1
-            return board_inst
+            new_pos_on_right_side = (curr_pos[0]+2*self.back_or_forth, curr_pos[1] + 1)
+            # Проверка на индексацию новой координаты, чтобы не выходило за рамки доски.
+            # Проверка на существование вражеской пешки справа.
+            if (curr_pos[1] + 1 <= 7
+                    and board_inst.get_color(new_pos_on_right_side) == self.enemy_color
+                    and board_inst.get_class(new_pos_on_right_side) == 'class.Pawn'):
+
+                enemy_pawn = board_inst.board[new_pos_on_right_side[0]][new_pos_on_right_side[1]]
+                # создание промежуточной координаты между прошлым и текущим ходом данной пешки.
+                mid_move_for_this_pawn_list = list([self, self.loc])
+                # финальный результат входит в атрибут вражеской пешки.
+                mid_move_for_this_pawn_list = tuple([self.loc[0] + 1 * self.back_or_forth, self.loc[1]])
+
+                enemy_pawn.memory[mid_move_for_this_pawn_list] = self
+
+            new_pos_on_left_side = (curr_pos[0]+2*self.back_or_forth, curr_pos[1] - 1)
+            # Проверка на отрицательность x, так как индексация начинается с нуля.
+            # Проверка на существование вражеской пешки справа.
+            if (curr_pos[1] - 1 >= 0
+                    and board_inst.get_color(new_pos_on_left_side) == self.enemy_color
+                    and board_inst.get_class(new_pos_on_left_side) == 'class.Pawn'):
+
+                enemy_pawn = board_inst.board[new_pos_on_left_side[0]][new_pos_on_left_side[1]]
+                # создание промежуточной координаты между прошлым и текущим ходом данной пешки
+                mid_move_for_this_pawn_list = tuple([self.loc[0]+1*self.back_or_forth, self.loc[1]])
+
+                # финальный результат входит в атрибут вражеской пешки.
+                enemy_pawn.memory[mid_move_for_this_pawn_list] = self
+
+
 
         return None
 
@@ -331,11 +364,13 @@ class Pawn(Piece):
 
     def _check_move(self, board_inst: object, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
-        if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
-            if board_inst.get_color(to_where[0], to_where[1]) != self.enemy_color and not self.memory:
+        if not self.is_not_changed:
+            self.allowed_moves = 1
+        elif (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
+            if board_inst.get_color(to_where) != self.enemy_color and not self.memory:
                 board_inst.make_msg('E: You cannot move this way')
                 return False
-        if from_where == to_where:
+        elif from_where == to_where:
             board_inst.make_msg('E: You have to make a move')
             return False
 
@@ -349,14 +384,20 @@ class Rock(Piece):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         super().__init__(loc, color)
 
+    def __repr__(self):
+        return (f'\tcolor for rock: {self.color},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'all moves: {self.moves}')
+
     def _get_all_moves(self, board_inst: object) -> list[Any]:
-        # Задает переменную с текущим координатами фигуры.
-        current_position = self.loc
         # Обновляет переменную экземпляра с возможными ходами.
         self.moves.clear()
         # Простой список с направлениями: вниз, вверх, вправо, влево.
-        resulted_moves = self._generate_linear_moves(board_inst, self.ways_to_go)
-
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
         # Возвращает все возможные ходы в список.
         self.moves.extend(resulted_moves)
         return self.moves
@@ -381,21 +422,36 @@ class Knight(Piece):
 
     def __init__(self, loc, color):
         self.ways_to_go = [(2, 1), (2, -1), (-2, 1),
-                             (-2, -1), (1, -2), (1, 2), (-1, 2), (-1, -2)]
+                             (-2, -1), (1, -2), (1, 2),
+                           (-1, 2), (-1, -2)]
         super().__init__(loc, color)
 
-    def _get_all_moves(self, board_inst):
-        self.moves.clear()
-        curr_pos,temp_moves = self.loc, list()
-        for dir in self.ways_to_go:
-            new_pos = (curr_pos[0] + dir[0], curr_pos[1] + dir[1])
+    def __repr__(self):
+        return (f'\tcolor for knight: {self.color},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'all moves: {self.moves}')
+
+    def _prep_moves(self, board_inst: object, array_dirs):
+        curr_pos, temp_moves = self.loc, list()
+        for d1r in self.ways_to_go:
+            new_pos = (curr_pos[0] + d1r[0], curr_pos[1] + d1r[1])
             if new_pos[0] < 0 or new_pos[1] < 0:
                 continue
-            elif self.__is_valid_move(board_inst, new_pos):
+            elif self._is_valid_move(board_inst, new_pos):
                 temp_moves.extend([new_pos])
                 continue
 
-        self.moves.extend(temp_moves)
+
+        return temp_moves
+
+    def _get_all_moves(self, board_inst):
+        self.moves.clear()
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
+        self.moves.extend(resulted_moves)
         return self.moves
 
     def _move_object(self, board_inst: object, to_where):
@@ -416,9 +472,18 @@ class Bishop(Piece):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         super().__init__(loc, color)
 
+    def __repr__(self):
+        return (f'\tcolor for bishop: {self.color},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'all moves: {self.moves}')
+
     def _get_all_moves(self, board_inst: object) -> list[Any]:
         self.moves.clear()
-        resulted_moves = self._generate_linear_moves(board_inst, self.ways_to_go)
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
         self.moves.extend(resulted_moves)
         return self.moves
 
@@ -442,17 +507,23 @@ class Queen(Piece):
                              (0, 1), (0, -1)]
         super().__init__(loc, color)
 
+    def __repr__(self):
+        return (f'\tcolor for queen: {self.color},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'all moves: {self.moves}')
+
     def _get_all_moves(self, board_inst: object) -> list[Any]:
         self.moves.clear()
-        resulted_moves = self._generate_linear_moves(board_inst, self.ways_to_go)
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
         self.moves.extend(resulted_moves)
-
         return self.moves
 
     def _move_object(self, board_inst: object, to_where: tuple) -> dict or None:
-
         self._get_all_moves(board_inst)
-
         if to_where in self.moves:
             self._finish_move(board_inst, to_where)
             self._get_all_moves(board_inst)
@@ -472,21 +543,35 @@ class King(Piece):
         super().__init__(loc, color)
         self.safe_zone = self.loc
 
-    def _get_all_moves(self, board_inst):
-        self.moves.clear()
+    def __repr__(self):
+        return (f'\tcolor for king: {self.color},\n'
+                f'enemy color: {self.enemy_color}\n'
+                f'eaten enemy: {self.enemy_to_delete 
+                                       if self.enemy_to_delete is not None 
+                                           else 'nothing eaten yet'},\n'
+                f'location: {self.loc},\n'
+                f'all moves: {self.moves}')
+
+    def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, temp_moves = self.loc, list()
-        for dir in self.ways_to_go:
-            new_pos = (curr_pos[0] + dir[0],
-                            curr_pos[1] + dir[1])
+        for d1r in self.ways_to_go:
+            new_pos = (curr_pos[0] + d1r[0],
+                       curr_pos[1] + d1r[1])
 
             if new_pos[0] < 0 or new_pos[1] < 0:
                 continue
 
-            elif self.__is_valid_move(board_inst, new_pos):
+            elif self._is_valid_move(board_inst, new_pos):
                 temp_moves.extend([new_pos])
 
-        self.moves.extend(temp_moves)
         return temp_moves
+
+
+    def _get_all_moves(self, board_inst):
+        self.moves.clear()
+        resulted_moves = self._prep_moves(board_inst, self.ways_to_go)
+        self.moves.extend(resulted_moves)
+        return self.moves
 
     def _move_object(self, board_inst, to_where):
         self._get_all_moves(board_inst)

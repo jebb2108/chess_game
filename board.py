@@ -74,7 +74,8 @@ class Board:
         obj = self.board[coords[0]][coords[1]]
         return class_mapping.get(type(obj), 'Empty')
 
-    def get_color(self, y, x):
+    def get_color(self, loc):
+        y, x = loc
         # Простой метод для определения цвета
         # фигуры в заданных координатах доски.
         try:
@@ -123,7 +124,7 @@ class Board:
         return False
 
     # noinspection PyProtectedMember
-    def change_its_position(self, obj: object, to_where: tuple):
+    def change_its_position(self, obj: object, to_where: list):
         """ Важный метод, который берет экземпляр доски,
         аргументы уровня выше и опускается на уровень ниже,
         чтобы работать с низко-уровненными условиями фигур. """
@@ -194,7 +195,7 @@ class Board:
     @staticmethod
     def change_board(board, obj, from_where, to_where):
 
-        if board.get_color(to_where[0], to_where[1]) == obj.enemy_color:
+        if board.get_color(to_where) == obj.enemy_color:
             enemy_piece = board.board[to_where[0]][to_where[1]]
             # Исправлено.
             gen_id = next((item_id for item_id, item_obj in board.all_moves.items() if

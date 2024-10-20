@@ -1,6 +1,4 @@
 import copy
-from pprint import *
-from typing import Any
 
 from board import Board
 
@@ -68,11 +66,17 @@ class GamePlay(Board):
 
             # Команда разработчика.
             elif from_where_input == 'h+':
-                # gen0 = [(move[0].y, move[0].x) for move in self.all_moves.values()]
-                gen1 = [move[1] for move in self.all_moves.values()]
-                gen2 = [move[2] for move in self.all_moves.values()]
-                for item in zip(gen1, gen2):
-                    print(item)
+                print('options: dictionary for moves "d"; stats for each piece "s"')
+                response = input('What would you like to see: ')
+                if response == 'd':
+                    gen1 = [move[1] for move in self.all_moves.values()]
+                    gen2 = [move[2] for move in self.all_moves.values()]
+                    for item in zip(gen1, gen2):
+                        print(item)
+                elif response == 's':
+                    for key in self.all_moves.values():
+                        print(repr(key[0]))
+                        print()
 
             to_where_input = input('{}'.format(self.second_beginning_message))
             if to_where_input[0].lower() == 'q' or len(to_where_input) < 2:
@@ -194,7 +198,7 @@ class GamePlay(Board):
         """ Важный метод для проверки шаха королю. """
 
         # Выявляет цвет затронутой фигуры.
-        piece_touched = my_game.get_color(from_where[0], from_where[1])
+        piece_touched = my_game.get_color(from_where)
         # Проверяет, кому принадлежит ход.
 
         if my_game.whose_turn_it_is.current_move != piece_touched:
