@@ -155,8 +155,7 @@ class Pawn(Piece):
                                            else 'nothing eaten yet'},\n'
                 f'location: {self.loc},\n'
                 f'direction: {self.back_or_forth},\n'
-                f'allowed moves: {self.allowed_moves},\n'
-                f'all moves: {self.moves}')
+                f'allowed moves: {self.allowed_moves},\n')
 
     def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, temp_moves = self.loc, list()
@@ -262,10 +261,12 @@ class Pawn(Piece):
                     board_inst.make_msg('Eaten in passing')
                     self.memory.clear()
 
+
             self._check_enemy_pawns_passed_by(board_inst, to_where)
             self._finish_move(board_inst, to_where)
             self._is_at_the_edge(board_inst)
 
+            self.allowed_moves = 1
             self._get_all_moves(board_inst)
             return self.enemy_to_delete
 
@@ -299,10 +300,8 @@ class Pawn(Piece):
 
                 enemy_pawn = board_inst.board[new_pos_on_right_side[0]][new_pos_on_right_side[1]]
                 # создание промежуточной координаты между прошлым и текущим ходом данной пешки.
-                mid_move_for_this_pawn_list = list([self, self.loc])
-                # финальный результат входит в атрибут вражеской пешки.
                 mid_move_for_this_pawn_list = tuple([self.loc[0] + 1 * self.back_or_forth, self.loc[1]])
-
+                # финальный результат входит в атрибут вражеской пешки.
                 enemy_pawn.memory[mid_move_for_this_pawn_list] = self
 
             new_pos_on_left_side = (curr_pos[0]+2*self.back_or_forth, curr_pos[1] - 1)
@@ -315,7 +314,6 @@ class Pawn(Piece):
                 enemy_pawn = board_inst.board[new_pos_on_left_side[0]][new_pos_on_left_side[1]]
                 # создание промежуточной координаты между прошлым и текущим ходом данной пешки
                 mid_move_for_this_pawn_list = tuple([self.loc[0]+1*self.back_or_forth, self.loc[1]])
-
                 # финальный результат входит в атрибут вражеской пешки.
                 enemy_pawn.memory[mid_move_for_this_pawn_list] = self
 
@@ -364,9 +362,7 @@ class Pawn(Piece):
 
     def _check_move(self, board_inst: object, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
-        if not self.is_not_changed:
-            self.allowed_moves = 1
-        elif (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
+        if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
             if board_inst.get_color(to_where) != self.enemy_color and not self.memory:
                 board_inst.make_msg('E: You cannot move this way')
                 return False
@@ -385,13 +381,12 @@ class Rock(Piece):
         super().__init__(loc, color)
 
     def __repr__(self):
-        return (f'\tcolor for rock: {self.color},\n'
+        return (f'\tcolor for rock: {self.img[self.color-1]},\n'
                 f'enemy color: {self.enemy_color}\n'
                 f'eaten enemy: {self.enemy_to_delete 
                                        if self.enemy_to_delete is not None 
                                            else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'all moves: {self.moves}')
+                f'location: {self.loc},\n')
 
     def _get_all_moves(self, board_inst: object) -> list[Any]:
         # Обновляет переменную экземпляра с возможными ходами.
@@ -427,13 +422,12 @@ class Knight(Piece):
         super().__init__(loc, color)
 
     def __repr__(self):
-        return (f'\tcolor for knight: {self.color},\n'
+        return (f'\tcolor for knight: {self.img[self.color-1]},\n'
                 f'enemy color: {self.enemy_color}\n'
                 f'eaten enemy: {self.enemy_to_delete 
                                        if self.enemy_to_delete is not None 
                                            else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'all moves: {self.moves}')
+                f'location: {self.loc},\n')
 
     def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, temp_moves = self.loc, list()
@@ -473,13 +467,12 @@ class Bishop(Piece):
         super().__init__(loc, color)
 
     def __repr__(self):
-        return (f'\tcolor for bishop: {self.color},\n'
+        return (f'\tcolor for bishop: {self.img[self.color-1]},\n'
                 f'enemy color: {self.enemy_color}\n'
                 f'eaten enemy: {self.enemy_to_delete 
                                        if self.enemy_to_delete is not None 
                                            else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'all moves: {self.moves}')
+                f'location: {self.loc},\n')
 
     def _get_all_moves(self, board_inst: object) -> list[Any]:
         self.moves.clear()
@@ -508,13 +501,12 @@ class Queen(Piece):
         super().__init__(loc, color)
 
     def __repr__(self):
-        return (f'\tcolor for queen: {self.color},\n'
+        return (f'\tcolor for queen: {self.img[self.color-1]},\n'
                 f'enemy color: {self.enemy_color}\n'
                 f'eaten enemy: {self.enemy_to_delete 
                                        if self.enemy_to_delete is not None 
                                            else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'all moves: {self.moves}')
+                f'location: {self.loc},\n')
 
     def _get_all_moves(self, board_inst: object) -> list[Any]:
         self.moves.clear()
@@ -544,13 +536,12 @@ class King(Piece):
         self.safe_zone = self.loc
 
     def __repr__(self):
-        return (f'\tcolor for king: {self.color},\n'
+        return (f'\tcolor for king: {self.img[self.color-1]},\n'
                 f'enemy color: {self.enemy_color}\n'
                 f'eaten enemy: {self.enemy_to_delete 
                                        if self.enemy_to_delete is not None 
                                            else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'all moves: {self.moves}')
+                f'location: {self.loc},\n')
 
     def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, temp_moves = self.loc, list()
