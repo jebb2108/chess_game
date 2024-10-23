@@ -54,7 +54,7 @@ class Piece:
     def _get_x(self):
         return self.__loc[1]
 
-    def _set_loc(self, loc):
+    def _set_loc(self, loc: tuple):
         self.__loc = loc
 
     def _prep_moves(self, board_inst: object, array_dirs):
@@ -120,18 +120,22 @@ class Piece:
                          # и не произошла ошибка.
         return False
 
+    def access_all_moves(self):
+        return list(self.moves)
 
+    def _move_object(self, board, coords):
+        return None
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
                                                                 # кортеж белого и черного цвета фигуры.
+
 
     @staticmethod
     def raise_exception(error_message):
         default_message = 'Please, report it by clicking the button bellow.'
         print(error_message, default_message, sep='\n')
         return sys.exit()
-
 
 class Pawn(Piece):
     """ Класс для пешки """
@@ -236,11 +240,6 @@ class Pawn(Piece):
 
         # Получает все возможные ходы.
         self._get_all_moves(board_inst)  # Получает все возможные ходы.
-
-        # # Воспроизводит память.
-        # if self.memory:
-        #     new_moves = list([move[1] for move in self.memory.values()])
-        #     self.moves.extend(new_moves)
 
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
