@@ -1,12 +1,10 @@
 """ Класс шахматной доски """
 import copy
-from abc import ABC, abstractmethod, abstractclassmethod
-from xmlrpc.client import Fault
 
 from chess_pieces import *
 from settings import Settings
 
-class Board(ABC):
+class Board:
     def __init__(self, board=None):
         self.board = [[Empty()] * 8 for _ in range(8)]
         if board is not None:  # оставленная возможность
@@ -19,8 +17,6 @@ class Board(ABC):
         self.initialize()
 
 
-
-    @abstractmethod
     def initialize(self):
         for obj in self.settings.all_pieces:
             obj_y, obj_x = obj.loc
@@ -39,7 +35,7 @@ class Board(ABC):
         board_inst = self
         for key, value in self.all_poss_moves.items():
             o_piece = value[0]
-            self.all_poss_moves[key] = list([ o_piece, o_piece.access_all_moves(board_inst) ])
+            self.all_poss_moves[key] = list([ o_piece, o_piece.access_all_moves() ])
 
         return None
 
@@ -78,25 +74,18 @@ class Board(ABC):
 
 
 
-class BoardTools(Board, ABC):
-    def __init__(self, board, chosen_piece_object=None):
+class BoardTools(Board):
+    def __init__(self, board=None, chosen_piece_object=Empty):
         super().__init__(board)
-        self.chosen_piece_object = chosen_piece_object   # переменная сохраняет экземпляр фигуры,
+        self.chosen_piece_object = chosen_piece_object  # переменная сохраняет экземпляр фигуры,
                                            # над которой программа работает в текущий
                                            # момент для автоматизации процесса
 
-    def __add__(self, o_other_piece):
-        if self._get_class(o_other_piece) != 'Empty':
-            self.chosen_piece_object += o_other_piece
-        else:
-            raise ValueError('E: The incorrect input was given which is empty space instead of an object')
 
-        return
-
-
-    def pick_piece(self, its_loc_on_board: list) -> object:
+    def pick_piece(self, its_loc_on_board: tuple) -> object:
         coord_y, coord_x = its_loc_on_board
         the_piece = self.board[coord_y][coord_x]
+        print(type(the_piece))
         return the_piece
 
 
@@ -106,20 +95,19 @@ class BoardTools(Board, ABC):
 
     @chosen_piece_object.setter
     def chosen_piece_object(self, chosen_piece_object):
-        if issubclass(chosen_piece_object, Piece):
+        if issubclass(type(chosen_piece_object), Piece):
             # Новые обязательные динамические атрибуты классу BoardTools
-            self.chosen_piece_class = self._get_class(chosen_piece_object)
-            self.chosen_piece_color = self._get_color(chosen_piece_object)
+            self.chosen_piece_class = self.get_class(chosen_piece_object)
+            self.chosen_piece_color = self.get_color(chosen_piece_object)
             # Выролняет назначение основному атрибуту
             self.__chosen_piece_object = chosen_piece_object
 
         else:
-            self.chosen_piece_class = object
+            self.chosen_piece_class = Empty
             self.chosen_piece_color = None
             self.__chosen_piece_object = None
 
-    @abstractmethod
-    def _get_class(self, o_piece):
+    def get_class(self, o_piece):
         coords = o_piece.loc
         # Из-за того, что не могу спуститься ниже,
         # программу делает проверку на класс на этом уровне.
@@ -134,10 +122,15 @@ class BoardTools(Board, ABC):
         obj = self.board[coords[0]][coords[1]]
         return class_mapping.get(type(obj), 'Empty')
 
-    def _get_color(self, o_piece: object) -> int or None:
-        coord_y, coord_x = o_piece.loc
-        # Простой метод для определения цвета
-        # фигуры в заданных координатах доски.
+    def get_color(self, data) -> int or None:
+        """ Простой метод для определения цвета
+          фигуры в заданных координатах доски. """
+
+        if type(data) is tuple:
+            coord_y, coord_x = data
+        else:
+            coord_y, coord_x = data.loc
+
         try:
             color = self.board[coord_y][coord_x].color
         except IndexError:  # Индекс выходит за пределы клеток.
@@ -146,11 +139,9 @@ class BoardTools(Board, ABC):
         # Возвращает цвет фигуры.
         return color
 
-    def attempt_piece_to_move(self, this_piece_coords: list, dest_coords: list) -> [True or False]:
+    def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
-        self.chosen_piece_object = self.pick_piece(this_piece_coords)
-        board_inst = copy.copy(self)
-        deleted_item = self.chosen_piece_object._move_object(board_inst, dest_coords)   # noqa
+        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_inst=self)   # noqa
 
         if deleted_item is False:
             self.update_all_poss_moves_dict()
@@ -169,10 +160,9 @@ class BoardTools(Board, ABC):
             self.update_all_poss_moves_dict()
             return True
 
-    @abstractmethod
-    def conduct_change(self, to_where: list):
+    def conduct_change(self, to_where):
         """ Метод изменяет доску совершая ход после сделанной проверки """
-        if self._get_color(to_where) == self.chosen_piece_object.enemy_color:
+        if self.get_color(to_where) == self.chosen_piece_object.enemy_color:
             enemy_piece = self.pick_piece(to_where)
 
             # Нахожу искомый id вражеской фигуры, который находит нужную фигуру со всеми ходами
@@ -222,7 +212,7 @@ class BoardTools(Board, ABC):
 
         return False
 
-    def check_castling(self, to_where: list) -> [True or False]:
+    def check_castling_and_move(self, to_where: list) -> [True or False]:
 
         if isinstance(self.chosen_piece_object, King):
 

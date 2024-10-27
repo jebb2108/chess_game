@@ -1,5 +1,6 @@
 """ Все шахматные фигуры, состояния и их поведение. """
 import sys
+from abc import *
 from sys import exception
 from typing import Any
 
@@ -25,7 +26,7 @@ class Empty(object):
         return None
 
 
-class Piece:
+class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
     img = None  # Начальная дефолтная переменная для каждой фигуры.
 
@@ -56,6 +57,14 @@ class Piece:
 
     def _set_loc(self, loc: tuple):
         self.__loc = loc
+
+    @abstractmethod
+    def _get_all_moves(self, board_inst: object):
+        return NotImplementedError
+
+    @abstractmethod
+    def _move_object(self, to_where: list, board_inst: object):
+        return NotImplementedError
 
     def _prep_moves(self, board_inst: object, array_dirs):
         curr_pos, moves = self.loc, list()
@@ -122,9 +131,6 @@ class Piece:
 
     def access_all_moves(self):
         return list(self.moves)
-
-    def _move_object(self, board, coords):
-        return None
 
     def __str__(self):
         return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
@@ -227,7 +233,7 @@ class Pawn(Piece):
         return self.moves
 
 
-    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, to_where: tuple, board_inst: object) -> int or None:
         """ Метод приказывает переместить положение пешки. """
         # Создает кортеж с координатами фигуры.
         from_where = self.loc
@@ -396,7 +402,7 @@ class Rock(Piece):
         self.moves.extend(resulted_moves)
         return self.moves
 
-    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, to_where: tuple, board_inst: object ) -> int or None:
         # Получает все возможные ходы фигуры.
         self._get_all_moves(board_inst)
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
@@ -447,7 +453,7 @@ class Knight(Piece):
         self.moves.extend(resulted_moves)
         return self.moves
 
-    def _move_object(self, board_inst: object, to_where):
+    def _move_object(self, to_where, board_inst: object,):
         self._get_all_moves(board_inst)  # noqa
         if to_where in self.moves:
             self._finish_move(board_inst, to_where)
@@ -479,7 +485,7 @@ class Bishop(Piece):
         self.moves.extend(resulted_moves)
         return self.moves
 
-    def _move_object(self, board_inst: object, to_where: tuple) -> int or None:
+    def _move_object(self, to_where: tuple, board_inst: object) -> int or None:
         self._get_all_moves(board_inst)
         if to_where in self.moves:
             self._finish_move(board_inst, to_where)
@@ -513,7 +519,7 @@ class Queen(Piece):
         self.moves.extend(resulted_moves)
         return self.moves
 
-    def _move_object(self, board_inst: object, to_where: tuple) -> dict or None:
+    def _move_object(self, to_where: tuple, board_inst: object) -> dict or None:
         self._get_all_moves(board_inst)
         if to_where in self.moves:
             self._finish_move(board_inst, to_where)
@@ -563,7 +569,7 @@ class King(Piece):
         self.moves.extend(resulted_moves)
         return self.moves
 
-    def _move_object(self, board_inst, to_where):
+    def _move_object(self, to_where, board_inst):
         self._get_all_moves(board_inst)
         if to_where in self.moves:
             self._finish_move(board_inst, to_where)
