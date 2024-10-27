@@ -4,6 +4,10 @@ import copy
 from chess_pieces import *
 from settings import Settings
 
+class Accessor(BoardManipulator, ABC):
+    def remove_piece_from_board(self, board, coords, id_num):
+        pass
+
 class Board:
     def __init__(self, board=None):
         self.board = [[Empty()] * 8 for _ in range(8)]
@@ -74,7 +78,7 @@ class Board:
 
 
 
-class BoardTools(Board):
+class BoardUser(Board):
     def __init__(self, board=None, chosen_piece_object=Empty):
         super().__init__(board)
         self.chosen_piece_object = chosen_piece_object  # переменная сохраняет экземпляр фигуры,
@@ -141,7 +145,7 @@ class BoardTools(Board):
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
-        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_inst=self)   # noqa
+        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_list=self.board)   # noqa
 
         if deleted_item is False:
             self.update_all_poss_moves_dict()

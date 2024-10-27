@@ -1,6 +1,6 @@
 import copy
 
-from board import BoardTools
+from board import BoardUser
 from chess_pieces import *
 
 
@@ -22,7 +22,7 @@ class WhoMoves(object):
         self.current_move = 1 if self.turn == 1 else 2
 
 
-class GamePlay(BoardTools):
+class GamePlay(BoardUser):
     """ Класс самого высокого уровня,
     с чем непосредственно взаимодействует пользователь. """
     def __init__(self, board=None):
