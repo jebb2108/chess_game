@@ -42,7 +42,7 @@ class BoardManipulator(ABC):
             Queen: 'class.Queen',
             King: 'class.King'
         }
-        piece = board.board[coord_y][coord_x]
+        piece = board[coord_y][coord_x]
         return class_mapping.get(type(piece), 'Empty')
 
     @staticmethod

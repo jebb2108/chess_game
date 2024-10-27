@@ -1,6 +1,6 @@
 """ Класс шахматной доски """
-import copy
 
+import copy
 from chess_pieces import *
 from settings import Settings
 
@@ -95,8 +95,8 @@ class BoardUser(Board):
     def chosen_piece_object(self, chosen_piece_object):
         if issubclass(type(chosen_piece_object), Piece):
             # Новые обязательные динамические атрибуты классу BoardTools
-            self.chosen_piece_class = self.get_class(chosen_piece_object)
-            self.chosen_piece_color = self.get_color(chosen_piece_object)
+            self.chosen_piece_class = self.get_class(self.board, chosen_piece_object.loc)
+            self.chosen_piece_color = self.get_color(self.board, chosen_piece_object.loc)
             # Выролняет назначение основному атрибуту
             self.__chosen_piece_object = chosen_piece_object
 
@@ -105,37 +105,6 @@ class BoardUser(Board):
             self.chosen_piece_color = None
             self.__chosen_piece_object = None
 
-    def get_class(self, o_piece):
-        coords = o_piece.loc
-        # Из-за того, что не могу спуститься ниже,
-        # программу делает проверку на класс на этом уровне.
-        class_mapping = {
-            Pawn: 'class.Pawn',
-            Rock: 'class.Rock',
-            Knight: 'class.Knight',
-            Bishop: 'class.Bishop',
-            Queen: 'class.Queen',
-            King: 'class.King'
-        }
-        obj = self.board[coords[0]][coords[1]]
-        return class_mapping.get(type(obj), 'Empty')
-
-    def get_color(self, data) -> int or None:
-        """ Простой метод для определения цвета
-          фигуры в заданных координатах доски. """
-
-        if type(data) is tuple:
-            coord_y, coord_x = data
-        else:
-            coord_y, coord_x = data.loc
-
-        try:
-            color = self.board[coord_y][coord_x].color
-        except IndexError:  # Индекс выходит за пределы клеток.
-            return None
-
-        # Возвращает цвет фигуры.
-        return color
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
@@ -160,7 +129,7 @@ class BoardUser(Board):
 
     def conduct_change(self, to_where):
         """ Метод изменяет доску совершая ход после сделанной проверки """
-        if self.get_color(to_where) == self.chosen_piece_object.enemy_color:
+        if self.get_color(self.board.board, to_where) == self.chosen_piece_object.enemy_color:
             enemy_piece = self.pick_piece(to_where)
 
             # Нахожу искомый id вражеской фигуры, который находит нужную фигуру со всеми ходами
