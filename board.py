@@ -4,22 +4,18 @@ import copy
 from chess_pieces import *
 from settings import Settings
 
-class Accessor(BoardManipulator, ABC):
-    def remove_piece_from_board(self, board, coords, id_num):
-        pass
 
-class Board:
+class Board(BoardManipulator, ABC):
     def __init__(self, board=None):
         self.board = [[Empty()] * 8 for _ in range(8)]
         if board is not None:  # оставленная возможность
-                               # замены для копирования доски
+            # замены для копирования доски
             self.board.clear()
             self.board = board
 
         self.all_poss_moves = dict()
         self.settings = Settings()
         self.initialize()
-
 
     def initialize(self):
         for obj in self.settings.all_pieces:
@@ -32,14 +28,13 @@ class Board:
         all_pieces = self.settings.all_pieces
         for piece in all_pieces:
             id_num = id(piece)
-            res = list([ piece, piece.access_all_moves() ])
+            res = list([piece, piece.access_all_moves()])
             self.all_poss_moves[id_num] = res
 
     def update_all_poss_moves_dict(self):
-        board_inst = self
         for key, value in self.all_poss_moves.items():
             o_piece = value[0]
-            self.all_poss_moves[key] = list([ o_piece, o_piece.access_all_moves() ])
+            self.all_poss_moves[key] = list([o_piece, o_piece.access_all_moves()])
 
         return None
 
@@ -55,6 +50,9 @@ class Board:
         print(res)
 
         return None
+
+    def remove_piece_from_board(self, board, coords, id_num):
+        pass
 
     @staticmethod
     def update_enemy_pieces_moves(board, color_indx=None):
@@ -76,22 +74,18 @@ class Board:
         return None
 
 
-
-
 class BoardUser(Board):
     def __init__(self, board=None, chosen_piece_object=Empty):
         super().__init__(board)
         self.chosen_piece_object = chosen_piece_object  # переменная сохраняет экземпляр фигуры,
-                                           # над которой программа работает в текущий
-                                           # момент для автоматизации процесса
-
+        # над которой программа работает в текущий
+        # момент для автоматизации процесса
 
     def pick_piece(self, its_loc_on_board: tuple) -> object:
         coord_y, coord_x = its_loc_on_board
         the_piece = self.board[coord_y][coord_x]
         print(type(the_piece))
         return the_piece
-
 
     @property
     def chosen_piece_object(self):
@@ -145,7 +139,7 @@ class BoardUser(Board):
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
-        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_list=self.board)   # noqa
+        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_list=self.board)  # noqa
 
         if deleted_item is False:
             self.update_all_poss_moves_dict()
@@ -187,7 +181,6 @@ class BoardUser(Board):
             self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
 
         return None
-
 
     def conduct_force_change(self, to_where: list, from_where: list, removed_piece=None) -> [True or False]:
         """
