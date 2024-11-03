@@ -55,13 +55,13 @@ class BoardManipulator(ABC):
         return color
 
     @staticmethod
-    def update_board_list(board_inst: list, curr_pos, new_pos: tuple, color: int):
+    def update_board_list(board_list: list, curr_pos, new_pos: tuple, color: int):
         enemy_id = None
-        res = BoardManipulator.__check_enemy_for_removal(board_inst, new_pos, color)
+        res = BoardManipulator.__check_enemy_for_removal(board_list, new_pos, color)
         if res:
             enemy_id = res
 
-        BoardManipulator.__put_piece_on_board_into_loc(board_inst, curr_pos, new_pos)
+        BoardManipulator.__put_piece_on_board_into_loc(board_list, curr_pos, new_pos)
         return enemy_id
 
     @staticmethod

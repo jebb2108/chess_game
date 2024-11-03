@@ -2,75 +2,40 @@ import pygame
 import pygwidgets
 
 from settings import Settings
+from constants import *
 
 
 class Authorization:
 
-    def __init__(self, screen):
-        self.screen = screen
-        self.settings = Settings()
+    BACKGROUND_IMAGE = pygame.image.load('images/background.png')
 
-        self.box_rect = self._create_box_rect()
-        self.box_name = self._create_box_name()
+    def __init__(self, window):
+        self.window = window
 
-        self.login_input = self._create_login_input_field()
-        self.password_input = self._create_password_input_field()
-        self.login_button = self._create_login_button()
-        self.reg_button = self._create_reg_button()
+        self.box_name = pygwidgets.DisplayText(window, (660, 50), 'Chess Game', fontSize=40)
+
+        self.login_input = pygwidgets.InputText(window, (655, 85), width=180, fontSize=40,
+                                                backgroundColor=LIGHT_GRAY, textColor=DARK_GRAY)
+
+        self.password_input = pygwidgets.InputText(window, (655, 125), width=180, fontSize=40,
+                                                   backgroundColor=LIGHT_GRAY, textColor=DARK_GRAY)
+
+        self.login_button = pygwidgets.TextButton(window, (655, 165), 'Login', width=65, height=30)
+
+        self.reg_button = pygwidgets.TextButton(window, (725, 165),'Register', width=110, height=30)
+
+        self.buttons = [self.box_name, self.login_input, self.password_input, self.login_button, self.reg_button]
 
 
-    def _create_box_rect(self):
-        rect_box = pygame.draw.rect(self.screen, self.settings.DARK_GRAY,
-                                    self.settings.BOX_LOC_SIZE, 0)
+    def check_authorization(self):
+        if (self.login_input.getValue() + ' ' +
+                self.password_input.getValue() == 'gabriel bouchard'):
+            return True
+        else:
+            return False
 
-        return rect_box
-
-    def _create_box_name(self):
-        box_name = pygwidgets.DisplayText(self.screen, self.settings.BOX_NAME_LOC,
-                                          'Chess Game',
-                                          fontSize=self.settings.BOX_NAME_FONT_SIZE)
-
-        return box_name
-
-    def _create_login_input_field(self):
-        login_field = pygwidgets.InputText(self.screen, self.settings.LOGIN_LOC,
-                                           width=self.settings.LOGIN_WIDTH,
-                                           fontSize=self.settings.LOGIN_FONT_SIZE,
-                                           backgroundColor=self.settings.LIGHT_GRAY,
-                                           textColor=self.settings.DARK_GRAY)
-        return login_field
-
-    def _create_password_input_field(self):
-        password_field = pygwidgets.InputText(self.screen, self.settings.PASSWORD_LOC,
-                                              width=self.settings.PASSWORD_WIDTH,
-                                              fontSize=self.settings.PASSWORD_FONT_SIZE,
-                                              backgroundColor=self.settings.LIGHT_GRAY,
-                                              textColor=self.settings.DARK_GRAY)
-        return password_field
-
-    def _create_login_button(self):
-        login_button = pygwidgets.TextButton(self.screen, self.settings.LOGIN_BUTTON_LOC,
-                                             'log in', width=self.settings.LOGIN_BUTTON_WIDTH,
-                                             height=self.settings.LOGIN_BUTTON_HEIGHT)
-        return login_button
-
-    def _create_reg_button(self):
-        reg_button = pygwidgets.TextButton(self.screen, self.settings.REG_BUTTON_LOC,
-                                           'registration', width=self.settings.REG_BUTTON_WIDTH,
-                                           height=self.settings.REG_BUTTON_HEIGHT)
-        return reg_button
-
-    def show_authorization_window(self):
-        visuals = [
-
-            self._create_box_rect(),
-
-            self.box_name.draw(),
-            self.login_input.draw(),
-            self.password_input.draw(),
-            self.login_button.draw(),
-            self.reg_button.draw()
-
-        ]
-
-        return visuals
+    def draw(self):
+        self.window.blit(self.BACKGROUND_IMAGE, (-170, 40))
+        pygame.draw.rect(self.window, GRAY, (635, 40, 220, 180), 0)
+        for button in self.buttons:
+            button.draw()
