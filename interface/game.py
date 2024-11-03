@@ -74,6 +74,10 @@ class Game:
 
                 height_adjustment += 55 + offset_xy
 
+        # filename = 'mapping.txt'
+        # with open (filename, 'w') as file:
+        #     for key, value in self.board_dict.items():
+        #         file.write(f"{value[1]}: {value[0]},\n")
 
         return None
 
