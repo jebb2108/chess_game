@@ -70,6 +70,7 @@ while True:
                 o_game.alter_time()
 
             board_dict = o_game.draw(flag)
+            o_game.handleEvent(event)
 
 
             if o_game.quit_button.handleEvent(event):
