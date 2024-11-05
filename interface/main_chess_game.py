@@ -2,14 +2,11 @@
 
 # 1 - Импортируем модули
 
-import os
 import pygame
-import pygwidgets
 import sys
 
 from game import *
 from authorization import *
-from settings import *
 
 # 2 - Определяем константы
 WINDOW_WIDTH = 900
@@ -65,9 +62,9 @@ while True:
                 login_awaiting_status = False
                 break
         else:
+
             o_game.new_game_button.handleEvent(event)
-            if o_game.choose_time_button.handleEvent(event):
-                o_game.alter_time()
+            o_game.choose_time_button.handleEvent(event)
             o_game.draw(flag)
             o_game.event_manager(event)
 
