@@ -34,6 +34,11 @@ class Game:
 
         self.board_rects = list()
         self.chained_rects_dict = dict()
+        
+    def choose_time_button.handleEvent(event):
+        if self.choose_time_button.state == "armed":
+            self.alter_time()
+        super().handleEvent(event)
 
     def handleEvent(self, event):
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
@@ -81,7 +86,7 @@ class Game:
         else:
             self.choose_time_display.draw()
 
-    def show_borders(self, flag):
+    def show_tiles(self, flag):
         # alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         offset_xy = 10
         hash_indx = 0
@@ -120,4 +125,4 @@ class Game:
             button.draw()
         self.check_time_button()
         self.window.blit(self.board, self.board_rect)
-        self.show_borders(flag)
+        self.show_tiles(flag)
