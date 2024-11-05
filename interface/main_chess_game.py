@@ -68,9 +68,8 @@ while True:
             o_game.new_game_button.handleEvent(event)
             if o_game.choose_time_button.handleEvent(event):
                 o_game.alter_time()
-
-            board_dict = o_game.draw(flag)
-            o_game.handleEvent(event)
+            o_game.draw(flag)
+            o_game.event_manager(event)
 
 
             if o_game.quit_button.handleEvent(event):

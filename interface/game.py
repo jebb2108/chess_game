@@ -33,34 +33,31 @@ class Game:
         self.board_rect.top, self.board_rect.left = 20, 20
 
         self.board_rects = list()
-        self.chained_rects_dict = dict()
+        self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
-    def handleEvent(self, event):
+    def event_manager(self, event):
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
             pos_x, pos_y = pygame.mouse.get_pos()
             for rect in self.board_rects:
                 key = self.board_rects.index(rect)
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if rect.collidepoint(pos_x, pos_y):
-                        if self.chained_rects_dict[key] == HOVER:
-                            self.chained_rects_dict[key] = SELECTED
+                        if self.linked_rects_dict[key] == HOVER:
+                            self.linked_rects_dict[key] = SELECTED
 
                 else:
-                    if self.chained_rects_dict[key] == IDLE:
-                        self.chained_rects_dict[key] = HOVER
+                    if self.linked_rects_dict[key] == IDLE:
+                        self.linked_rects_dict[key] = HOVER
 
-        for key, value in self.chained_rects_dict.items():
+        for key, value in self.linked_rects_dict.items():
             if value == SELECTED:
-                gen = list([key for key, value in self.chained_rects_dict.items() if value == SELECTED])
+                gen = list([key for key, value in self.linked_rects_dict.items() if value == SELECTED])
                 if len(gen) > 1:
                     for item in gen:
-                        self.chained_rects_dict[item] = IDLE
+                        self.linked_rects_dict[item] = IDLE
 
             if value == HOVER and not (self.board_rects[key].collidepoint(pygame.mouse.get_pos())):
-                self.chained_rects_dict[key] = IDLE
-            elif value in [SELECTED, HOVER]:
-                rect = self.board_rects[key]
-                pygame.draw.rect(self.window, GREEN, [rect.x, rect.y, 55, 55], 10)
+                self.linked_rects_dict[key] = IDLE
 
     def alter_time(self):
         current_time = self.default_time
@@ -82,9 +79,7 @@ class Game:
             self.choose_time_display.draw()
 
     def show_borders(self, flag):
-        # alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         offset_xy = 10
-        hash_indx = 0
 
         if flag:
             pygame.draw.rect(self.window, RED, (50, 50, 540, 540), 5)
@@ -104,11 +99,14 @@ class Game:
                 if len(self.board_rects) != 64:
                     single_rect = pygame.Rect(width_adjustment, top_border + height_adjustment, 55, 55)
                     self.board_rects.append(single_rect)
-                    self.chained_rects_dict[hash_indx] = IDLE
-
-                    hash_indx += 1
 
             height_adjustment += 55 + offset_xy
+
+        if flag:
+            for key, value in self.linked_rects_dict.items():
+                if value in [SELECTED, HOVER]:
+                    rect = self.board_rects[key]
+                    pygame.draw.rect(self.window, GREEN, [rect.x, rect.y, 55, 55], 10)
 
         # print(self.chained_rects_dict)
         return None
