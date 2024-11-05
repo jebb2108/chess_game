@@ -4,7 +4,6 @@ import pygwidgets
 import pygame
 
 from constants import *
-from settings import Settings
 
 
 class Game:
@@ -101,12 +100,6 @@ class Game:
                     self.board_rects.append(single_rect)
 
             height_adjustment += 55 + offset_xy
-
-        if flag:
-            for key, value in self.linked_rects_dict.items():
-                if value in [SELECTED, HOVER]:
-                    rect = self.board_rects[key]
-                    pygame.draw.rect(self.window, GREEN, [rect.x, rect.y, 55, 55], 10)
 
         # print(self.chained_rects_dict)
         return None
