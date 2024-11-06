@@ -1,17 +1,22 @@
-# Класс умной кнопки, в которой переназначается функция нажатия
+# Модуль для добавления функциональных кнопок,
+# переназначая свойства базового класса PygWidgetsButton
+
 import pygwidgets
 import pygame
 
-from constants import *
 from game import *
+from constants import *
 
+# список событий мыши, на которые реагирует кнопка
 MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 
 class ChooseTimeButton(pygwidgets.TextButton):
 
+    # время в формате (минуты, секунды)
     TIMES_LIST = [(10, 5), (10, 0), (30, 0), (30, 15), (45, 0), (5, 0), (5, 3)]
 
     def __init__(self, window, loc, text, width=180, height=45, fontSize=22):
+        self.state = self.STATE_IDLE
         self.default_time = ChooseTimeButton.TIMES_LIST[0]
         self.font = pygame.font.Font(None, 24)
         self.default_text_image = self.font.render('CHOOSE TIME', True, DARK_GRAY)
@@ -23,24 +28,31 @@ class ChooseTimeButton(pygwidgets.TextButton):
 
     def handleEvent(self, event):
 
+        # кнопка заботится только о событиях мыши
         if event.type in MOUSE_EVENTS_LIST:
 
+            # создает переменную для координат курсора
             event_point_in_button_rect = self.rect.collidepoint(event.pos)
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event_point_in_button_rect:
-                self.state = self.STATE_ARMED
-                self.alter_time()
-
-            elif event_point_in_button_rect:
-                self.display_time()
+            # иначе, если курсор в пределах кнопки,
+            # то кнопка меняет свое состояние на активную
+            if event_point_in_button_rect:
                 self.state = self.STATE_OVER
+                self.display_time()
+
+                # нажата левая кнопка мыши
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.state = self.STATE_ARMED
+                    self.alter_time()
+
 
             else:
                 self.current_text = self.default_text_image
                 self.state = self.STATE_IDLE
 
+        # после модификации кнопки,
+        # вызываем метод родительского класса
         super().handleEvent(event)
-
 
 
     def alter_time(self):

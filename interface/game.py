@@ -2,9 +2,19 @@
 
 import pygwidgets
 import pygame
+from pygame.event import clear
 
 from constants import *
 from buttons import *
+from authorization import *
+
+
+class LoginData(Authorization):
+
+    def __init__(self, window):
+        super().__init__(window)
+        self.name = self.login_input
+        self.password = self.password_input
 
 
 class Game:
@@ -13,6 +23,7 @@ class Game:
     BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 
     def __init__(self, window):
+
         self.window = window
 
         self.font = pygame.font.Font(None, 40)
@@ -23,7 +34,8 @@ class Game:
 
         self.profile_button = pygwidgets.TextButton(self.window, (440, 640), 'PROFILE', width=180, height=45, fontSize=22)
 
-        self.quit_button = pygwidgets.TextButton(self.window, (745, 640), 'QUIT', width=100, height=45, fontSize=22)
+        self.quit_button = pygwidgets.TextButton(self.window, (745, 640), 'QUIT', width=100, height=45, fontSize=22,
+                                                 callBack=self.exit)
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
 
@@ -70,6 +82,10 @@ class Game:
                     pygame.draw.rect(self.window, GREEN, [rect.left, rect.top, rect.width, rect.height], 10)
 
         return None
+
+    def exit(self, CallBack):
+        Authorization.LOGIN_AWAITING_STATUS = True
+        self.window.fill(BLACK)
 
     @staticmethod
     def create_rects():

@@ -1,4 +1,5 @@
 # Главная программа
+from gc import callbacks
 
 # 1 - Импортируем модули
 
@@ -7,6 +8,7 @@ import sys
 
 from game import *
 from authorization import *
+from constants import *
 
 # 2 - Определяем константы
 WINDOW_WIDTH = 900
@@ -26,8 +28,8 @@ BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 # 5 - Инициализируем переменные
 o_auth = Authorization(window)
 o_game = Game(window)
-login_awaiting_status = False
 flag = False
+
 
 
 # 6 - Бесконечный цикл
@@ -44,21 +46,20 @@ while True:
                 print(board_dict)
                 flag = not flag
 
-        if login_awaiting_status:
+        if Authorization.LOGIN_AWAITING_STATUS:
+
             o_auth.login_input.handleEvent(event)
             o_auth.password_input.handleEvent(event)
+            o_auth.login_button.handleEvent(event)
 
-            if o_auth.login_input.getValue() != '':
-                if o_auth.password_input.getValue() != '':
+
+            if o_auth.login_input.getValue() != '' and o_auth.password_input.getValue() != '':
                     o_auth.login_button.enable()
             else:
                 o_auth.login_button.disable()
 
             o_auth.draw()
 
-            if o_auth.login_button.handleEvent(event) and o_auth.check_authorization():
-                login_awaiting_status = False
-                break
         else:
 
             o_game.event_manager(event)
@@ -66,12 +67,7 @@ while True:
             o_game.choose_time_button.handleEvent(event)
             o_game.draw(flag)
 
-            if o_game.quit_button.handleEvent(event):
-                o_auth.login_input.setValue('')
-                o_auth.password_input.setValue('')
-                login_awaiting_status = True
-                window.fill(BLACK)
-                break
+            o_game.quit_button.handleEvent(event)
 
 
 
