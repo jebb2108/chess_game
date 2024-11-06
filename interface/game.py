@@ -8,14 +8,13 @@ from buttons import *
 
 
 class Game:
-    TIMES_LIST = [(10, 5), (10, 0), (30, 0), (30, 15), (45, 0), (5, 0), (5, 3)]
 
     BACKGROUND_IMAGE = pygame.image.load('images/background.png')
     BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 
     def __init__(self, window):
         self.window = window
-        self.default_time = Game.TIMES_LIST[0]
+
         self.font = pygame.font.Font(None, 40)
 
         self.new_game_button = pygwidgets.TextButton(self.window, (20, 640), 'NEW GAME', width=180, height=45, fontSize=22)
@@ -36,6 +35,9 @@ class Game:
         self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
     def event_manager(self, event):
+        #
+        # event_point_in_board_rect = self.board_rect.collidepoint(event.get_pos())
+
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
             pos_x, pos_y = pygame.mouse.get_pos()
             for rect in self.board_rects:
@@ -84,7 +86,6 @@ class Game:
 
             height_adjustment += 55 + offset_xy
 
-        # print(self.chained_rects_dict)
         return None
 
 

@@ -5,6 +5,8 @@ import pygame
 from constants import *
 from game import *
 
+MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+
 class ChooseTimeButton(pygwidgets.TextButton):
 
     TIMES_LIST = [(10, 5), (10, 0), (30, 0), (30, 15), (45, 0), (5, 0), (5, 3)]
@@ -20,19 +22,25 @@ class ChooseTimeButton(pygwidgets.TextButton):
 
 
     def handleEvent(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            self.state = self.STATE_ARMED
-            self.alter_time()
 
-        elif self.rect.collidepoint(pygame.mouse.get_pos()):
-            self.display_time()
-            self.state = self.STATE_OVER
+        if event.type in MOUSE_EVENTS_LIST:
 
-        else:
-            self.current_text = self.default_text_image
-            self.state = self.STATE_IDLE
+            event_point_in_button_rect = self.rect.collidepoint(event.pos)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event_point_in_button_rect:
+                self.state = self.STATE_ARMED
+                self.alter_time()
+
+            elif event_point_in_button_rect:
+                self.display_time()
+                self.state = self.STATE_OVER
+
+            else:
+                self.current_text = self.default_text_image
+                self.state = self.STATE_IDLE
 
         super().handleEvent(event)
+
 
 
     def alter_time(self):
