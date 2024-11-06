@@ -4,7 +4,7 @@ import pygwidgets
 import pygame
 
 from constants import *
-from time_button import *
+from buttons import *
 
 
 class Game:
