@@ -31,12 +31,10 @@ class Game:
         self.board_rect = self.board.get_rect()
         self.board_rect.top, self.board_rect.left = 20, 20
 
-        self.board_rects = list()
+        self.board_rects = self.create_rects()
         self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
     def event_manager(self, event):
-        #
-        # event_point_in_board_rect = self.board_rect.collidepoint(event.get_pos())
 
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
             pos_x, pos_y = pygame.mouse.get_pos()
@@ -62,31 +60,35 @@ class Game:
                 self.linked_rects_dict[key] = IDLE
 
 
-    def show_borders(self, flag):
-        offset_xy = 10
 
+    def show_tiles(self, flag):
         if flag:
             pygame.draw.rect(self.window, RED, (50, 50, 540, 540), 5)
+            for rect in self.board_rects:
+                pygame.draw.rect(self.window, GREEN, [rect.left, rect.top, rect.width, rect.height], 2)
+                if self.linked_rects_dict[self.board_rects.index(rect)] in [SELECTED, HOVER]:
+                    pygame.draw.rect(self.window, GREEN, [rect.left, rect.top, rect.width, rect.height], 10)
 
+        return None
+
+    @staticmethod
+    def create_rects():
+        rects_list = []
+        offset_xy = 10
         left_border, top_border = 50 + 15, 50 + 15
         height_adjustment = 0
-
         for _ in range(1, 9):
             width_adjustment = 0
 
             for _ in range(8):
-                if flag:
-                    pygame.draw.rect(self.window, GREEN,
-                                     (left_border + width_adjustment, top_border + height_adjustment, 55, 55), 2)
-
                 width_adjustment += 55 + offset_xy
-                if len(self.board_rects) != 64:
-                    single_rect = pygame.Rect(width_adjustment, top_border + height_adjustment, 55, 55)
-                    self.board_rects.append(single_rect)
+                # if len(rects_list) != 64:
+                single_rect = pygame.Rect(width_adjustment, top_border + height_adjustment, 55, 55)
+                rects_list.append(single_rect)
 
             height_adjustment += 55 + offset_xy
 
-        return None
+        return rects_list
 
 
     def draw(self, flag=False):
@@ -94,4 +96,7 @@ class Game:
         for button in self.buttons:
             button.draw()
         self.window.blit(self.board, self.board_rect)
-        self.show_borders(flag)
+        self.show_tiles(flag)
+
+
+

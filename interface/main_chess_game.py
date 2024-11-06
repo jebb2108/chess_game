@@ -44,8 +44,6 @@ while True:
                 print(board_dict)
                 flag = not flag
 
-
-
         if login_awaiting_status:
             o_auth.login_input.handleEvent(event)
             o_auth.password_input.handleEvent(event)
@@ -63,11 +61,10 @@ while True:
                 break
         else:
 
+            o_game.event_manager(event)
             o_game.new_game_button.handleEvent(event)
             o_game.choose_time_button.handleEvent(event)
             o_game.draw(flag)
-            o_game.event_manager(event)
-
 
             if o_game.quit_button.handleEvent(event):
                 o_auth.login_input.setValue('')
