@@ -7,6 +7,7 @@ from pygame.event import clear
 from constants import *
 from buttons import *
 from authorization import *
+from board import *
 
 
 class LoginData(Authorization):
@@ -25,6 +26,8 @@ class Game:
     def __init__(self, window):
 
         self.window = window
+
+        self.board_inst = Board(window)
 
         self.font = pygame.font.Font(None, 40)
 
@@ -46,6 +49,8 @@ class Game:
         self.board_rects = self.create_rects()
         self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
+        self.chosen_piece = None
+
     def event_manager(self, event):
 
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
@@ -57,6 +62,15 @@ class Game:
                         if self.linked_rects_dict[key] == HOVER:
                             self.linked_rects_dict[key] = SELECTED
 
+                            res = self.convert_selected_into_coord(key)
+                            coord_y, coord_x = res
+                            if issubclass(self.board_inst.board[coord_y][coord_x].__class__, Piece):
+                                self.chosen_piece = self.board_inst.board[coord_y][coord_x]
+                                print('There is a piece:', self.chosen_piece)
+                            else:
+                                print('no piece')
+
+
                 else:
                     if self.linked_rects_dict[key] == IDLE:
                         self.linked_rects_dict[key] = HOVER
@@ -65,11 +79,26 @@ class Game:
             if value == SELECTED:
                 gen = list([key for key, value in self.linked_rects_dict.items() if value == SELECTED])
                 if len(gen) > 1:
+                    try:
+                        self.attempt_piece_to_move(self.chosen_piece, self.convert_selected_into_coord(key))
                     for item in gen:
                         self.linked_rects_dict[item] = IDLE
 
             if value == HOVER and not (self.board_rects[key].collidepoint(pygame.mouse.get_pos())):
                 self.linked_rects_dict[key] = IDLE
+
+    @staticmethod
+    def convert_selected_into_coord(key):
+        coords = (key // 8, key % 8)
+        return coords
+
+    def attach_pieces_to_board(self):
+        for piece in self.board_inst.all_pieces:
+            coords = piece.loc
+            pixel_coords = Settings.pixel_mapping[coords]
+            self.window.blit(piece.image, pixel_coords)
+
+
 
 
 

@@ -98,15 +98,15 @@ class Board(ABC):
         print('no piece')
 
 
-if __name__ == '__main__':
-    window = None
-    board = Board(window)
-    board.make_all_spot_list()
-    print(board.spot_list)
-    board.test_click([130, 65])
-    board.test_click([130, 195])
-
-
-
-    # print(board.board)
+# if __name__ == '__main__':
+#     window = None
+#     board = Board(window)
+#     board.make_all_spot_list()
+#     # print(board.spot_list)
+#     board.test_click([130, 65])
+#     board.test_click([130, 195])
+#
+#
+#
+#     # print(board.board)
 
