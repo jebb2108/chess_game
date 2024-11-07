@@ -1,3 +1,5 @@
+import copy
+
 from board import *
 from settings import *
 
@@ -58,8 +60,8 @@ class GamePlay:
                 print('options: dictionary for moves "d"; stats for each piece "s"')
                 response = input('What would you like to see: ')
                 if response == 'd':
-                    gen1 = [move[1] for move in self.actions.all_poss_moves.values()]
-                    gen2 = [move[2] for move in self.actions.all_poss_moves.values()]
+                    gen1 = [key.img[key.color-1] for key in self.actions.all_poss_moves]
+                    gen2 = [moves for moves in self.actions.all_poss_moves.values()]
                     for item in zip(gen1, gen2):
                         print(item)
                 elif response == 's':
@@ -153,7 +155,7 @@ class GamePlay:
             if self.place_piece_on_board(to_where):
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
-                self.actions.update_all_poss_moves_dict()
+                self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
                 return self.actions.print_board()
 
         return self.actions.print_board()
@@ -177,20 +179,20 @@ class GamePlay:
     def place_piece_on_board(self, to_where):
         # Если шаха не зафиксировано,
         # программа пытается переместить фигуру на доске.
-        temp_res = self.actions.attempt_piece_to_move(to_where)
+        eaten_piece = self.actions.attempt_piece_to_move(to_where)
 
         # Если результат отрицательный,
         # происходит выброс из цикла действий.
-        if temp_res is False: return False
-        if temp_res not in [True, None]:  # Иначе проверяет, есть ли другое значение от булевых?
-            removed_piece_id = temp_res[0]
-            removed_piece = temp_res[1]
+        if eaten_piece is False: return False
+        if eaten_piece not in [True, None]:  # Иначе проверяет, есть ли другое значение от булевых?
+            removed_piece_id = eaten_piece.id
+            removed_piece = eaten_piece
             # Перемещает экземпляр во временное хранилище - список.
             self.object_copies.extend([removed_piece])
 
             # Так как изменения на доске уже произошли,
             # проверяет, есть ли шах королю сейчас?
-            if self.post_check_king(obj, from_where, to_where, color_indx):  # noqa
+            if self.post_check_king(to_where):  # noqa
 
                 # Проверка выполнена.
                 # Фигура остается в той же позиции
@@ -239,7 +241,7 @@ class GamePlay:
 
         elif res not in [True, None]:
             # Создает копию съеденной фигуры в резерве
-            removed_piece = res[1]
+            removed_piece = res
             self.object_copies.append(removed_piece)
 
         # Король теперь в опасности?
@@ -248,7 +250,7 @@ class GamePlay:
             if self.object_copies:
                 self.actions.conduct_force_change(to_where, self.actions.chosen_piece_object.loc, self.object_copies)
                 if not isinstance(self.object_copies[-1], object):
-                    self.actions.all_poss_moves[res[0]] = (self.object_copies[-1], [])
+                    self.actions.all_poss_moves[res] = (self.object_copies[-1], [])
                     self.object_copies.clear()
                 return False
 
@@ -259,10 +261,9 @@ class GamePlay:
         return self.post_check_king(obj, from_where, to_where, color_indx)  # noqa
 
     def get_moves(self):
-        gen_moves = [[move[0], list(move[1])] for move in self.actions.all_poss_moves.values() if
-                     move[0].color == self.actions.chosen_piece_color]
-        array = list(gen_moves)
-        return array
+        array_moves = [ value.access_all_moves() for key, value in self.actions.all_poss_moves.items() if
+                     key.color == self.actions.chosen_piece_color ]
+        return array_moves
 
     def make_msg(self, e=''):
         """ Подставляет сообщение об ошибке. """
@@ -288,11 +289,10 @@ class GamePlay:
             return None
 
     def process_deleted_item(self, item):
-        removed_piece_id = item[0]
-        removed_piece = item[1]
+        removed_piece = item
         # Перемещает экземпляр во временное хранилище - список.
         self.object_copies.extend([removed_piece])
-        return removed_piece_id, removed_piece
+        return removed_piece.id, removed_piece
 
     def is_checked(self, chessboard_inst=None) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
@@ -306,19 +306,19 @@ class GamePlay:
             return False
 
         if color == 'black':
-            black_king_id = next((key for key, item in chessboard_inst.all_poss_moves.items() if
-                                  item[0].color == 2 and isinstance(item[0], King)), None)
-            return (chessboard_inst.all_poss_moves[black_king_id][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 1 else value[1] for value in
-                                chessboard_inst.all_poss_moves.values()], [])))
+            black_king = next((key for key in chessboard_inst.all_poss_moves if
+                                  key.color == 2 and isinstance(key, King)), None)
+            return (chessboard_inst.all_poss_moves[black_king].safe_zone
+                    in set(sum([value if key.color == 1 else key for key, value in
+                                chessboard_inst.all_poss_moves.items()], [])))
 
 
         elif color == 'white':
-            white_king_id = next((key for key, item in chessboard_inst.all_poss_moves.items() if
-                                  item[0].color == 1 and isinstance(item[0], King)), None)
-            return (chessboard_inst.all_poss_moves[white_king_id][0].safe_zone
-                    in set(sum([value[1] if value[0].color == 2 else value[1] for value in
-                                chessboard_inst.all_poss_moves.values()], [])))
+            white_king = next((key for key in chessboard_inst.all_poss_moves if
+                                  key.color == 1 and isinstance(key, King)), None)
+            return (chessboard_inst.all_poss_moves[white_king].safe_zone
+                    in set(sum([value if key.color == 2 else key for key, value in
+                                chessboard_inst.all_poss_moves.items()], [])))
 
 
 # Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.

@@ -8,7 +8,7 @@ class Authorization:
 
     BACKGROUND_IMAGE = pygame.image.load('images/background.png')
 
-    LOGIN_AWAITING_STATUS = False
+    LOGIN_AWAITING_STATUS = True
 
     def __init__(self, window):
 
@@ -28,6 +28,20 @@ class Authorization:
         self.reg_button = pygwidgets.TextButton(window, (725, 165),'Register', width=110, height=30)
 
         self.buttons = [self.box_name, self.login_input, self.password_input, self.login_button, self.reg_button]
+
+
+    def event_manager(self, event):
+
+        if self.login_input.getValue() != '' and self.password_input.getValue() != '':
+            self.login_button.enable()
+        else:
+            self.login_button.disable()
+
+        if event.type in MOUSE_EVENTS_LIST:
+            if self.reg_button.rect.collidepoint(event.pos):
+                pass
+            else:
+                pass
 
 
     def check_authorization(self, callBack):

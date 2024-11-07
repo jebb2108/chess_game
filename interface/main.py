@@ -5,9 +5,10 @@ from gc import callbacks
 
 import pygame
 import sys
+import logging
 
-from game import *
-from authorization import *
+from game import Game
+from authorization import Authorization
 from constants import *
 
 # 2 - Определяем константы
@@ -44,22 +45,18 @@ while True:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_m:
-                print(board_dict)
                 flag = not flag
                 chosen_piece = not chosen_piece
+                level = logging.INFO
+                fmt = '[%(levelname)s] - %(asctime)s %(message)s'
+                logging.basicConfig(level=level, format=fmt)
 
         if Authorization.LOGIN_AWAITING_STATUS:
 
+            o_auth.event_manager(event)
             o_auth.login_input.handleEvent(event)
             o_auth.password_input.handleEvent(event)
             o_auth.login_button.handleEvent(event)
-
-
-            if o_auth.login_input.getValue() != '' and o_auth.password_input.getValue() != '':
-                    o_auth.login_button.enable()
-            else:
-                o_auth.login_button.disable()
-
             o_auth.draw()
 
         else:
@@ -67,7 +64,7 @@ while True:
             o_game.event_manager(event)
             o_game.new_game_button.handleEvent(event)
             o_game.choose_time_button.handleEvent(event)
-            o_game.draw(flag, event)
+            o_game.draw(event, flag)
 
             o_game.quit_button.handleEvent(event)
 

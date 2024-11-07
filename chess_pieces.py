@@ -1,4 +1,5 @@
 """ Все шахматные фигуры, состояния и их поведение. """
+import copy
 import sys
 from abc import *
 from sys import exception
@@ -51,18 +52,14 @@ class BoardManipulator(ABC):
         try:
             color = board[coord_y][coord_x].color
         except IndexError:
-            return Color.empty
+            return None
         return color
 
     @staticmethod
     def update_board_list(board_list: list, curr_pos, new_pos: tuple, color: int):
-        enemy_id = None
-        res = BoardManipulator.__check_enemy_for_removal(board_list, new_pos, color)
-        if res:
-            enemy_id = res
-
+        this_enemy = BoardManipulator.__check_enemy_for_removal(board_list, new_pos, color)
         BoardManipulator.__put_piece_on_board_into_loc(board_list, curr_pos, new_pos)
-        return enemy_id
+        return this_enemy
 
     @staticmethod
     def __put_piece_on_board_into_loc(board_list: list, curr_pos: tuple, new_pos: tuple):
@@ -79,9 +76,8 @@ class BoardManipulator(ABC):
         """ Проверяет на наличие вражеской фигуры по заданной координате. """
         new_y, nex_x = new_pos
         if BoardManipulator.get_color(board_list, new_pos) == color:
-            enemy_piece = board_list[new_y][nex_x]
-            enemy_to_delete = id(enemy_piece)
-            return enemy_to_delete
+            enemy = board_list[new_y][nex_x]
+            return enemy
 
         return False
 
@@ -89,13 +85,21 @@ class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
     img = None  # Начальная дефолтная переменная для каждой фигуры.
 
-    def __init__(self, loc: tuple[int, int], color: object):  # Каждая фигура должна иметь свой цвет.
+    # Каждая фигура должна иметь свой цвет.
+    def __init__(self, loc: tuple[int, int], color: object):
         self.loc = loc
         self.color = color  # Программа должна явно указывать Белый или Черный.
+        self.id = id(loc)
+        # Первый динамический атрибут для связи с вражеской фигурой, которая съедает
+        # текущую, а второй атрибут для вывода его id на вехние уровни и обновления словаря
+        self.alien_id = None
         self.enemy_color = 1 if self.color == Color.black else 2
         self.is_not_changed = True
-        self.enemy_to_delete = None
         self.moves = list()
+
+
+    def get_id(self):
+        return self.id
 
     @property
     def loc(self):
@@ -108,13 +112,13 @@ class Piece(ABC):
 
         self.__loc = loc
 
-    def _get_y(self):
+    def get_y(self):
         return self.__loc[0]
 
-    def _get_x(self):
+    def get_x(self):
         return self.__loc[1]
 
-    def _set_loc(self, loc: tuple):
+    def set_loc(self, loc: tuple):
         self.__loc = loc
 
     @abstractmethod
@@ -125,7 +129,7 @@ class Piece(ABC):
     def _move_object(self, to_where: list, board_list: list):
         return NotImplementedError
 
-    def _prep_moves(self, board_inst: list, array_dirs):
+    def _prep_moves(self, board_list: list, array_dirs):
         curr_pos, moves = self.loc, list()
         for d1r in array_dirs:
             # Каждый раз устанавливает новое положение
@@ -133,18 +137,23 @@ class Piece(ABC):
             new_pos = (curr_pos[0] + d1r[0],  # noqa
                             curr_pos[1] + d1r[1])
 
+            if (new_pos[0] < 0 or new_pos[1] < 0) or \
+                    (new_pos[0] > 7 or new_pos[1]) > 7:
+
+                continue
+
             # Цикл продолжает работать пока функция возвращает True.
-            while self._is_valid_move(board_inst, new_pos):
+            while self._is_valid_move(board_list, new_pos):
                 # Необходимое условие, если координата стала отрицательной в результате прошлого действия,
                 # то происходит инвертирования значения в положительное e.g -1 --> 1.
-                if d1r[0] + d1r[1] < 0 and (new_pos[0] < 0 or new_pos[1] < 0):
-                    # Проверяет, чтобы значение координаты не стало отрицательным
-                    # тогда проверка списка начинается с конца, а этого нельзя допустить
-                    # иначе произойдет бесконечный цикл.
-                    break
+                # if d1r[0] + d1r[1] < 0 and (new_pos[0] < 0 or new_pos[1] < 0):
+                #     # Проверяет, чтобы значение координаты не стало отрицательным
+                #     # тогда проверка списка начинается с конца, а этого нельзя допустить
+                #     # иначе произойдет бесконечный цикл.
+                #     break
 
                 # Вражеская фигура должна стать последней в списке возможных ходов.
-                elif BoardManipulator.get_color(board_inst, new_pos) == self.enemy_color:
+                if BoardManipulator.get_color(board_list, new_pos) == self.enemy_color:
                     moves.append(new_pos)
                     break
 
@@ -159,8 +168,7 @@ class Piece(ABC):
     def _is_valid_move(self, board_list: list, new_pos: tuple) -> bool:
         # Только два возможных условия истинности:
         # либо это поле пустое, либо оно вражеское (последнее)
-        if (BoardManipulator.get_color(board_list, new_pos)
-                in [Color.empty, self.enemy_color]):
+        if BoardManipulator.get_color(board_list, new_pos) in [Color.empty, self.enemy_color]:
             return True  # Возвращает истинное значение, если поле пустое
                          # и не произошла ошибка.
         return False
@@ -170,7 +178,7 @@ class Piece(ABC):
 
     def _finish_move(self, board_list: list, new_pos: tuple):
         BoardManipulator.update_board_list(board_list, self.loc, new_pos, self.enemy_color)
-        self._set_loc(new_pos)
+        self.set_loc(new_pos)
         self.is_not_changed = False
         return None
 
@@ -179,17 +187,12 @@ class Piece(ABC):
                                                                 # кортеж белого и черного цвета фигуры.
 
 
-    @staticmethod
-    def raise_exception(error_message):
-        default_message = 'Please, report it by clicking the button bellow.'
-        print(error_message, default_message, sep='\n')
-        return sys.exit()
 
 class Pawn(Piece):
     """ Класс для пешки """
     img = ('\u265F', '\u2659')  # Кортеж из цветов.
 
-    def __init__(self, loc, color, back_or_forth=None):
+    def __init__(self, loc, color, back_or_forth):
         self.allowed_moves = 2
         self.ways_to_go = [(1, 0), (1, 1), (1, -1)]
         self.back_or_forth = back_or_forth
@@ -198,16 +201,6 @@ class Pawn(Piece):
 
         super().__init__(loc, color)  # Унаследование от родителя атрибутов.
 
-    def __repr__(self):
-        return (f'\tcolor for pawn: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'memory: {bool(self.memory)},\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n'
-                f'direction: {self.back_or_forth},\n'
-                f'allowed moves: {self.allowed_moves},\n')
 
     def _prep_moves(self, board_list: list, array_dirs):
         curr_pos, temp_moves = self.loc, list()
@@ -228,7 +221,7 @@ class Pawn(Piece):
             if d1r == (1, 0):
                 if self.allowed_moves == 2:
                     # Эта строка отвечает за направление движения и количество ходов.
-                    new_pos = (self._get_y()+(1*self.back_or_forth), new_pos[1])
+                    new_pos = (self.get_y()+(1*self.back_or_forth), new_pos[1])
 
                     if self._is_valid_move(board_list, new_pos):
 
@@ -242,8 +235,8 @@ class Pawn(Piece):
                 if self.allowed_moves == 1:
                     # Тот же смысл, как и в прошлом комментарии.
                     # Только количество ходов изменилось на 1.
-                    new_pos = (self._get_y() + (d1r[0] * self.back_or_forth),
-                                    self._get_x() + d1r[1])
+                    new_pos = (self.get_y() + (d1r[0] * self.back_or_forth),
+                                    self.get_x() + d1r[1])
                     if self._is_valid_move(board_list, new_pos):
                         temp_moves.append(new_pos)
 
@@ -292,30 +285,28 @@ class Pawn(Piece):
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
 
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             if self.memory:
                 # Передаю переменную кортежа вражеской фигуры
                 # все значения для удаления из общего словаря фигур.
                 enemy_piece = self.memory[to_where]
-                try:
-                    self.enemy_to_delete = [id(enemy_piece), enemy_piece, enemy_piece.moves]
-                except ValueError:
-                    raise exception('Problem emerged related to the Value Error.')
-
-                else:
-                    # Удаление вражеской фигуры с поля доски
-                    # перед непосредственным передвижением данной фигуры.
-                    board_list[enemy_piece._get_y()][enemy_piece._get_x()] = Empty()
-                    # board_list.make_msg('Eaten in passing')
-                    self.memory.clear()
+                # Удаление вражеской фигуры с поля доски
+                # перед непосредственным передвижением данной фигуры.
+                board_list[enemy_piece.get_y()][enemy_piece.get_x()] = Empty()
+                self.memory.clear()
 
 
             self._check_enemy_pawns_passed_by(board_list, to_where)
             self._finish_move(board_list, to_where)
             self._is_at_the_edge(board_list)
 
+
             self.allowed_moves = 1
             self._get_all_moves(board_list)
-            return self.enemy_to_delete
+            return self.alien_id
 
         # board_inst.make_msg('E: You cannot move there')
         return False
@@ -324,7 +315,7 @@ class Pawn(Piece):
         """ Метод для проверки состояния поля на доске."""
         # Если заданная координата не меняется относительно оси X, значит
         # пешка ходит вперед. Она не может занять вражескую позицию.
-        if self._get_x() == new_pos[1] and BoardManipulator.get_color(board_list, new_pos) != Color.empty:
+        if self.get_x() == new_pos[1] and BoardManipulator.get_color(board_list, new_pos) != Color.empty:
             return False  # Условие не выполняется.
         else:
             if super()._is_valid_move(board_list, new_pos):
@@ -371,7 +362,7 @@ class Pawn(Piece):
     def _is_at_the_edge(self, board_list: list):
         # Каждый раз проверяет, что пешки
         # находятся на ключевой позиции.
-        if self._get_y() in [0, 7]:
+        if self.get_y() in [0, 7]:
             # Вывод сообщения
             response = input('Which piece would you like to have instead? '
                              '"queen", "rock", "knight", or "bishop": ')
@@ -402,15 +393,15 @@ class Pawn(Piece):
                 'bishop': Bishop,
             }
 
-            board_list[self._get_y()][self._get_x()] = (
-                piece_mapping[response](self._get_y(), self._get_x(), color))
+            board_list[self.get_y()][self.get_x()] = (
+                piece_mapping[response](self.get_y(), self.get_x(), color))
 
         return None
 
     def _check_move(self, board_list: list, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
         if (to_where[0] - from_where[0]) * self.back_or_forth < 0 or from_where[1] != to_where[1]:
-            if BoardManipulator.get_color(to_where) != self.enemy_color and not self.memory:
+            if BoardManipulator.get_color(board_list, to_where) != self.enemy_color and not self.memory:
                 # BoardManipulator.make_msg('E: You cannot move this way')
                 return False
         elif from_where == to_where:
@@ -427,13 +418,6 @@ class Rock(Piece):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         super().__init__(loc, color)
 
-    def __repr__(self):
-        return (f'\tcolor for rock: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n')
 
     def _get_all_moves(self, board_list: list) -> list[Any]:
         # Обновляет переменную экземпляра с возможными ходами.
@@ -453,7 +437,7 @@ class Rock(Piece):
             # Удаление вражеской фигуры из общего списка фигур.
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_delete
+            return self.enemy_to_call
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
@@ -468,13 +452,6 @@ class Knight(Piece):
                            (-1, 2), (-1, -2)]
         super().__init__(loc, color)
 
-    def __repr__(self):
-        return (f'\tcolor for knight: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n')
 
     def _prep_moves(self, board_list: list, array_dirs):
         curr_pos, temp_moves = self.loc, list()
@@ -500,7 +477,7 @@ class Knight(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)   # noqa
-            return self.enemy_to_delete
+            return self.enemy_to_call
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
@@ -513,13 +490,6 @@ class Bishop(Piece):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         super().__init__(loc, color)
 
-    def __repr__(self):
-        return (f'\tcolor for bishop: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n')
 
     def _get_all_moves(self, board_list: list) -> list[Any]:
         self.moves.clear()
@@ -532,7 +502,7 @@ class Bishop(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_delete
+            return self.enemy_to_call
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
@@ -547,14 +517,6 @@ class Queen(Piece):
                              (0, 1), (0, -1)]
         super().__init__(loc, color)
 
-    def __repr__(self):
-        return (f'\tcolor for queen: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n')
-
     def _get_all_moves(self, board_list: list) -> list[Any]:
         self.moves.clear()
         resulted_moves = self._prep_moves(board_list, self.ways_to_go)
@@ -566,7 +528,7 @@ class Queen(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_delete
+            return self.enemy_to_call
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
@@ -582,13 +544,6 @@ class King(Piece):
         super().__init__(loc, color)
         self.safe_zone = self.loc
 
-    def __repr__(self):
-        return (f'\tcolor for king: {self.img[self.color-1]},\n'
-                f'enemy color: {self.enemy_color}\n'
-                f'eaten enemy: {self.enemy_to_delete 
-                                       if self.enemy_to_delete is not None 
-                                           else 'nothing eaten yet'},\n'
-                f'location: {self.loc},\n')
 
     def _prep_moves(self, board_list: list, array_dirs):
         curr_pos, temp_moves = self.loc, list()
@@ -620,7 +575,31 @@ class King(Piece):
             # Не позволяет королю сделать
             # рокировку после сделанного хода.
             self.is_not_changed = False
-            return self.enemy_to_delete
+            return self.enemy_to_call
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
+
+
+# if __name__ == '__main__':
+#
+#     from settings import Settings
+#     from board import Board, BoardUser
+#
+#     board = Board()
+#     board_user = BoardUser()
+#
+#     w_pawn = board_user.board[6][3]
+#     board_user.board[2][3] = w_pawn
+#     board_user.board[6][3] = Empty()
+#
+#     board_user.chosen_piece_object = board_user.board[2][3]
+#     board_user.chosen_piece_object.set_loc((2, 3))
+#     print(board_user.all_poss_moves)
+#
+#     # board_user.update_all_poss_moves_dict(board_user.all_poss_moves)
+#
+#     board_user.attempt_piece_to_move((1, 2))
+#
+#     board_user.print_board()
+

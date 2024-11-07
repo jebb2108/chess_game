@@ -4,7 +4,7 @@
 import pygwidgets
 import pygame
 
-from game import *
+#
 from constants import *
 
 # список событий мыши, на которые реагирует кнопка

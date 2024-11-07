@@ -1,3 +1,5 @@
+import pygame
+
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -8,3 +10,6 @@ LIGHT_GRAY = (240, 240, 240)
 IDLE = 'idle'
 HOVER = 'hover'
 SELECTED = 'selected'
+
+# список событий мыши, на которые реагирует кнопка
+MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]

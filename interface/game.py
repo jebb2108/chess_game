@@ -1,21 +1,21 @@
 # Класс Game
 
-import pygwidgets
 import pygame
-from pygame.event import clear
+import pygwidgets
 
+from board import Board, Piece
+from settings import Settings
+from buttons import ChooseTimeButton
+from authorization import Authorization
 from constants import *
-from buttons import *
-from authorization import *
-from board import *
 
 
-class LoginData(Authorization):
-
-    def __init__(self, window):
-        super().__init__(window)
-        self.name = self.login_input
-        self.password = self.password_input
+# class LoginData(Authorization):
+#
+#     def __init__(self, window):
+#         super().__init__(window)
+#         self.name = self.login_input
+#         self.password = self.password_input
 
 
 class Game:
@@ -59,7 +59,6 @@ class Game:
             for rect in self.board_rects:
                 key = self.board_rects.index(rect)
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    # print(event.pos)
                     if rect.collidepoint(pos_x, pos_y):
                         if self.linked_rects_dict[key] == HOVER:
                             self.linked_rects_dict[key] = SELECTED
@@ -69,21 +68,20 @@ class Game:
                         self.linked_rects_dict[key] = HOVER
 
 
-        gen = list([key for key, value in self.linked_rects_dict.items() if value == SELECTED])
+        comprehension = [key for key, value in self.linked_rects_dict.items() if value == SELECTED]
         for key, value in self.linked_rects_dict.items():
             if value == SELECTED:
-                key_index = key
 
-                if len(gen) == 1:
-                    self.appoint_active_piece(key_index)
+                if len(comprehension) == 1:
+                    self.appoint_active_piece(key)
 
-                elif len(gen) > 1:
+                elif len(comprehension) > 1:
 
                     # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
                     # self.attempt_piece_to_move(self.chosen_piece, key)
 
                     self.chosen_piece = None
-                    for item in list(gen):
+                    for item in list(comprehension):
                         self.linked_rects_dict[item] = IDLE
 
 
@@ -167,7 +165,7 @@ class Game:
     #
     #     return print(pixel_rect_ls)
 
-    def show_active_piece(self, flag, event):
+    def show_active_piece(self, event, flag):
         if flag:
             pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
             if self.cursor or event.type == pygame.MOUSEBUTTONDOWN:
@@ -189,13 +187,15 @@ class Game:
             self.window.blit(text_img, (650, 50))
 
 
-    def draw(self, flag=False, event=False):
+    def draw(self, event, flag=False):
+        if flag is False:
+            flag = False
         self.window.fill(LIGHT_GRAY)
         for button in self.buttons:
             button.draw()
         self.window.blit(self.board, self.board_rect)
         self.show_tiles(flag)
-        self.show_active_piece(flag, event)
+        self.show_active_piece(event, flag)
         self.attach_pieces_to_board()
         # self.generate_board_rects()
 

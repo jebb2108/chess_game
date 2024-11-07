@@ -1,6 +1,5 @@
 """ Класс шахматной доски """
 
-import copy
 from chess_pieces import *
 from settings import Settings
 
@@ -18,25 +17,17 @@ class Board(BoardManipulator, ABC):
         self.initialize()
 
     def initialize(self):
-        for obj in self.settings.all_pieces:
-            obj_y, obj_x = obj.loc
-            self.board[obj_y][obj_x] = obj
+        container = self.settings.all_pieces
+        for piece in container:
+            self.board[piece.get_y()][piece.get_x()] = piece
 
-        return self.make_all_poss_moves_dict()
+        self.update_all_poss_moves_dict(container)
 
-    def make_all_poss_moves_dict(self):
-        all_pieces = self.settings.all_pieces
-        for piece in all_pieces:
-            id_num = id(piece)
-            res = list([piece, piece.access_all_moves()])
-            self.all_poss_moves[id_num] = res
+    def update_all_poss_moves_dict(self, container):
+        self.all_poss_moves = { key: [key._get_all_moves(self.board)]
+                                for  key in container }
 
-    def update_all_poss_moves_dict(self):
-        for key, value in self.all_poss_moves.items():
-            o_piece = value[0]
-            self.all_poss_moves[key] = list([o_piece, o_piece.access_all_moves()])
-
-        return None
+        return
 
     def print_board(self):
         # Вывод доски на экран.
@@ -55,28 +46,32 @@ class Board(BoardManipulator, ABC):
         pass
 
     @staticmethod
-    def update_enemy_pieces_moves(board, color_indx=None):
-        array = sum(board.board, [])
+    def update_enemy_pieces_moves(board_inst, color_indx=None):
+
+        if color_indx is None:
+            color_indx = None
+
+        array = sum(board_inst.board, [])
         for obj in array:
             if obj.color > 0 and obj.color == color_indx:
 
-                gen_key = next((key for key, value in board.all_moves.items()
-                                if id(obj) == id(value[0])), None)
+                gen_key = next(( key for key in board_inst.all_poss_moves
+                                if obj.id == key.id), None)
 
                 if gen_key is None:
                     raise Exception("Object not found")
 
-                items_moves = obj(board)
-                value = obj, items_moves
+                items_moves = obj(board_inst)
+                value = items_moves
 
-                board.all_moves[gen_key] = value  # !!!! check it !!!!
+                board_inst.all_poss_moves[gen_key] = value  # !!!! check it !!!!
 
         return None
 
 
 class BoardUser(Board):
-    def __init__(self, board=None, chosen_piece_object=Empty):
-        super().__init__(board)
+    def __init__(self, board_list=None, chosen_piece_object=Empty):
+        super().__init__(board_list)
         self.chosen_piece_object = chosen_piece_object  # переменная сохраняет экземпляр фигуры,
         # над которой программа работает в текущий
         # момент для автоматизации процесса
@@ -84,7 +79,6 @@ class BoardUser(Board):
     def pick_piece(self, its_loc_on_board: tuple) -> object:
         coord_y, coord_x = its_loc_on_board
         the_piece = self.board[coord_y][coord_x]
-        print(type(the_piece))
         return the_piece
 
     @property
@@ -92,13 +86,14 @@ class BoardUser(Board):
         return self.__chosen_piece_object
 
     @chosen_piece_object.setter
-    def chosen_piece_object(self, chosen_piece_object):
-        if issubclass(type(chosen_piece_object), Piece):
-            # Новые обязательные динамические атрибуты классу BoardTools
-            self.chosen_piece_class = self.get_class(self.board, chosen_piece_object.loc)
-            self.chosen_piece_color = self.get_color(self.board, chosen_piece_object.loc)
-            # Выролняет назначение основному атрибуту
-            self.__chosen_piece_object = chosen_piece_object
+    def chosen_piece_object(self, chosen_piece_object=None):
+        if chosen_piece_object is not None:
+            if issubclass(type(chosen_piece_object), Piece):
+                # Новые обязательные динамические атрибуты классу BoardTools
+                self.chosen_piece_class = self.get_class(self.board, chosen_piece_object.loc)
+                self.chosen_piece_color = self.get_color(self.board, chosen_piece_object.loc)
+                # Выролняет назначение основному атрибуту
+                self.__chosen_piece_object = chosen_piece_object
 
         else:
             self.chosen_piece_class = Empty
@@ -108,23 +103,18 @@ class BoardUser(Board):
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
-        deleted_item = self.chosen_piece_object._move_object(dest_coords, board_list=self.board)  # noqa
+        if self.chosen_piece_object._move_object(dest_coords, board_list=self.board):  # noqa
 
-        if deleted_item is False:
-            self.update_all_poss_moves_dict()
-            return False
+            if isinstance(self.chosen_piece_object.alien_id, int):
+                eaten_piece = next((key for key in self.all_poss_moves
+                                    if key.id == self.chosen_piece_object.alien_id), None)
+                self.chosen_piece_object.alien_id = None
+                del self.all_poss_moves[eaten_piece]
+                # Обновление всего, чтобы было затронуто перемещением.
+                self.update_all_poss_moves_dict(self.all_poss_moves)
+                return eaten_piece
 
-        # Удаление экземпляра из общего словаря.
-        elif deleted_item is not None:
-            if deleted_item[0] in self.all_poss_moves:
-                del self.all_poss_moves[deleted_item[0]]
-                # Обновление всего, чтобы
-                # было затронуто перемещением.
-            self.update_all_poss_moves_dict()
-            return deleted_item  # Id needed in moves_dict !!!
-
-        else:
-            self.update_all_poss_moves_dict()
+            self.update_all_poss_moves_dict(self.all_poss_moves)
             return True
 
     def conduct_change(self, to_where):
@@ -134,8 +124,8 @@ class BoardUser(Board):
 
             # Нахожу искомый id вражеской фигуры, который находит нужную фигуру со всеми ходами
             # из списка всех ходов активных фигур.
-            gen_id = next((item_id for item_id, item_obj in self.all_poss_moves.items() if
-                           id(enemy_piece) == id(item_obj[0])), None)
+            gen_id = next((obj for obj, item_moves in self.all_poss_moves.items() if
+                           enemy_piece.id == obj.id), None)
             # удаление фигуры из общего списка
             del self.all_poss_moves[gen_id]
 
@@ -169,11 +159,12 @@ class BoardUser(Board):
                 self.board[to_where[0]][to_where[1]] = Empty()
 
             self.chosen_piece_object._set_loc(tuple(from_where))  # noqa
-            self.update_all_poss_moves_dict()
+            self.update_all_poss_moves_dict(self.all_poss_moves)
 
             if self.chosen_piece_class == 'class.King':
                 self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
 
+            # self.update_all_poss_moves_dict()
             return True
 
         return False
@@ -206,7 +197,7 @@ class BoardUser(Board):
                         # Происходит перестановка фигур и обновление словаря ходов.
                         self.conduct_change(rock_possible_move)
                         self.conduct_force_change(king_from_where, king_to_where)  # noqa
-                        self.update_all_poss_moves_dict()
+                        self.update_all_poss_moves_dict(self.all_poss_moves)
                         return True
                     else:
                         return False
