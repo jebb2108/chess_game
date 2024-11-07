@@ -51,41 +51,61 @@ class Game:
 
         self.chosen_piece = None
 
-    def event_manager(self, event):
+        self.cursor = None
 
+    def event_manager(self, event):
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
             pos_x, pos_y = pygame.mouse.get_pos()
             for rect in self.board_rects:
                 key = self.board_rects.index(rect)
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    # print(event.pos)
                     if rect.collidepoint(pos_x, pos_y):
                         if self.linked_rects_dict[key] == HOVER:
                             self.linked_rects_dict[key] = SELECTED
-
-                            res = self.convert_selected_into_coord(key)
-                            coord_y, coord_x = res
-                            if issubclass(self.board_inst.board[coord_y][coord_x].__class__, Piece):
-                                self.chosen_piece = self.board_inst.board[coord_y][coord_x]
-                                print('There is a piece:', self.chosen_piece)
-                            else:
-                                print('no piece')
-
 
                 else:
                     if self.linked_rects_dict[key] == IDLE:
                         self.linked_rects_dict[key] = HOVER
 
+
+        gen = list([key for key, value in self.linked_rects_dict.items() if value == SELECTED])
         for key, value in self.linked_rects_dict.items():
             if value == SELECTED:
-                gen = list([key for key, value in self.linked_rects_dict.items() if value == SELECTED])
-                if len(gen) > 1:
-                    try:
-                        self.attempt_piece_to_move(self.chosen_piece, self.convert_selected_into_coord(key))
-                    for item in gen:
+                key_index = key
+
+                if len(gen) == 1:
+                    self.appoint_active_piece(key_index)
+
+                elif len(gen) > 1:
+
+                    # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
+                    # self.attempt_piece_to_move(self.chosen_piece, key)
+
+                    self.chosen_piece = None
+                    for item in list(gen):
                         self.linked_rects_dict[item] = IDLE
+
+
+
 
             if value == HOVER and not (self.board_rects[key].collidepoint(pygame.mouse.get_pos())):
                 self.linked_rects_dict[key] = IDLE
+
+        return
+
+
+
+    def appoint_active_piece(self, key_indx):
+        try:
+            res = self.convert_selected_into_coord(key_indx)
+        except TypeError:
+            return False
+        else:
+            coord_y, coord_x = res
+            self.chosen_piece = self.board_inst.board[coord_y][coord_x]
+            return True
+
 
     @staticmethod
     def convert_selected_into_coord(key):
@@ -97,9 +117,6 @@ class Game:
             coords = piece.loc
             pixel_coords = Settings.pixel_mapping[coords]
             self.window.blit(piece.image, pixel_coords)
-
-
-
 
 
     def show_tiles(self, flag):
@@ -135,13 +152,52 @@ class Game:
 
         return rects_list
 
+    # def generate_board_rects(self):
+    #     pixel_rect_ls = {}
+    #     for rect in self.board_rects:
+    #         value = self.board_rects.index(rect)
+    #         formated_key = (value // 8, value % 8)
+    #         pixel_rect_ls[formated_key] = [rect.left, rect.top]
+    #
+    #     with open('pixel_rect_ls.txt', 'w') as f:
+    #         f.write(r'pixel_mapping = {'f'\n')
+    #         for coords, pixel in pixel_rect_ls.items():
+    #             f.write(f'\t{coords}: {pixel},\n')
+    #         f.write('}\n')
+    #
+    #     return print(pixel_rect_ls)
 
-    def draw(self, flag=False):
+    def show_active_piece(self, flag, event):
+        if flag:
+            pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
+            if self.cursor or event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.cursor = event.pos
+                mouse_pos_text = f'Cursor loc:\n{self.cursor}'
+                cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
+                self.window.blit(cursor_img, (650, 120))
+
+            if issubclass(type(self.chosen_piece), Piece):
+                class_name = self.chosen_piece.__class__.__name__
+                its_loc = self.chosen_piece.get_loc()
+                text = f'There is {class_name}.\nIts loc: {its_loc}'
+
+            else:
+                text = 'NO PIECE'
+
+            text_img = self.font.render(text, True, DARK_GRAY)
+            self.window.blit(text_img, (650, 50))
+
+
+    def draw(self, flag=False, event=False):
         self.window.fill(LIGHT_GRAY)
         for button in self.buttons:
             button.draw()
         self.window.blit(self.board, self.board_rect)
         self.show_tiles(flag)
+        self.show_active_piece(flag, event)
+        self.attach_pieces_to_board()
+        # self.generate_board_rects()
 
 
 

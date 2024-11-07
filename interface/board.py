@@ -19,6 +19,9 @@ class Empty(object):
     def __str__(self):
         return '.'
 
+    def get_loc(self):
+        return None
+
 
 class Piece(ABC):
 
@@ -28,7 +31,7 @@ class Piece(ABC):
         self.rect = None
         self.color = color
         color_name = 'white' if color == Color.white else 'black'
-        full_path = color_name + '_' + self.__class__.__name__ + '.png'
+        full_path = color_name + '_' + self.__class__.__name__ + '_mod.png'
         self.image = pygame.image.load('images/' + full_path)
         self.is_moved = False
 
@@ -68,12 +71,15 @@ class Board(ABC):
         self.board = [[Empty] * 8 for _ in range(8)]
         self.spot_list = self.make_all_spot_list()
         self.initialise()
+        self.all_pieces = list((piece for piece in sum(self.board, []) if issubclass(type(piece), Piece)))
+
 
     def initialise(self):
         for black_indx in range(0, 8):
             self.board[1][black_indx] = Pawn(self.window,(1, black_indx), Color.black)
         for white_indx in range(0, 8):
             self.board[6][white_indx] = Pawn(self.window, (6, white_indx), Color.white)
+
 
     def make_all_spot_list(self):
         self.spot_list = []
@@ -86,6 +92,11 @@ class Board(ABC):
                 self.spot_list.append(single_rect)
 
         return self.spot_list
+
+    def attempt_piece_to_move(self, piece, dest_coords):
+        print(piece, dest_coords)
+        return
+
 
     def test_click(self, mouse_pos):
         for line in self.board:
@@ -102,11 +113,13 @@ class Board(ABC):
 #     window = None
 #     board = Board(window)
 #     board.make_all_spot_list()
-#     # print(board.spot_list)
-#     board.test_click([130, 65])
-#     board.test_click([130, 195])
-#
-#
-#
-#     # print(board.board)
+    # print(board.spot_list)
+    # board.test_click([130, 65])
+    # board.test_click([130, 195])
+    #
+    # print(repr(board))
+
+
+
+    # print(board.board)
 

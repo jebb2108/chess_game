@@ -29,6 +29,7 @@ BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 o_auth = Authorization(window)
 o_game = Game(window)
 flag = False
+chosen_piece = False
 
 
 
@@ -45,6 +46,7 @@ while True:
             if event.key == pygame.K_m:
                 print(board_dict)
                 flag = not flag
+                chosen_piece = not chosen_piece
 
         if Authorization.LOGIN_AWAITING_STATUS:
 
@@ -65,10 +67,9 @@ while True:
             o_game.event_manager(event)
             o_game.new_game_button.handleEvent(event)
             o_game.choose_time_button.handleEvent(event)
-            o_game.draw(flag)
+            o_game.draw(flag, event)
 
             o_game.quit_button.handleEvent(event)
-
 
 
         # 8 - Обновляем экран
@@ -76,3 +77,4 @@ while True:
 
         # 9 - Обновляем частоту кадров
         clock.tick(FRAMES_PER_SECOND)
+
