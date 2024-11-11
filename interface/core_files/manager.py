@@ -1,7 +1,7 @@
 import copy
 
-from board import *
-from settings import *
+from interface.core_files.board import BoardUser
+from interface.core_files.settings import Settings
 
 
 class WhoMoves(object):
@@ -25,17 +25,29 @@ class GamePlay:
     """ Класс самого высокого уровня,
     с чем непосредственно взаимодействует пользователь. """
 
-    def __init__(self):
+    def __init__(self, window):
+        self.window = window
         self.whose_turn_it_is = WhoMoves()
-        self.actions = BoardUser()
-        self.settings = Settings()
+        self.actions = BoardUser(window)
+        # self.settings = Settings(window)
         self.default_message = True
-        self.message = 'Press "q" to quit'
-        self.current_move_message = 'Turn to play: white'
-        self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
-        self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
+        # self.message = 'Press "q" to quit'
+        # self.current_move_message = 'Turn to play: white'
+        # self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
+        # self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
 
         self.object_copies = list()
+
+    def initiate_move(self, from_where, to_where):
+
+        if not self.is_end_game(self.whose_turn_it_is.current_move): return False
+
+        else:
+            self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
+            self.move_piece(to_where)
+            return True
+
+
 
     # def start_game(self):
     #
@@ -105,7 +117,7 @@ class GamePlay:
         while checkmate_status:
 
             board_copy = copy.deepcopy(self.actions.board)
-            game_stats = GamePlay()
+            game_stats = GamePlay(self.window)
             game_stats.actions = BoardUser(board_copy)
 
             tmp = [value.access_all_moves() for key, value
@@ -137,19 +149,19 @@ class GamePlay:
 
         return True
 
-    def move_piece(self, to_where):
-
+    def move_piece(self, piece, to_where):
+        self.actions.chosen_piece_object = piece
         # Проверяет, если это король и запрашивается рокировка.
         if self.actions.chosen_piece_class == 'class.King':
             if self.actions.check_castling_and_move(to_where):
                 self.whose_turn_it_is.change_turn()
                 # self.make_msg('Castling your king went successful')
                 self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return self.actions.print_board()
+                return
             else:
                 # self.make_msg('Castling your king went unsuccessful')
                 self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return self.actions.print_board()
+                return
 
         # Следующее условие. Это не король. Совершает обычный ход
         elif self.check_king(to_where):
@@ -158,14 +170,14 @@ class GamePlay:
                 self.whose_turn_it_is.change_turn()
                 self.auto_print()
                 self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return self.actions.print_board()
+                return
 
-        return self.actions.print_board()
+        return
 
     def check_king(self, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
         # Проверяет, кому принадлежит ход.
-        if my_game.whose_turn_it_is.current_move != self.actions.chosen_piece_color:
+        if self.whose_turn_it_is.current_move != self.actions.chosen_piece_color:
             # self.make_msg('This isn`t your turn')
             return False
 
@@ -187,7 +199,7 @@ class GamePlay:
         # происходит выброс из цикла действий.
         if eaten_piece is False: return False
 
-        if issubclass(type(eaten_piece), Piece):
+        if issubclass(type(eaten_piece), self.actions.settings.class_mapping['Piece']):
             # Иначе проверяет, есть ли другое значение от булевых?
             # removed_piece = eaten_piece
             # Перемещает экземпляр во временное хранилище - список.
@@ -245,7 +257,7 @@ class GamePlay:
         if eaten_piece is False:
             return False
 
-        elif issubclass(type(eaten_piece), Piece):
+        elif issubclass(type(eaten_piece), self.actions.settings.class_mapping['Piece']):
             # Создает копию съеденной фигуры в резерве
             self.object_copies.append(eaten_piece)
 
@@ -277,7 +289,7 @@ class GamePlay:
         if not self.default_message:
             self.current_move_message = 'Turn to play: {}'.format(
                 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-            self.actions.print_board()
+            # self.actions.print_board()
             return None
 
 
@@ -285,7 +297,7 @@ class GamePlay:
             self.message = 'Press "q" to press'
             self.current_move_message = 'Turn to play: {}'.format(
                 'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-            self.actions.print_board()
+            # self.actions.print_board()
             return None
 
     def is_checked(self, chessboard_inst=None) -> [True or False]:
@@ -300,16 +312,18 @@ class GamePlay:
             return False
 
         if color == 'black':
-            black_king = next((key for key in chessboard_inst.all_poss_moves if
-                               key.color == 2 and isinstance(key, King)), None)
+            black_king = next((key for key in chessboard_inst.all_poss_moves
+                               if key.color == 2 and
+                               isinstance(key, self.actions.settings.class_mapping['King'])), None)
             return (chessboard_inst.all_poss_moves[black_king].safe_zone
                     in set(sum([value if key.color == 1 else key for key, value in
                                 chessboard_inst.all_poss_moves.items()], [])))
 
 
         elif color == 'white':
-            white_king = next((key for key in chessboard_inst.all_poss_moves if
-                               key.color == 1 and isinstance(key, King)), None)
+            white_king = next((key for key in chessboard_inst.all_poss_moves
+                               if key.color == 1 and
+                               isinstance(key, self.actions.settings.class_mapping['King'])), None)
             return (chessboard_inst.all_poss_moves[white_king].safe_zone
                     in set(sum([value if key.color == 2 else key for key, value in
                                 chessboard_inst.all_poss_moves.items()], [])))

@@ -6,7 +6,7 @@ class Authorization:
 
     BACKGROUND_IMAGE = pygame.image.load('images/background.png')
 
-    LOGIN_AWAITING_STATUS = True
+    LOGIN_AWAITING_STATUS = False
 
     def __init__(self, window):
 

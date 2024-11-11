@@ -2,8 +2,8 @@
 
 import pygwidgets
 
-from interface.core_files.board import Board, Piece
-from interface.core_files.settings import Settings
+from interface.core_files.manager import GamePlay
+from interface.core_files.pixels import pixel_mapping
 from buttons import ChooseTimeButton
 from authorization import Authorization
 from constants import *
@@ -26,7 +26,7 @@ class Game:
 
         self.window = window
 
-        self.board_inst = Board(window)
+        self.game_manager = GamePlay(window)
 
         self.font = pygame.font.Font(None, 40)
 
@@ -49,8 +49,8 @@ class Game:
         self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
         self.chosen_piece = None
-
         self.cursor = None
+        self.next_move = None
 
     def event_manager(self, event):
         if event.type == pygame.MOUSEMOTION or event.type == pygame.MOUSEBUTTONDOWN:
@@ -75,11 +75,16 @@ class Game:
                     self.appoint_active_piece(key)
 
                 elif len(comprehension) > 1:
+                    chosen_key = self.chosen_piece.loc[0] * 8 + self.chosen_piece.loc[1]
+                    the_other_coord = [ item for item in comprehension if item != chosen_key ].pop(0)
+                    self.next_move = self.convert_selected_into_coord(the_other_coord)
 
                     # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
-                    # self.attempt_piece_to_move(self.chosen_piece, key)
+                    self.game_manager.move_piece(self.chosen_piece, self.next_move)
 
                     self.chosen_piece = None
+                    self.next_move = None
+
                     for item in list(comprehension):
                         self.linked_rects_dict[item] = IDLE
 
@@ -100,7 +105,7 @@ class Game:
             return False
         else:
             coord_y, coord_x = res
-            self.chosen_piece = self.board_inst.board[coord_y][coord_x]
+            self.chosen_piece = self.game_manager.actions.board[coord_y][coord_x]
             return True
 
 
@@ -110,10 +115,8 @@ class Game:
         return coords
 
     def attach_pieces_to_board(self):
-        for piece in self.board_inst.all_pieces:
-            coords = piece.loc
-            pixel_coords = Settings.pixel_mapping[coords]
-            self.window.blit(piece.image, pixel_coords)
+        for piece in self.game_manager.actions.settings.all_pieces:
+            piece.draw()
 
 
     def show_tiles(self, flag):
@@ -174,9 +177,9 @@ class Game:
                 cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
                 self.window.blit(cursor_img, (650, 120))
 
-            if issubclass(type(self.chosen_piece), Piece):
+            if issubclass(type(self.chosen_piece), self.game_manager.actions.settings.class_mapping['Piece']):
                 class_name = self.chosen_piece.__class__.__name__
-                its_loc = self.chosen_piece.get_loc()
+                its_loc = self.chosen_piece.loc
                 text = f'There is {class_name}.\nIts loc: {its_loc}'
 
             else:

@@ -7,7 +7,7 @@ import pygame
 import sys
 import logging
 
-from game import Game
+from interface.game import Game
 from authorization import Authorization
 from constants import *
 

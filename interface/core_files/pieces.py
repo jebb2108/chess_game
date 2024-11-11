@@ -1,7 +1,7 @@
 import pygame
 from abc import ABC, abstractmethod
 
-from settings import Settings
+from interface.core_files.pixels import pixel_mapping
 
 """ Все шахматные фигуры, состояния и их поведение. """
 
@@ -95,7 +95,7 @@ class Piece(ABC):
         self.enemy_color = 1 if self.color == Color.black else 2
         full_path = (('white', 'black')[self.color-1]  # noqa
                      + '_' + self.__class__.__name__ + '.png')
-        self.image = pygame.image.load('interface.images/' + full_path)
+        self.image = pygame.image.load('images/' + full_path)
         self.is_not_changed = True
         self.moves = list()
 
@@ -126,7 +126,7 @@ class Piece(ABC):
 
 
     def clicked_inside(self, mouse_pos):
-        first_x, first_y = Settings.pixel_mapping[self.loc]
+        first_x, first_y = pixel_mapping[self.loc]
         this_rect = pygame.rect.Rect(first_x, first_y, 55, 55)
         clicked = this_rect.collidepoint(mouse_pos)
         if clicked:
@@ -196,7 +196,7 @@ class Piece(ABC):
 
 
     def draw(self):
-        screen_loc = Settings.pixel_mapping[self.loc]
+        screen_loc = pixel_mapping[self.loc]
         self.window.blit(self.image, screen_loc)
 
 
