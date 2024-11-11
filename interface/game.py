@@ -1,10 +1,9 @@
 # Класс Game
 
-import pygame
 import pygwidgets
 
-from board import Board, Piece
-from settings import Settings
+from interface.core_files.board import Board, Piece
+from interface.core_files.settings import Settings
 from buttons import ChooseTimeButton
 from authorization import Authorization
 from constants import *

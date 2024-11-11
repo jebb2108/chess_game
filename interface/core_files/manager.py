@@ -1,4 +1,4 @@
-# import copy
+import copy
 
 from board import *
 from settings import *
@@ -37,63 +37,63 @@ class GamePlay:
 
         self.object_copies = list()
 
-    def start_game(self):
-
-        self.actions.print_board()
-
-        while True:
-
-            if not self.is_end_game(self.whose_turn_it_is.current_move): break
-
-            print(self.message)
-            if not self.default_message:
-                self.default_message = True
-
-            print('***', str(self.current_move_message), '***')
-            from_where_input = input('{}'.format(self.first_beginning_message))
-            if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
-                print('\nWhite wins!' if self.whose_turn_it_is.current_move == 2 else '\nBlack wins!')
-                break
-
-            # Команда разработчика.
-            elif from_where_input == 'h+':
-                print('options: dictionary for moves "d"; stats for each piece "s"')
-                response = input('What would you like to see: ')
-                if response == 'd':
-                    gen1 = [key.img[key.color-1] for key in self.actions.all_poss_moves]
-                    gen2 = [moves for moves in self.actions.all_poss_moves.values()]
-                    for item in zip(gen1, gen2):
-                        print(item)
-                elif response == 's':
-                    for key in self.actions.all_poss_moves.values():
-                        print(repr(key[0]))
-                        print()
-
-            to_where_input = input('{}'.format(self.second_beginning_message))
-            if to_where_input[0].lower() == 'q' or len(to_where_input) < 2:
-                print('\nThe session is over')
-                break
-
-            from_where_input = from_where_input[0].title() + from_where_input[1]
-            to_where_input = to_where_input[0].title() + to_where_input[1]
-
-            # Переводит в числовые координаты 'E2' --> [6, 4]
-            # Если координаты некорректные, выдает ошибку.
-            try:
-                from_where = self.actions.settings.transcripts[from_where_input]
-                to_where = self.actions.settings.transcripts[to_where_input]
-                from_where, to_where = tuple(from_where), tuple(to_where)
-
-            except KeyError:
-                # self.make_msg('E: You mistyped. Please try again')
-                self.actions.print_board()
-
-            # Маленькая проверка на то, чтобы это была фигуры.
-            # Передает в следующую функцию.
-            else:
-                self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
-                self.move_piece(to_where)
-                print()
+    # def start_game(self):
+    #
+    #     self.actions.print_board()
+    #
+    #     while True:
+    #
+    #         if not self.is_end_game(self.whose_turn_it_is.current_move): break
+    #
+    #         print(self.message)
+    #         if not self.default_message:
+    #             self.default_message = True
+    #
+    #         print('***', str(self.current_move_message), '***')
+    #         from_where_input = input('{}'.format(self.first_beginning_message))
+    #         if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
+    #             print('\nWhite wins!' if self.whose_turn_it_is.current_move == 2 else '\nBlack wins!')
+    #             break
+    #
+    #         # Команда разработчика.
+    #         elif from_where_input == 'h+':
+    #             print('options: dictionary for moves "d"; stats for each piece "s"')
+    #             response = input('What would you like to see: ')
+    #             if response == 'd':
+    #                 gen1 = [key.img[key.color - 1] for key in self.actions.all_poss_moves]
+    #                 gen2 = [moves for moves in self.actions.all_poss_moves.values()]
+    #                 for item in zip(gen1, gen2):
+    #                     print(item)
+    #             elif response == 's':
+    #                 for key in self.actions.all_poss_moves.values():
+    #                     print(repr(key[0]))
+    #                     print()
+    #
+    #         to_where_input = input('{}'.format(self.second_beginning_message))
+    #         if to_where_input[0].lower() == 'q' or len(to_where_input) < 2:
+    #             print('\nThe session is over')
+    #             break
+    #
+    #         from_where_input = from_where_input[0].title() + from_where_input[1]
+    #         to_where_input = to_where_input[0].title() + to_where_input[1]
+    #
+    #         # Переводит в числовые координаты 'E2' --> [6, 4]
+    #         # Если координаты некорректные, выдает ошибку.
+    #         try:
+    #             from_where = self.actions.settings.transcripts[from_where_input]
+    #             to_where = self.actions.settings.transcripts[to_where_input]
+    #             from_where, to_where = tuple(from_where), tuple(to_where)
+    #
+    #         except KeyError:
+    #             # self.make_msg('E: You mistyped. Please try again')
+    #             self.actions.print_board()
+    #
+    #         # Маленькая проверка на то, чтобы это была фигуры.
+    #         # Передает в следующую функцию.
+    #         else:
+    #             self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
+    #             self.move_piece(to_where)
+    #             print()
 
     def is_end_game(self, color_indx):
 
@@ -108,9 +108,9 @@ class GamePlay:
             game_stats = GamePlay()
             game_stats.actions = BoardUser(board_copy)
 
-            tmp = [ value.access_all_moves() for key, value
-                                  in self.actions.all_poss_moves.items()
-                                  if key.color == self.actions.chosen_piece_object.color ]
+            tmp = [value.access_all_moves() for key, value
+                   in self.actions.all_poss_moves.items()
+                   if key.color == self.actions.chosen_piece_object.color]
 
             for piece, moves in tmp:
 
@@ -161,7 +161,6 @@ class GamePlay:
                 return self.actions.print_board()
 
         return self.actions.print_board()
-
 
     def check_king(self, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
@@ -225,7 +224,7 @@ class GamePlay:
             # Возвращает фигуру на место.
             self.actions.chosen_piece_object.moves.clear()
             self.actions.conduct_force_change(to_where, self.actions.chosen_piece_object.loc,
-                                      self.object_copies[-1] if self.object_copies else None)
+                                              self.object_copies[-1] if self.object_copies else None)
             # self.make_msg(f'{('White', 'Black')[self.actions.chosen_piece_color.color - 1]} '
             #               f'king is under attack!')
             # Очищает резервное хранилище.
@@ -302,7 +301,7 @@ class GamePlay:
 
         if color == 'black':
             black_king = next((key for key in chessboard_inst.all_poss_moves if
-                                  key.color == 2 and isinstance(key, King)), None)
+                               key.color == 2 and isinstance(key, King)), None)
             return (chessboard_inst.all_poss_moves[black_king].safe_zone
                     in set(sum([value if key.color == 1 else key for key, value in
                                 chessboard_inst.all_poss_moves.items()], [])))
@@ -310,13 +309,7 @@ class GamePlay:
 
         elif color == 'white':
             white_king = next((key for key in chessboard_inst.all_poss_moves if
-                                  key.color == 1 and isinstance(key, King)), None)
+                               key.color == 1 and isinstance(key, King)), None)
             return (chessboard_inst.all_poss_moves[white_king].safe_zone
                     in set(sum([value if key.color == 2 else key for key, value in
                                 chessboard_inst.all_poss_moves.items()], [])))
-
-
-# Приказывает Python не гулять по библиотекам, а принимать этот файл за главный.
-if __name__ == '__main__':
-    my_game = GamePlay()
-    my_game.start_game()

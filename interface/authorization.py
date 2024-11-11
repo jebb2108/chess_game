@@ -1,7 +1,5 @@
-import pygame
 import pygwidgets
 
-from settings import Settings
 from constants import *
 
 class Authorization:

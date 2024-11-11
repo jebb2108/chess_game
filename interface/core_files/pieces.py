@@ -1,10 +1,9 @@
-""" Все шахматные фигуры, состояния и их поведение. """
-import copy
-import sys
-from abc import *
-from sys import exception
-from typing import Any
+import pygame
+from abc import ABC, abstractmethod
 
+from settings import Settings
+
+""" Все шахматные фигуры, состояния и их поведение. """
 
 class Color(object):
     """ Цвет, состоящий из трех значений,
@@ -83,23 +82,23 @@ class BoardManipulator(ABC):
 
 class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
-    img = None  # Начальная дефолтная переменная для каждой фигуры.
+    # img = None  # Начальная дефолтная переменная для каждой фигуры.
 
     # Каждая фигура должна иметь свой цвет.
-    def __init__(self, loc: tuple[int, int], color: object):
+    def __init__(self, window, loc: tuple[int, int], color: object):
+        self.window = window
         self.loc = loc
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.id = id(loc)
-        # Первый динамический атрибут для связи с вражеской фигурой, которая съедает
-        # текущую, а второй атрибут для вывода его id на вехние уровни и обновления словаря
         self.alien_id = None
+
         self.enemy_color = 1 if self.color == Color.black else 2
+        full_path = (('white', 'black')[self.color-1]  # noqa
+                     + '_' + self.__class__.__name__ + '.png')
+        self.image = pygame.image.load('interface.images/' + full_path)
         self.is_not_changed = True
         self.moves = list()
 
-
-    def get_id(self):
-        return self.id
 
     @property
     def loc(self):
@@ -112,6 +111,10 @@ class Piece(ABC):
 
         self.__loc = loc
 
+
+    def get_id(self):
+        return self.id
+
     def get_y(self):
         return self.__loc[0]
 
@@ -121,6 +124,18 @@ class Piece(ABC):
     def set_loc(self, loc: tuple):
         self.__loc = loc
 
+
+    def clicked_inside(self, mouse_pos):
+        first_x, first_y = Settings.pixel_mapping[self.loc]
+        this_rect = pygame.rect.Rect(first_x, first_y, 55, 55)
+        clicked = this_rect.collidepoint(mouse_pos)
+        if clicked:
+            # self.clicked_sound.play()
+            return True
+        else:
+            return False
+
+
     @abstractmethod
     def _get_all_moves(self, board_list: object):
         return NotImplementedError
@@ -128,6 +143,7 @@ class Piece(ABC):
     @abstractmethod
     def _move_object(self, to_where: list, board_list: list):
         return NotImplementedError
+
 
     def _prep_moves(self, board_list: list, array_dirs):
         curr_pos, moves = self.loc, list()
@@ -158,6 +174,7 @@ class Piece(ABC):
 
         return moves
 
+
     def _is_valid_move(self, board_list: list, new_pos: tuple) -> bool:
         # Только два возможных условия истинности:
         # либо это поле пустое, либо оно вражеское (последнее)
@@ -166,8 +183,10 @@ class Piece(ABC):
                          # и не произошла ошибка.
         return False
 
+
     def access_all_moves(self):
         return list(self.moves)
+
 
     def _finish_move(self, board_list: list, new_pos: tuple):
         BoardManipulator.update_board_list(board_list, self.loc, new_pos, self.enemy_color)
@@ -175,24 +194,26 @@ class Piece(ABC):
         self.is_not_changed = False
         return None
 
-    def __str__(self):
-        return self.img[0 if self.color == Color.white else 1]  # Каждая фигура имеет свой
-                                                                # кортеж белого и черного цвета фигуры.
+
+    def draw(self):
+        screen_loc = Settings.pixel_mapping[self.loc]
+        self.window.blit(self.image, screen_loc)
 
 
 
-class Pawn(Piece):
+
+class Pawn(Piece, ABC):
     """ Класс для пешки """
-    img = ('\u265F', '\u2659')  # Кортеж из цветов.
+    # img = ('\u265F', '\u2659')  # Кортеж из цветов.
 
-    def __init__(self, loc, color, back_or_forth):
+    def __init__(self, window, loc, color, back_or_forth):
         self.allowed_moves = 2
         self.ways_to_go = [(1, 0), (1, 1), (1, -1)]
         self.back_or_forth = back_or_forth
         # Список вражеских фигур на съедение.
         self.memory = {}
 
-        super().__init__(loc, color)  # Унаследование от родителя атрибутов.
+        super().__init__(window, loc, color)  # Унаследование от родителя атрибутов.
 
 
     def _prep_moves(self, board_list: list, array_dirs):
@@ -404,15 +425,14 @@ class Pawn(Piece):
         return True
 
 
-class Rock(Piece):
-    img = ('\u265C', '\u2656')
-
-    def __init__(self, loc, color):
+class Rock(Piece, ABC):
+    # img = ('\u265C', '\u2656')
+    def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1), (0, -1)]
-        super().__init__(loc, color)
+        super().__init__(window, loc, color)
 
 
-    def _get_all_moves(self, board_list: list) -> list[Any]:
+    def _get_all_moves(self, board_list: list) -> list:
         # Обновляет переменную экземпляра с возможными ходами.
         self.moves.clear()
         # Простой список с направлениями: вниз, вверх, вправо, влево.
@@ -430,20 +450,19 @@ class Rock(Piece):
             # Удаление вражеской фигуры из общего списка фигур.
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_call
+            return self.alien_id
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
 
-class Knight(Piece):
-    img = ('\u265E', '\u2658')
-
-    def __init__(self, loc, color):
+class Knight(Piece, ABC):
+    # img = ('\u265E', '\u2658')
+    def __init__(self, window, loc, color):
         self.ways_to_go = [(2, 1), (2, -1), (-2, 1),
                              (-2, -1), (1, -2), (1, 2),
                            (-1, 2), (-1, -2)]
-        super().__init__(loc, color)
+        super().__init__(window, loc, color)
 
 
     def _prep_moves(self, board_list: list, array_dirs):
@@ -470,21 +489,20 @@ class Knight(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)   # noqa
-            return self.enemy_to_call
+            return self.alien_id
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
 
-class Bishop(Piece):
-    img = ('\u265D', '\u2657')
-
-    def __init__(self, loc, color):
+class Bishop(Piece, ABC):
+    # img = ('\u265D', '\u2657')
+    def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
-        super().__init__(loc, color)
+        super().__init__(window, loc, color)
 
 
-    def _get_all_moves(self, board_list: list) -> list[Any]:
+    def _get_all_moves(self, board_list: list) -> list:
         self.moves.clear()
         resulted_moves = self._prep_moves(board_list, self.ways_to_go)
         self.moves.extend(resulted_moves)
@@ -495,22 +513,21 @@ class Bishop(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_call
+            return self.alien_id
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
 
-class Queen(Piece):
-    img = ('\u265B', '\u2655')
-
-    def __init__(self, loc, color):
+class Queen(Piece, ABC):
+    # img = ('\u265B', '\u2655')
+    def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1),
                              (-1, -1), (1, 0), (-1, 0),
                              (0, 1), (0, -1)]
-        super().__init__(loc, color)
+        super().__init__(window, loc, color)
 
-    def _get_all_moves(self, board_list: list) -> list[Any]:
+    def _get_all_moves(self, board_list: list) -> list:
         self.moves.clear()
         resulted_moves = self._prep_moves(board_list, self.ways_to_go)
         self.moves.extend(resulted_moves)
@@ -521,20 +538,20 @@ class Queen(Piece):
         if to_where in self.moves:
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
-            return self.enemy_to_call
+            return self.alien_id
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
 
-class King(Piece):
-    img = ('\u265A', '\u2654')
+class King(Piece, ABC):
+    # img = ('\u265A', '\u2654')
 
-    def __init__(self, loc, color):
+    def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1),
                              (0, -1), (1, 1), (1, -1),
                              (-1, 1), (-1, -1)]
-        super().__init__(loc, color)
+        super().__init__(window, loc, color)
         self.safe_zone = self.loc
 
 
@@ -568,31 +585,10 @@ class King(Piece):
             # Не позволяет королю сделать
             # рокировку после сделанного хода.
             self.is_not_changed = False
-            return self.enemy_to_call
+            return self.alien_id
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
 
-# if __name__ == '__main__':
-#
-#     from settings import Settings
-#     from board import Board, BoardUser
-#
-#     board = Board()
-#     board_user = BoardUser()
-#
-#     w_pawn = board_user.board[6][3]
-#     board_user.board[2][3] = w_pawn
-#     board_user.board[6][3] = Empty()
-#
-#     board_user.chosen_piece_object = board_user.board[2][3]
-#     board_user.chosen_piece_object.set_loc((2, 3))
-#     print(board_user.all_poss_moves)
-#
-#     # board_user.update_all_poss_moves_dict(board_user.all_poss_moves)
-#
-#     board_user.attempt_piece_to_move((1, 2))
-#
-#     board_user.print_board()
 
