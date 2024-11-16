@@ -45,8 +45,16 @@ class Game:
     def got_click(self, mouse_pos):
         for rect in self.board_rects:
             if rect.collidepoint(mouse_pos):
-                key = self.board_rects.index(rect)
-                self.linked_rects_dict[key] = SELECTED
+                rect_int = self.board_rects.index(rect)
+                coords = self.convert_selected_into_coords(rect_int)
+
+                if self.chosen_piece:
+                    self.linked_rects_dict[rect_int] = SELECTED
+
+                elif self.game_manager.actions.get_class_as_str(coords) != 'Empty':
+                    self.linked_rects_dict[rect_int] = SELECTED
+
+
 
         return self.check_selected(mouse_pos)
 

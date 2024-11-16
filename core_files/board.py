@@ -53,6 +53,9 @@ class Board(BoardManipulator, ABC):
 
         return None
 
+    def get_class_as_str(self, coords):
+        return BoardManipulator.get_class(self.board, coords)
+
 
 class BoardUser(Board):
     def __init__(self, board_list=None, chosen_piece_object=Empty):

@@ -31,6 +31,8 @@ class GamePlay:
 
         self.object_copies = list()
 
+
+
     def initiate_move(self, from_where, to_where):
 
         if not self.is_end_game(self.whose_turn_it_is.current_move):

@@ -79,7 +79,6 @@ class BoardManipulator(ABC):
 
 class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
-    # img = None  # Начальная дефолтная переменная для каждой фигуры.
     sounds_loaded = False
     capture_sound = None
 
@@ -88,16 +87,17 @@ class Piece(ABC):
         self.window = window
         self.loc = loc
         self.color = color  # Программа должна явно указывать Белый или Черный.
-        self.id = id(loc)
+        self.id = self.__hash__()
         self.alien_id = None
+
         if not Piece.sounds_loaded:
             Piece.capture_sound = pygame.mixer.Sound('sounds/capture.mp3')
             Piece.sounds_loaded = True
 
         self.enemy_color = 1 if self.color == Color.black else 2
-        full_path = (('white', 'black')[self.color-1]  # noqa
+        path = (('white', 'black')[self.color-1]  # noqa
                      + '_' + self.__class__.__name__ + '.png')
-        self.image = pygame.image.load('images/' + full_path)
+        self.image = pygame.image.load('images/' + path)
         self.is_not_changed = True
         self.moves = list()
 
@@ -205,9 +205,7 @@ class Piece(ABC):
 
 
 class Pawn(Piece, ABC):
-    """ Класс для пешки """
-    # img = ('\u265F', '\u2659')  # Кортеж из цветов.
-
+    """ Класс пешки """
     def __init__(self, window, loc, color, back_or_forth):
         self.allowed_moves = 2
         self.ways_to_go = [(1, 0), (1, 1), (1, -1)]
@@ -428,7 +426,6 @@ class Pawn(Piece, ABC):
 
 
 class Rock(Piece, ABC):
-    # img = ('\u265C', '\u2656')
     def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         super().__init__(window, loc, color)
@@ -449,6 +446,10 @@ class Rock(Piece, ABC):
         # Проверяет, если заданное перемещение присутствует в списке возможных ходов.
         if to_where in self.moves:
 
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             # Удаление вражеской фигуры из общего списка фигур.
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
@@ -459,7 +460,6 @@ class Rock(Piece, ABC):
 
 
 class Knight(Piece, ABC):
-    # img = ('\u265E', '\u2658')
     def __init__(self, window, loc, color):
         self.ways_to_go = [(2, 1), (2, -1), (-2, 1),
                              (-2, -1), (1, -2), (1, 2),
@@ -489,6 +489,11 @@ class Knight(Piece, ABC):
     def _move_object(self, to_where: tuple, board_list: list):
         self._get_all_moves(board_list)  # noqa
         if to_where in self.moves:
+
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)   # noqa
             return self.alien_id
@@ -498,7 +503,6 @@ class Knight(Piece, ABC):
 
 
 class Bishop(Piece, ABC):
-    # img = ('\u265D', '\u2657')
     def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
         super().__init__(window, loc, color)
@@ -513,6 +517,11 @@ class Bishop(Piece, ABC):
     def _move_object(self, to_where: tuple, board_list: list) -> int or None:
         self._get_all_moves(board_list)
         if to_where in self.moves:
+
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
             return self.alien_id
@@ -522,7 +531,6 @@ class Bishop(Piece, ABC):
 
 
 class Queen(Piece, ABC):
-    # img = ('\u265B', '\u2655')
     def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1),
                              (-1, -1), (1, 0), (-1, 0),
@@ -538,6 +546,11 @@ class Queen(Piece, ABC):
     def _move_object(self, to_where: tuple, board_list: list) -> dict or None:
         self._get_all_moves(board_list)
         if to_where in self.moves:
+
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
             return self.alien_id
@@ -547,8 +560,6 @@ class Queen(Piece, ABC):
 
 
 class King(Piece, ABC):
-    # img = ('\u265A', '\u2654')
-
     def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 0), (-1, 0), (0, 1),
                              (0, -1), (1, 1), (1, -1),
@@ -581,6 +592,11 @@ class King(Piece, ABC):
     def _move_object(self, to_where: tuple, board_list: list):
         self._get_all_moves(board_list)
         if to_where in self.moves:
+
+            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
+                self.alien_id = perhaps_enemy
+
             self._finish_move(board_list, to_where)
             self._get_all_moves(board_list)
             self.safe_zone = self.loc
