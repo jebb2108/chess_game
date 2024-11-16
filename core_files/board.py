@@ -95,6 +95,8 @@ class BoardUser(Board):
             if isinstance(self.chosen_piece_object.alien_id, int):
                 eaten_piece = next((key for key in self.all_poss_moves
                                     if key.id == self.chosen_piece_object.alien_id), None)
+                # проигрывает звук при съедании
+                self.chosen_piece_object.capture_sound.play()
                 self.chosen_piece_object.alien_id = None
                 del self.all_poss_moves[eaten_piece]
                 # Обновление всего, чтобы было затронуто перемещением.

@@ -80,6 +80,8 @@ class BoardManipulator(ABC):
 class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
     # img = None  # Начальная дефолтная переменная для каждой фигуры.
+    sounds_loaded = False
+    capture_sound = None
 
     # Каждая фигура должна иметь свой цвет.
     def __init__(self, window, loc: tuple[int, int], color: object):
@@ -88,6 +90,9 @@ class Piece(ABC):
         self.color = color  # Программа должна явно указывать Белый или Черный.
         self.id = id(loc)
         self.alien_id = None
+        if not Piece.sounds_loaded:
+            Piece.capture_sound = pygame.mixer.Sound('sounds/capture.mp3')
+            Piece.sounds_loaded = True
 
         self.enemy_color = 1 if self.color == Color.black else 2
         full_path = (('white', 'black')[self.color-1]  # noqa
