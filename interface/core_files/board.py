@@ -56,10 +56,12 @@ class Board(BoardManipulator, ABC):
 
 class BoardUser(Board):
     def __init__(self, board_list=None, chosen_piece_object=Empty):
+
+        self.chosen_piece_object = chosen_piece_object
+        self.chosen_piece_class = None
+        self.chosen_piece_color = None
+
         super().__init__(board_list)
-        self.chosen_piece_object = chosen_piece_object  # переменная сохраняет экземпляр фигуры,
-        # над которой программа работает в текущий
-        # момент для автоматизации процесса
 
     def pick_piece(self, its_loc_on_board: tuple) -> object:
         coord_y, coord_x = its_loc_on_board
@@ -81,9 +83,9 @@ class BoardUser(Board):
                 self.__chosen_piece_object = chosen_piece_object
 
         else:
-            self.chosen_piece_class = Empty
+            self.__chosen_piece_object = Empty()
+            self.chosen_piece_class = None
             self.chosen_piece_color = None
-            self.__chosen_piece_object = None
 
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:

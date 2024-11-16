@@ -50,7 +50,6 @@ class Game:
 
         return self.check_selected(mouse_pos)
 
-
     def run_through_all_rects(self, mouse_pos):
         # Отслеживает состояние всех
         # клеток: IDLE, HOVER, SELECTED
@@ -67,10 +66,9 @@ class Game:
 
         return
 
-
     def check_selected(self, mouse_pos):
         all_selected_keys = [key for key, value in
-                         self.linked_rects_dict.items() if value == SELECTED]
+                             self.linked_rects_dict.items() if value == SELECTED]
 
         if 0 < len(all_selected_keys) < 2:
             key = all_selected_keys[0]
@@ -79,14 +77,14 @@ class Game:
         elif len(all_selected_keys) == 2:
 
             chosen_piece_coords = self.get_coords_of_chosen_piece(mouse_pos)
-            # converted_into_num = int(self.chosen_piece.loc[0]*8+self.chosen_piece.loc[1])
-            #
-            the_other_index = [ num for num in all_selected_keys if self.convert_selected_into_coord(num) != chosen_piece_coords][0]
-            next_move_coords = self.convert_selected_into_coord(the_other_index)
+            the_other_index = \
+            [num for num in all_selected_keys
+             if self.convert_selected_into_coords(num) != chosen_piece_coords][0]
+            next_move_coords = self.convert_selected_into_coords(the_other_index)
 
             # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
             self.game_manager.move_piece(self.chosen_piece, next_move_coords)
-            self.linked_rects_dict = { key: IDLE for key in self.linked_rects_dict }
+            self.linked_rects_dict = {key: IDLE for key in self.linked_rects_dict}
             self.chosen_piece = None
 
         return
@@ -95,34 +93,25 @@ class Game:
         try:
             coords = self.chosen_piece.loc
         except AttributeError:
-           coords = [ self.convert_selected_into_coord(self.board_rects.index(rect))
-                   for rect in self.board_rects if rect.collidepoint(mouse_pos) ]
-           return coords
+            coords = [self.convert_selected_into_coords(self.board_rects.index(rect))
+                      for rect in self.board_rects if rect.collidepoint(mouse_pos)]
+            return coords
         else:
             return coords
 
-
     def appoint_active_piece(self, key_indx):
         try:
-            res = self.convert_selected_into_coord(key_indx)
+            res = self.convert_selected_into_coords(key_indx)
         except TypeError:
-            return False
+            return
         else:
             coord_y, coord_x = res
             self.chosen_piece = self.game_manager.actions.board[coord_y][coord_x]
-            return True
-
 
     @staticmethod
-    def convert_selected_into_coord(key):
+    def convert_selected_into_coords(key):
         coords = (key // 8, key % 8)
         return coords
-
-
-    def attach_pieces_to_board(self):
-        for piece in self.game_manager.actions.all_poss_moves:
-            piece.draw()
-
 
     def show_tiles(self, flag):
         if flag:
@@ -134,32 +123,41 @@ class Game:
 
         return None
 
-
     def show_developer_table(self, event, flag):
         if flag:
             pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
             selected_info_text = f'Number of\nselected: {[tile for tile in self.linked_rects_dict.values()].count(SELECTED)}'
             cursor_img = self.font.render(selected_info_text, True, DARK_GRAY)
-            self.window.blit(cursor_img, (650, 200))
+            self.window.blit(cursor_img, (650, 270))
+
+            whose_turn_in_num = self.game_manager.whose_turn_it_is.current_move
+            text = f'Whose turn:\n--> {('white', 'black')[whose_turn_in_num-1]} <--'
+            text_img = self.font.render(text, True, DARK_GRAY)
+            self.window.blit(text_img, (650, 50))
 
             if self.cursor or event.type == pygame.MOUSEBUTTONDOWN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.cursor = event.pos
                 mouse_pos_text = f'Cursor loc:\n{self.cursor}'
                 cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
-                self.window.blit(cursor_img, (650, 120))
+                self.window.blit(cursor_img, (650, 200))
 
             if issubclass(type(self.chosen_piece), self.game_manager.actions.settings.class_mapping['Piece']):
                 class_name = self.chosen_piece.__class__.__name__
                 its_loc = self.chosen_piece.loc
                 text = f'There is {class_name}.\nIts loc: {its_loc}'
-
+                text_img = self.font.render(text, True, DARK_GRAY)
+                self.window.blit(text_img, (650, 120))
             else:
                 text = 'NO PIECE'
+                text_img = self.font.render(text, True, DARK_GRAY)
+                self.window.blit(text_img, (650, 120))
 
-            text_img = self.font.render(text, True, DARK_GRAY)
-            self.window.blit(text_img, (650, 50))
 
+
+    def attach_pieces_to_board(self):
+        for piece in self.game_manager.actions.all_poss_moves:
+            piece.draw()
 
     def draw(self, event, flag=False):
         if flag is False:
@@ -172,11 +170,9 @@ class Game:
         self.show_developer_table(event, flag)
         self.attach_pieces_to_board()
 
-
     def exit(self, CallBack):
         Authorization.LOGIN_AWAITING_STATUS = True
         self.window.fill(BLACK)
-
 
     @staticmethod
     def create_rects():
