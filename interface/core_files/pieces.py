@@ -27,9 +27,6 @@ class Empty(object):
 
 
 class BoardManipulator(ABC):
-    @abstractmethod
-    def remove_piece_from_board(self, board, coords, id_num):
-        return NotImplementedError
 
     @staticmethod
     def get_class(board, coords):

@@ -43,17 +43,11 @@ while True:
             pygame.quit()
             sys.exit()
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_m:
-                flag = not flag
-                chosen_piece = not chosen_piece
-                level = logging.INFO
-                fmt = '[%(levelname)s] - %(asctime)s %(message)s'
-                logging.basicConfig(level=level, format=fmt)
 
         if Authorization.LOGIN_AWAITING_STATUS:
 
             o_auth.event_manager(event)
+
             o_auth.login_input.handleEvent(event)
             o_auth.password_input.handleEvent(event)
             o_auth.login_button.handleEvent(event)
@@ -61,7 +55,17 @@ while True:
 
         else:
 
-            o_game.event_manager(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_m:
+                    flag = not flag
+                    chosen_piece = not chosen_piece
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                o_game.got_click(event.pos)
+
+            elif event.type == pygame.MOUSEMOTION:
+                o_game.run_through_all_rects(event.pos)
+
             o_game.new_game_button.handleEvent(event)
             o_game.choose_time_button.handleEvent(event)
             o_game.draw(event, flag)

@@ -1,8 +1,6 @@
 import copy
 
 from interface.core_files.board import BoardUser
-from interface.core_files.settings import Settings
-
 
 class WhoMoves(object):
     """ Класс, который следит за очередностью ходов белых и черных. """
@@ -29,83 +27,19 @@ class GamePlay:
         self.window = window
         self.whose_turn_it_is = WhoMoves()
         self.actions = BoardUser(window)
-        # self.settings = Settings(window)
         self.default_message = True
-        # self.message = 'Press "q" to quit'
-        # self.current_move_message = 'Turn to play: white'
-        # self.first_beginning_message = 'What do you want to move: (e.g. "e2") '
-        # self.second_beginning_message = 'To where do you want to move it: (e.g. "e4") '
 
         self.object_copies = list()
 
     def initiate_move(self, from_where, to_where):
 
-        if not self.is_end_game(self.whose_turn_it_is.current_move): return False
+        if not self.is_end_game(self.whose_turn_it_is.current_move):
+            return False
 
         else:
             self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
             self.move_piece(to_where)
             return True
-
-
-
-    # def start_game(self):
-    #
-    #     self.actions.print_board()
-    #
-    #     while True:
-    #
-    #         if not self.is_end_game(self.whose_turn_it_is.current_move): break
-    #
-    #         print(self.message)
-    #         if not self.default_message:
-    #             self.default_message = True
-    #
-    #         print('***', str(self.current_move_message), '***')
-    #         from_where_input = input('{}'.format(self.first_beginning_message))
-    #         if from_where_input[0].lower() == 'q' or len(from_where_input) < 2:
-    #             print('\nWhite wins!' if self.whose_turn_it_is.current_move == 2 else '\nBlack wins!')
-    #             break
-    #
-    #         # Команда разработчика.
-    #         elif from_where_input == 'h+':
-    #             print('options: dictionary for moves "d"; stats for each piece "s"')
-    #             response = input('What would you like to see: ')
-    #             if response == 'd':
-    #                 gen1 = [key.img[key.color - 1] for key in self.actions.all_poss_moves]
-    #                 gen2 = [moves for moves in self.actions.all_poss_moves.values()]
-    #                 for item in zip(gen1, gen2):
-    #                     print(item)
-    #             elif response == 's':
-    #                 for key in self.actions.all_poss_moves.values():
-    #                     print(repr(key[0]))
-    #                     print()
-    #
-    #         to_where_input = input('{}'.format(self.second_beginning_message))
-    #         if to_where_input[0].lower() == 'q' or len(to_where_input) < 2:
-    #             print('\nThe session is over')
-    #             break
-    #
-    #         from_where_input = from_where_input[0].title() + from_where_input[1]
-    #         to_where_input = to_where_input[0].title() + to_where_input[1]
-    #
-    #         # Переводит в числовые координаты 'E2' --> [6, 4]
-    #         # Если координаты некорректные, выдает ошибку.
-    #         try:
-    #             from_where = self.actions.settings.transcripts[from_where_input]
-    #             to_where = self.actions.settings.transcripts[to_where_input]
-    #             from_where, to_where = tuple(from_where), tuple(to_where)
-    #
-    #         except KeyError:
-    #             # self.make_msg('E: You mistyped. Please try again')
-    #             self.actions.print_board()
-    #
-    #         # Маленькая проверка на то, чтобы это была фигуры.
-    #         # Передает в следующую функцию.
-    #         else:
-    #             self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
-    #             self.move_piece(to_where)
-    #             print()
 
     def is_end_game(self, color_indx):
 
@@ -168,7 +102,6 @@ class GamePlay:
             # Требуется убрать проверки т.к они уже сделаны в check_king функциях
             if self.place_piece_on_board(to_where):
                 self.whose_turn_it_is.change_turn()
-                self.auto_print()
                 self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
                 return
 
@@ -282,23 +215,6 @@ class GamePlay:
     #     self.message = e
     #     self.default_message = False
     #     pass
-
-    def auto_print(self):
-        """Вспомогательная функция для печати доски и коррекции сообщений."""
-
-        if not self.default_message:
-            self.current_move_message = 'Turn to play: {}'.format(
-                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-            # self.actions.print_board()
-            return None
-
-
-        else:
-            self.message = 'Press "q" to press'
-            self.current_move_message = 'Turn to play: {}'.format(
-                'white' if self.whose_turn_it_is.current_move == 1 else 'black')
-            # self.actions.print_board()
-            return None
 
     def is_checked(self, chessboard_inst=None) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """

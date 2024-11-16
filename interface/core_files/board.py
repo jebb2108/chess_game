@@ -30,9 +30,6 @@ class Board(BoardManipulator, ABC):
 
         return
 
-    def remove_piece_from_board(self, board, coords, id_num):
-        pass
-
     @staticmethod
     def update_enemy_pieces_moves(board_inst, color_indx=None):
 

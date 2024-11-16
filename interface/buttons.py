@@ -10,8 +10,8 @@ from constants import *
 # список событий мыши, на которые реагирует кнопка
 MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 
-class ChooseTimeButton(pygwidgets.TextButton):
 
+class ChooseTimeButton(pygwidgets.TextButton):
     # время в формате (минуты, секунды)
     TIMES_LIST = [(10, 5), (10, 0), (30, 0), (30, 15), (45, 0), (5, 0), (5, 3)]
 
@@ -24,7 +24,6 @@ class ChooseTimeButton(pygwidgets.TextButton):
 
         self.new_coords = self.rect.move(35, 15)
         self.current_text = self.default_text_image
-
 
     def handleEvent(self, event):
 
@@ -53,7 +52,6 @@ class ChooseTimeButton(pygwidgets.TextButton):
         # после модификации кнопки,
         # вызываем метод родительского класса
         super().handleEvent(event)
-
 
     def alter_time(self):
         current_time = self.default_time
