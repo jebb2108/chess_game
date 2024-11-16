@@ -1,6 +1,6 @@
 import copy
 
-from interface.core_files.board import BoardUser
+from core_files.board import BoardUser
 
 class WhoMoves(object):
     """ Класс, который следит за очередностью ходов белых и черных. """

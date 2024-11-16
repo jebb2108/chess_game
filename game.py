@@ -1,7 +1,7 @@
 # Класс Game
 import pygwidgets
 
-from interface.core_files.manager import GamePlay
+from core_files.manager import GamePlay
 from buttons import ChooseTimeButton
 from authorization import Authorization
 from constants import *

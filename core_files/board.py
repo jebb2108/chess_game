@@ -1,8 +1,8 @@
 """ Класс шахматной доски """
 from abc import ABC
 
-from interface.core_files.settings import Settings
-from interface.core_files.pieces import BoardManipulator, Empty, Piece, King, Rock
+from core_files.settings import Settings
+from core_files.pieces import BoardManipulator, Empty, Piece, King, Rock
 
 
 class Board(BoardManipulator, ABC):

@@ -3,7 +3,7 @@
 конвертирует удобно-читаемые позиции в координаты,
 с чем уже работает программа и прочее... """
 
-from interface.core_files.pieces import Empty, Color, Piece, Pawn, Rock, Knight, Bishop, Queen, King
+from core_files.pieces import Empty, Color, Piece, Pawn, Rock, Knight, Bishop, Queen, King
 
 
 class Settings:

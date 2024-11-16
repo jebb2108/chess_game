@@ -1,7 +1,7 @@
 import pygame
 from abc import ABC, abstractmethod
 
-from interface.core_files.pixels import pixel_mapping
+from core_files.pixels import pixel_mapping
 
 """ Все шахматные фигуры, состояния и их поведение. """
 
