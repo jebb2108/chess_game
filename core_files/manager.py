@@ -44,9 +44,16 @@ class Manager(BoardUser):
             Manager.move_check_sound = pygame.mixer.Sound('sounds/move-check.mp3')
             Manager.sounds_loaded = True
 
+        self.move_sound_state = False
+        self.capture_sound_state = False
+        self.check_move_sound_state = False
+        self.end_game_sound_state = False
+
+
         super().__init__(window, board_ls)
 
         self.playing = True
+
 
 
     def initiate_move(self, piece, to_where):
@@ -58,19 +65,26 @@ class Manager(BoardUser):
                 self.whose_turn_it_is.change_turn()
                 # self.make_msg('Castling your king went successful')
                 self.update_all_poss_moves_dict(self.all_poss_moves)
-                return self.is_end_game()
+                if not self.is_end_game():
+                    self.play_sound()
+                return
+
             else:
                 # self.make_msg('Castling your king went unsuccessful')
                 self.update_all_poss_moves_dict()
-                return self.is_end_game()
+                if not self.is_end_game():
+                    self.play_sound()
+                return
 
         # Следующее условие. Это не король. Совершает обычный ход
         elif self.identify_whether_move_is_legal(to_where):
             # Требуется убрать проверки т.к они уже сделаны в check_king функциях
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
-            self.chosen_piece_object.move_sound.play()
-            return self.is_end_game()
+            # self.chosen_piece_object.move_sound.play()
+            if not self.is_end_game():
+                self.play_sound()
+
 
         else:
             return self.chosen_piece_object.illegal_sound.play()
@@ -118,9 +132,12 @@ class Manager(BoardUser):
 
             self.board = current_state
             if checkmate_status is True:
-                Manager.game_end_sound.play()
+                self.end_game_sound_state = True
                 self.playing = False
-                break
+                Manager.game_end_sound.play()
+                return True
+
+            return False
 
     def identify_whether_move_is_legal(self, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
@@ -187,6 +204,7 @@ class Manager(BoardUser):
         # создает переменную со съеденной фигурой, чтобы была
         # возомжность ее вернуть с функцией conduct_force_change
         eaten_piece = self.attempt_piece_to_move(to_where)
+        self.move_sound_state = True
 
         # Если результат отрицательный,
         # происходит выброс из цикла действий.
@@ -197,6 +215,7 @@ class Manager(BoardUser):
             # removed_piece = eaten_piece
             # Перемещает экземпляр во временное хранилище - список.
             self.object_copies.append(eaten_piece)
+            self.capture_sound_state = True
 
         return True
 
@@ -234,3 +253,20 @@ class Manager(BoardUser):
 
         # Позволяет пройти проверку.
 
+    def play_sound(self):
+        if self.end_game_sound_state:
+            # Manager.game_end_sound.play()
+
+            self.move_sound_state = False
+            self.capture_sound_state = False
+
+        elif self.move_sound_state and not self.capture_sound_state:
+            self.chosen_piece_object.move_sound.play()
+
+        elif self.capture_sound_state and not self.check_move_sound_state:
+            self.chosen_piece_object.capture_sound.play()
+
+        self.move_sound_state = False
+        self.capture_sound_state = False
+        self.end_game_sound_state = False
+        self.check_move_sound_state = False

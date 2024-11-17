@@ -199,7 +199,7 @@ class Piece(ABC):
     def _finish_move(self, board_list: list, new_pos: tuple):
         BoardManipulator.update_board_list(board_list, self.loc, new_pos, self.enemy_color)
         self.set_loc(new_pos)
-        self.move_sound.play()
+        # self.move_sound.play()
         self.is_not_changed = False
         return
 
