@@ -113,6 +113,8 @@ class Piece(ABC):
 
         self.__loc = loc
 
+    def get_color(self):
+        return self.color
 
     def get_id(self):
         return self.id

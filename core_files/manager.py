@@ -1,6 +1,10 @@
 import copy
+import sys
+
+import pygame
 
 from core_files.board import BoardUser
+
 
 class WhoMoves(object):
     """ Класс, который следит за очередностью ходов белых и черных. """
@@ -19,161 +23,190 @@ class WhoMoves(object):
         self.current_move = 1 if self.turn == 1 else 2
 
 
-class GamePlay:
+class Manager(BoardUser):
     """ Класс самого высокого уровня,
     с чем непосредственно взаимодействует пользователь. """
 
-    def __init__(self, window):
+    def __init__(self, window, board_ls=None):
         self.window = window
         self.whose_turn_it_is = WhoMoves()
-        self.actions = BoardUser(window)
-        self.default_message = True
+        super().__init__(window, board_ls)
 
         self.object_copies = list()
+        self.playing = True
 
 
+    def initiate_move(self, piece, to_where):
 
-    def initiate_move(self, from_where, to_where):
+        self.chosen_piece_object = piece
+        # Проверяет, если это король и запрашивается рокировка.
+        if self.chosen_piece_class == 'class.King':
+            if self.check_castling_and_move(to_where):
+                self.whose_turn_it_is.change_turn()
+                # self.make_msg('Castling your king went successful')
+                self.update_all_poss_moves_dict(self.all_poss_moves)
+                return self.is_end_game()
+            else:
+                # self.make_msg('Castling your king went unsuccessful')
+                self.update_all_poss_moves_dict()
+                return self.is_end_game()
 
-        if not self.is_end_game(self.whose_turn_it_is.current_move):
-            return False
+        # Следующее условие. Это не король. Совершает обычный ход
+        elif self.identify_whether_move_is_legal(to_where):
+            # Требуется убрать проверки т.к они уже сделаны в check_king функциях
+            self.whose_turn_it_is.change_turn()
+            self.update_all_poss_moves_dict()
+            return self.is_end_game()
 
-        else:
-            self.actions.chosen_piece_object = self.actions.pick_piece(from_where)
-            self.move_piece(to_where)
-            return True
+    def is_end_game(self):
 
-    def is_end_game(self, color_indx):
+        """ Метод, который активируется в случае шаха собственному королю,
+            сделанному оппонентом на предыдущем ходе """
 
         checkmate_status = False
-
-        if self.is_checked():
+        if self.is_checked(True):
             checkmate_status = True
 
+        # выполнит всевозможные ходы для проверки,
+        # если поставлен мат и это конец игры
         while checkmate_status:
 
-            board_copy = copy.deepcopy(self.actions.board)
-            game_stats = GamePlay(self.window)
-            game_stats.actions = BoardUser(board_copy)
+            # Тут мне нужно сохранить состояние доски
+            current_state = copy.deepcopy(self.board)
 
-            tmp = [value.access_all_moves() for key, value
-                   in self.actions.all_poss_moves.items()
-                   if key.color == self.actions.chosen_piece_object.color]
+            enemy_color_index = self.chosen_piece_object.enemy_color
+            enemy_moves_n_pieces = [(key, key.access_all_moves()) for key
+                                    in self.all_poss_moves if key.get_color() == enemy_color_index]
 
-            for piece, moves in tmp:
+            for piece, moves in enemy_moves_n_pieces:
 
-                curr_pos = list([piece.y, piece.x])
+                # Координаты выбранной фигуры до перестановки
+                curr_pos = tuple([piece.get_y(), piece.get_x()])
 
                 for new_move in moves:
                     # Функция, которая изменяет доску в новом экземпляре.
-                    game_stats.actions.conduct_change(new_move)
+                    eaten_piece = self.conduct_change(new_move, curr_pos)
                     # Обновляет возможные ходы в словаре после перестановки
-                    game_stats.actions.update_enemy_pieces_moves(game_stats, piece.enemy_color)
+                    self.update_all_poss_moves_dict()
 
-                    if game_stats.is_checked(color_indx):
-                        game_stats.actions.conduct_change(curr_pos)
+                    if self.is_checked():
+                        self.conduct_force_change(new_move, curr_pos, eaten_piece)
 
                     else:
+                        self.board = current_state
+                        self.update_all_poss_moves_dict()
                         checkmate_status = False
-                        break
 
-            del game_stats, board_copy
+
 
             if checkmate_status is True:
-                print('\tCheckmate!')
-                return False
+                print('Checkmate!')
+                self.playing = False
+                break
 
-        return True
-
-    def move_piece(self, piece, to_where):
-        self.actions.chosen_piece_object = piece
-        # Проверяет, если это король и запрашивается рокировка.
-        if self.actions.chosen_piece_class == 'class.King':
-            if self.actions.check_castling_and_move(to_where):
-                self.whose_turn_it_is.change_turn()
-                # self.make_msg('Castling your king went successful')
-                self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return
-            else:
-                # self.make_msg('Castling your king went unsuccessful')
-                self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return
-
-        # Следующее условие. Это не король. Совершает обычный ход
-        elif self.check_king(to_where):
-            # Требуется убрать проверки т.к они уже сделаны в check_king функциях
-            if self.place_piece_on_board(to_where):
-                self.whose_turn_it_is.change_turn()
-                self.actions.update_all_poss_moves_dict(self.actions.all_poss_moves)
-                return
-
-        return
-
-    def check_king(self, to_where: list) -> bool:
+    def identify_whether_move_is_legal(self, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
         # Проверяет, кому принадлежит ход.
-        if self.whose_turn_it_is.current_move != self.actions.chosen_piece_color:
+        if self.whose_turn_it_is.current_move != self.chosen_piece_color:
             # self.make_msg('This isn`t your turn')
             return False
 
-        # Проверка. Король находится под шахом?
-        if self.is_checked():
-            if self.king_remains_checked(to_where):
+        """ Должно выполняться два этапа проверки: 
+        1 - проверяет, может ли фигура пойти в настоящий момент времени,
+        2 - проверяет, если сделанный ход привел к шаху ИЛИ ушел из под него."""
+
+        # 1 - Проверяет, может ли фигура пойти в
+        # настоящий момент времени.
+        if not self.is_checked():
+
+            # Фигура может переместиться и обновиться словарик ходов.
+            if (self.place_piece_on_board(to_where)
+                    and self.post_check_king(to_where)):
+
+                # success!
                 return True
             else:
+                # self.play_not_allowed_sound()
                 return False
 
+        # 2 - Проверяет, если сделанный ход привел
+        # к шаху ИЛИ ушел из под него.
+        elif self.remains_checked(to_where):
+            # self.play_not_allowed_sound()
+            return False
+
+        # success!
         return True
 
+    def is_checked(self, enemy_check=False) -> [True or False]:
+        """ Проверка, если король находится в зоне атаки вражеской фигуры. """
+
+        color_indx = self.chosen_piece_color
+        enemy_color = self.chosen_piece_object.enemy_color
+
+
+        if enemy_check:
+            color_indx = self.chosen_piece_object.enemy_color
+            enemy_color = self.chosen_piece_color
+
+
+        # Функция определяет сначала цвет выбранной фигуры,
+        # а потом вражеский цвет.
+        # Таким образом подбираются значения для каждого действия
+        # и может определить находится ли этот король в зоне атаки
+        # вражеской фигуры.
+        either_king = next((key for key in self.all_poss_moves if key.color == color_indx and isinstance(key, self.settings.class_mapping['King'])), None)
+
+        # Возвращает True или False в зависимости от того,
+        # находится ли король в зоне атаки.
+        return either_king.safe_zone in set(sum([value for key, value in self.all_poss_moves.items() if key.color == enemy_color], []))
+
     def place_piece_on_board(self, to_where):
-        # Если шаха не зафиксировано,
-        # программа пытается переместить фигуру на доске.
-        eaten_piece = self.actions.attempt_piece_to_move(to_where)
+
+        """ Предпоследнее действие - пробное совершение хода.
+            Эта функция так же является проверочной. """
+
+        # создает переменную со съеденной фигурой, чтобы была
+        # возомжность ее вернуть с функцией conduct_force_change
+        eaten_piece = self.attempt_piece_to_move(to_where)
 
         # Если результат отрицательный,
         # происходит выброс из цикла действий.
         if eaten_piece is False: return False
 
-        if issubclass(type(eaten_piece), self.actions.settings.class_mapping['Piece']):
+        if type(eaten_piece) is not bool:
             # Иначе проверяет, есть ли другое значение от булевых?
             # removed_piece = eaten_piece
             # Перемещает экземпляр во временное хранилище - список.
             self.object_copies.append(eaten_piece)
 
-            # Так как изменения на доске уже произошли,
-            # проверяет, есть ли шах королю сейчас?
-            if self.post_check_king(to_where):  # noqa
-
-                # Проверка выполнена.
-                # Фигура остается в той же позиции
-                # и съеденная вражеская фигура удаляется.
-                return True
-
-            else:
-                # Король остается под шахом.
-                # Возвращает фигуру на место.
-                # Удаленная фигура возвращается
-                # в хранилище из резервного списка.
-                self.actions.all_poss_moves[eaten_piece] = eaten_piece.moves
-                self.actions.conduct_force_change(to_where,
-                                                  self.actions.chosen_piece_object.loc,
-                                                  self.object_copies[-1])
-                self.object_copies.clear()
-                # Проверка не пройдена. Возвращает False.
-                return False
-
         return True
 
+    def remains_checked(self, to_where):
+
+        """ Этот метод задает такое условие:
+        Хорошо, шах королю объявлен, но является
+        ли предложенный ход избавлением от него? """
+
+        if (self.place_piece_on_board(to_where)
+                and self.post_check_king(to_where)):
+            return True
+
+        return False
+
     def post_check_king(self, to_where):
-        """ Проверка на шах уже после сделанного хода. """
+
+        """ Метод является логическим завершением
+            проверки на шах королю и возможности
+            оставить фигуру на ее новом месте. """
 
         if self.is_checked():
-            # Возвращает фигуру на место.
-            self.actions.chosen_piece_object.moves.clear()
-            self.actions.conduct_force_change(to_where, self.actions.chosen_piece_object.loc,
-                                              self.object_copies[-1] if self.object_copies else None)
-            # self.make_msg(f'{('White', 'Black')[self.actions.chosen_piece_color.color - 1]} '
-            #               f'king is under attack!')
+            # Проверка провалена.
+            # Возвращает фигуру на прежнее место.
+            self.chosen_piece_object.moves.clear()
+            self.conduct_force_change(to_where, self.chosen_piece_object.loc,
+                                      self.object_copies[-1] if self.object_copies else None)
+
             # Очищает резервное хранилище.
             self.object_copies.clear()
             return False
@@ -183,65 +216,3 @@ class GamePlay:
 
         # Позволяет пройти проверку.
 
-    def king_remains_checked(self, to_where):
-
-        # from_where = self.chosen_piece_object.loc
-
-        eaten_piece = self.actions.attempt_piece_to_move(to_where)
-
-        if eaten_piece is False:
-            return False
-
-        elif issubclass(type(eaten_piece), self.actions.settings.class_mapping['Piece']):
-            # Создает копию съеденной фигуры в резерве
-            self.object_copies.append(eaten_piece)
-
-        # Король теперь в опасности?
-        if self.is_not_checked():  # noqa
-            # self.make_msg(f'{('White', 'Black')[self.actions.chosen_piece_color - 1]} king is under attack!')
-            if self.object_copies:
-                self.actions.conduct_force_change(to_where, self.actions.chosen_piece_object.loc, self.object_copies)
-                if not isinstance(self.object_copies[-1], object):
-                    self.actions.all_poss_moves[eaten_piece] = eaten_piece.moves
-                    self.object_copies.clear()
-                return False
-
-            else:
-                self.actions.conduct_force_change(to_where, self.actions.chosen_piece_object.loc)
-                return False
-
-        return self.post_check_king(obj, from_where, to_where, color_indx)  # noqa
-
-    # def make_msg(self, e=''):
-    #     """ Подставляет сообщение об ошибке. """
-    #     self.message = e
-    #     self.default_message = False
-    #     pass
-
-    def is_checked(self, chessboard_inst=None) -> [True or False]:
-        """ Проверка, если король находится в зоне атаки вражеской фигуры. """
-
-        if chessboard_inst is None:
-            chessboard_inst = self
-
-        try:
-            color = 'white' if chessboard_inst.chosen_piece_color == 1 else 'black'
-        except AttributeError:
-            return False
-
-        if color == 'black':
-            black_king = next((key for key in chessboard_inst.all_poss_moves
-                               if key.color == 2 and
-                               isinstance(key, self.actions.settings.class_mapping['King'])), None)
-            return (chessboard_inst.all_poss_moves[black_king].safe_zone
-                    in set(sum([value if key.color == 1 else key for key, value in
-                                chessboard_inst.all_poss_moves.items()], [])))
-
-
-        elif color == 'white':
-            white_king = next((key for key in chessboard_inst.all_poss_moves
-                               if key.color == 1 and
-                               isinstance(key, self.actions.settings.class_mapping['King'])), None)
-            return (chessboard_inst.all_poss_moves[white_king].safe_zone
-                    in set(sum([value if key.color == 2 else key for key, value in
-                                chessboard_inst.all_poss_moves.items()], [])))

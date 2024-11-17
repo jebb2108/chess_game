@@ -1,7 +1,7 @@
 # Класс Game
 import pygwidgets
 
-from core_files.manager import GamePlay
+from core_files.manager import Manager
 from buttons import ChooseTimeButton
 from authorization import Authorization
 from constants import *
@@ -15,12 +15,12 @@ class Game:
 
         self.window = window
 
-        self.game_manager = GamePlay(window)
+        self.game_mgr = Manager(window)
 
         self.font = pygame.font.Font(None, 40)
 
         self.new_game_button = pygwidgets.TextButton(self.window, (20, 640), 'NEW GAME', width=180, height=45,
-                                                     fontSize=22)
+                                                     fontSize=22, callBack=self.reset)
 
         self.choose_time_button = ChooseTimeButton(self.window, (230, 640), '', width=180, height=45, fontSize=22)
 
@@ -29,6 +29,10 @@ class Game:
 
         self.quit_button = pygwidgets.TextButton(self.window, (745, 640), 'QUIT', width=100, height=45, fontSize=22,
                                                  callBack=self.exit)
+
+        self.checkmate_window = pygwidgets.DisplayText(self.window, (250, 305), 'CHECKMATE', textColor=(200, 0, 0),
+                                                       fontSize=50)
+        self.checkmate_window.hide()
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
 
@@ -42,6 +46,9 @@ class Game:
         self.chosen_piece = None
         self.cursor = None
 
+    def reset(self, callBack):
+        pass
+
     def got_click(self, mouse_pos):
         for rect in self.board_rects:
             if rect.collidepoint(mouse_pos):
@@ -51,7 +58,7 @@ class Game:
                 if self.chosen_piece:
                     self.linked_rects_dict[rect_int] = SELECTED
 
-                elif self.game_manager.actions.get_class_as_str(coords) != 'Empty':
+                elif self.game_mgr.get_class_as_str(coords) != 'Empty':
                     self.linked_rects_dict[rect_int] = SELECTED
 
 
@@ -91,7 +98,7 @@ class Game:
             next_move_coords = self.convert_selected_into_coords(the_other_index)
 
             # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
-            self.game_manager.move_piece(self.chosen_piece, next_move_coords)
+            self.game_mgr.initiate_move(self.chosen_piece, next_move_coords)
             self.linked_rects_dict = {key: IDLE for key in self.linked_rects_dict}
             self.chosen_piece = None
 
@@ -114,7 +121,7 @@ class Game:
             return
         else:
             coord_y, coord_x = res
-            self.chosen_piece = self.game_manager.actions.board[coord_y][coord_x]
+            self.chosen_piece = self.game_mgr.board[coord_y][coord_x]
 
     @staticmethod
     def convert_selected_into_coords(key):
@@ -138,7 +145,7 @@ class Game:
             cursor_img = self.font.render(selected_info_text, True, DARK_GRAY)
             self.window.blit(cursor_img, (650, 270))
 
-            whose_turn_in_num = self.game_manager.whose_turn_it_is.current_move
+            whose_turn_in_num = self.game_mgr.whose_turn_it_is.current_move
             text = f'Whose turn:\n--> {('white', 'black')[whose_turn_in_num-1]} <--'
             text_img = self.font.render(text, True, DARK_GRAY)
             self.window.blit(text_img, (650, 50))
@@ -150,7 +157,7 @@ class Game:
                 cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
                 self.window.blit(cursor_img, (650, 200))
 
-            if issubclass(type(self.chosen_piece), self.game_manager.actions.settings.class_mapping['Piece']):
+            if issubclass(type(self.chosen_piece), self.game_mgr.settings.class_mapping['Piece']):
                 class_name = self.chosen_piece.__class__.__name__
                 its_loc = self.chosen_piece.loc
                 text = f'There is {class_name}.\nIts loc: {its_loc}'
@@ -164,7 +171,7 @@ class Game:
 
 
     def attach_pieces_to_board(self):
-        for piece in self.game_manager.actions.all_poss_moves:
+        for piece in self.game_mgr.all_poss_moves:
             piece.draw()
 
     def draw(self, event, flag=False):
@@ -178,7 +185,12 @@ class Game:
         self.show_developer_table(event, flag)
         self.attach_pieces_to_board()
 
+        if self.checkmate_window.visible:
+            pygame.draw.rect(self.window, LIGHT_GRAY, (190, 260, 320, 120), 0)
+            self.checkmate_window.draw()
+
     def exit(self, CallBack):
+        self.playing = True
         Authorization.LOGIN_AWAITING_STATUS = True
         self.window.fill(BLACK)
 

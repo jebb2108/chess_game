@@ -1,6 +1,4 @@
 # Главная программа
-from gc import callbacks
-
 # 1 - Импортируем модули
 
 import pygame
@@ -53,7 +51,9 @@ while True:
             o_auth.login_button.handleEvent(event)
             o_auth.draw()
 
-        else:
+        elif o_game.game_mgr.playing:
+
+            o_game.checkmate_window.hide()
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_m:
@@ -71,6 +71,18 @@ while True:
             o_game.draw(event, flag)
 
             o_game.quit_button.handleEvent(event)
+
+        else:
+            o_game.checkmate_window.show()
+
+            o_game.new_game_button.handleEvent(event)
+            o_game.choose_time_button.handleEvent(event)
+            o_game.draw(event, flag)
+
+            o_game.quit_button.handleEvent(event)
+
+
+
 
 
         # 8 - Обновляем экран

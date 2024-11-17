@@ -1,70 +1,65 @@
 """ Класс шахматной доски """
+import copy
 from abc import ABC
 
 from core_files.settings import Settings
-from core_files.pieces import BoardManipulator, Empty, Piece, King, Rock
+from core_files.pieces import BoardManipulator, Empty, Piece, King, Rock, Color
 
 
 class Board(BoardManipulator, ABC):
-    def __init__(self, window, board=None):
+    def __init__(self, window, board_ls):
         self.board = [[Empty()] * 8 for _ in range(8)]
-        if board is not None:  # оставленная возможность
+        if board_ls is not None:  # оставленная возможность
             # замены для копирования доски
             self.board.clear()
-            self.board = board
+            self.board = board_ls
 
         self.all_poss_moves = dict()
         self.settings = Settings(window)
         self.initialize()
 
     def initialize(self):
-        container = self.settings.all_pieces
-        for piece in container:
+        for piece in self.settings.all_pieces:
             self.board[piece.get_y()][piece.get_x()] = piece
 
-        self.update_all_poss_moves_dict(container)
 
-    def update_all_poss_moves_dict(self, container):
-        self.all_poss_moves = { key: [key._get_all_moves(self.board)]
-                                for  key in container }
+        self.update_all_poss_moves_dict(container=[self.board, self.settings.all_pieces],
+                                        color_indx=[Color.white, Color.black])
+
+    def update_all_poss_moves_dict(self, container=None, color_indx=None):
+
+        """ Главный смысл этого метода в том, чтобы обновить по дефолту
+            все значения словаря ИЛИ обновление словаря вражеских фигур в
+            скопированном словаре возможных ходов. """
+
+        # Проверка на то, чтобы НИЧЕГО не было передано в аргументах метода.
+        # Тогда операция считается деволтной
+        if (container is None) and (color_indx is None):
+            board_list = self.board
+            all_possible_moves_dict = self.all_poss_moves
+            color_indx = [Color.white, Color.black]
+
+        else:
+            board_list = container[0]
+            all_possible_moves_dict = container[1]
+
+        self.all_poss_moves = { key: key._get_all_moves(board_list)
+                                for  key in all_possible_moves_dict if key.color in color_indx }
 
         return
-
-    @staticmethod
-    def update_enemy_pieces_moves(board_inst, color_indx=None):
-
-        if color_indx is None:
-            color_indx = None
-
-        array = sum(board_inst.board, [])
-        for obj in array:
-            if obj.color > 0 and obj.color == color_indx:
-
-                gen_key = next(( key for key in board_inst.all_poss_moves
-                                if obj.id == key.id), None)
-
-                if gen_key is None:
-                    raise Exception("Object not found")
-
-                items_moves = obj(board_inst)
-                value = items_moves
-
-                board_inst.all_poss_moves[gen_key] = value  # !!!! check it !!!!
-
-        return None
 
     def get_class_as_str(self, coords):
         return BoardManipulator.get_class(self.board, coords)
 
 
 class BoardUser(Board):
-    def __init__(self, board_list=None, chosen_piece_object=Empty):
+    def __init__(self, window, board_ls):
 
-        self.chosen_piece_object = chosen_piece_object
+        self.chosen_piece_object = Empty
         self.chosen_piece_class = None
         self.chosen_piece_color = None
 
-        super().__init__(board_list)
+        super().__init__(window, board_ls)
 
     def pick_piece(self, its_loc_on_board: tuple) -> object:
         coord_y, coord_x = its_loc_on_board
@@ -91,9 +86,9 @@ class BoardUser(Board):
             self.chosen_piece_color = None
 
 
-    def attempt_piece_to_move(self, dest_coords: list) -> [True or False]:
+    def attempt_piece_to_move(self, dest_coords: list) -> [True or False or Piece]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
-        if self.chosen_piece_object._move_object(dest_coords, board_list=self.board):  # noqa
+        if self.chosen_piece_object._move_object(dest_coords, board_list=self.board) is not False:  # noqa
 
             if isinstance(self.chosen_piece_object.alien_id, int):
                 eaten_piece = next((key for key in self.all_poss_moves
@@ -103,63 +98,92 @@ class BoardUser(Board):
                 self.chosen_piece_object.alien_id = None
                 del self.all_poss_moves[eaten_piece]
                 # Обновление всего, чтобы было затронуто перемещением.
-                self.update_all_poss_moves_dict(self.all_poss_moves)
+                self.update_all_poss_moves_dict()
                 return eaten_piece
 
-            self.update_all_poss_moves_dict(self.all_poss_moves)
+            self.update_all_poss_moves_dict()
             return True
 
-    def conduct_change(self, to_where):
-        """ Метод изменяет доску совершая ход после сделанной проверки """
-        if self.get_color(self.board.board, to_where) == self.chosen_piece_object.enemy_color:
-            enemy_piece = self.pick_piece(to_where)
+        self.update_all_poss_moves_dict()
+        return False
 
-            # Нахожу искомый id вражеской фигуры, который находит нужную фигуру со всеми ходами
-            # из списка всех ходов активных фигур.
-            gen_id = next((obj for obj, item_moves in self.all_poss_moves.items() if
-                           enemy_piece.id == obj.id), None)
-            # удаление фигуры из общего списка
-            del self.all_poss_moves[gen_id]
+
+    def conduct_change(self, to_where, from_where=None):
+        """ Метод изменяет доску, совершая ход и не делая проверки """
+
+        # Позволяет назначить активную фигуру из другой доски
+        if from_where is not None:
+            the_piece = self.pick_piece(from_where)
+            self.chosen_piece_object = the_piece
+
+        dest_color = self.get_color(self.board, to_where)
+        if dest_color != Color.empty:
+            if dest_color == self.chosen_piece_object.enemy_color:
+
+                enemy_piece = self.pick_piece(to_where)
+                # удаление фигуры из общего списка
+                del self.all_poss_moves[enemy_piece]
+
+                orig_y, orig_x = self.chosen_piece_object.loc
+                self.chosen_piece_object.set_loc(to_where)
+                self.board[orig_y][orig_x] = Empty()
+
+
+                if self.chosen_piece_class == 'class.King':
+                    self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
+
+                return enemy_piece
+
+
+            else:
+                # ДОРАБОТАТЬ в случае обнаружении дружественной фигуры!
+                tmp = self.pick_piece(to_where)
+                return tmp
 
         orig_y, orig_x = self.chosen_piece_object.loc
-
+        new_y, new_x = to_where
         self.board[orig_y][orig_x] = Empty()
-
-        # self.board[to_where[0]][to_where[1]] = self.chosen_piece_object
-        # self.chosen_piece_object._set_loc(tuple(to_where))  # noqa
+        self.board[new_y][new_x] = self.chosen_piece_object
+        self.chosen_piece_object.set_loc(to_where)
 
         if self.chosen_piece_class == 'class.King':
             self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
 
         return None
 
-    def conduct_force_change(self, to_where: list, from_where: list, removed_piece=None) -> [True or False]:
-        """
-        :param to_where: Текущее положение, которые было изначально.
-        :param from_where: Предыдущее положение, которое нужно вернуть.
-        :param removed_piece: Возвращает съеденную фигуру на ее прошлое место.
-        :return: Возвращает правду или ложь о проделанном действии.
-        """
-        # Метод возвращает доску к изначальному
-        # состоянию до попытки игроком сходить.
-        if removed_piece is not None or from_where != to_where:
-            if removed_piece is not None:
-                self.board[from_where[0]][from_where[1]] = self.chosen_piece_object
-                self.board[to_where[0]][to_where[1]] = removed_piece
-            else:
-                self.board[from_where[0]][from_where[1]] = self.chosen_piece_object
-                self.board[to_where[0]][to_where[1]] = Empty()
+    def conduct_force_change(self, old_pos, new_pos, removed_piece=None) -> [True or False]:
 
-            self.chosen_piece_object._set_loc(tuple(from_where))  # noqa
-            self.update_all_poss_moves_dict(self.all_poss_moves)
+        if removed_piece:
+            old_x, old_y = new_pos
+            e_old_y, e_old_x = removed_piece.loc
+            self.board[old_y][old_x] = self.chosen_piece_object
+            self.board[e_old_y][e_old_x] = removed_piece
+
+            # Помимо этого, надо вернуть фигуру в общий список
+            self.all_poss_moves[removed_piece] = removed_piece.access_all_moves()
+
+            self.chosen_piece_object.set_loc(new_pos)
+
 
             if self.chosen_piece_class == 'class.King':
                 self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
 
-            # self.update_all_poss_moves_dict()
-            return True
+            self.update_all_poss_moves_dict()
+            return
 
-        return False
+        else:
+            old_y, old_x = new_pos
+            new_y, new_x = old_pos
+            self.board[old_y][old_x] = self.chosen_piece_object
+            self.board[new_y][new_x] = Empty()
+
+            self.chosen_piece_object.set_loc(new_pos)
+
+            if self.chosen_piece_class == 'class.King':
+                self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
+
+            self.update_all_poss_moves_dict()
+            return
 
     def check_castling_and_move(self, to_where: list) -> [True or False]:
 
@@ -189,7 +213,7 @@ class BoardUser(Board):
                         # Происходит перестановка фигур и обновление словаря ходов.
                         self.conduct_change(rock_possible_move)
                         self.conduct_force_change(king_from_where, king_to_where)  # noqa
-                        self.update_all_poss_moves_dict(self.all_poss_moves)
+                        self.update_all_poss_moves_dict()
                         return True
                     else:
                         return False
