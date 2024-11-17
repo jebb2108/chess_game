@@ -32,7 +32,6 @@ class Game:
 
         self.checkmate_window = pygwidgets.DisplayText(self.window, (250, 305), 'CHECKMATE', textColor=(200, 0, 0),
                                                        fontSize=50)
-        self.checkmate_window.hide()
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
 
@@ -186,7 +185,8 @@ class Game:
         self.attach_pieces_to_board()
 
         if self.checkmate_window.visible:
-            pygame.draw.rect(self.window, LIGHT_GRAY, (190, 260, 320, 120), 0)
+            pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
+            pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
             self.checkmate_window.draw()
 
     def exit(self, CallBack):
