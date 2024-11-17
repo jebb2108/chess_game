@@ -81,6 +81,8 @@ class Piece(ABC):
     """ Класс шаблон для шахматной фигуры """
     sounds_loaded = False
     capture_sound = None
+    illegal_sound = None
+    move_sound = None
 
     # Каждая фигура должна иметь свой цвет.
     def __init__(self, window, loc: tuple[int, int], color: object):
@@ -92,6 +94,8 @@ class Piece(ABC):
 
         if not Piece.sounds_loaded:
             Piece.capture_sound = pygame.mixer.Sound('sounds/capture.mp3')
+            Piece.move_sound = pygame.mixer.Sound('sounds/move-self.mp3')
+            Piece.illegal_sound = pygame.mixer.Sound('sounds/illegal.mp3')
             Piece.sounds_loaded = True
 
         self.enemy_color = 1 if self.color == Color.black else 2
@@ -195,8 +199,9 @@ class Piece(ABC):
     def _finish_move(self, board_list: list, new_pos: tuple):
         BoardManipulator.update_board_list(board_list, self.loc, new_pos, self.enemy_color)
         self.set_loc(new_pos)
+        self.move_sound.play()
         self.is_not_changed = False
-        return None
+        return
 
 
     def draw(self):

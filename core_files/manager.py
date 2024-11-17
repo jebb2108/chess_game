@@ -27,12 +27,25 @@ class Manager(BoardUser):
     """ Класс самого высокого уровня,
     с чем непосредственно взаимодействует пользователь. """
 
+    sounds_loaded = False
+
+    game_start_sound = None
+    game_end_sound = None
+    move_check_sound = None
+
     def __init__(self, window, board_ls=None):
         self.window = window
         self.whose_turn_it_is = WhoMoves()
+        self.object_copies = list()
+
+        if not Manager.sounds_loaded:
+            Manager.game_start_sound = pygame.mixer.Sound('sounds/game-start.mp3')
+            Manager.game_end_sound = pygame.mixer.Sound('sounds/game-end.mp3')
+            Manager.move_check_sound = pygame.mixer.Sound('sounds/move-check.mp3')
+            Manager.sounds_loaded = True
+
         super().__init__(window, board_ls)
 
-        self.object_copies = list()
         self.playing = True
 
 
@@ -56,7 +69,11 @@ class Manager(BoardUser):
             # Требуется убрать проверки т.к они уже сделаны в check_king функциях
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
+            self.chosen_piece_object.move_sound.play()
             return self.is_end_game()
+
+        else:
+            return self.chosen_piece_object.illegal_sound.play()
 
     def is_end_game(self):
 
@@ -93,14 +110,15 @@ class Manager(BoardUser):
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
 
                     else:
-                        self.board = current_state
+                        self.conduct_force_change(new_move, curr_pos, eaten_piece)
                         self.update_all_poss_moves_dict()
+                        Manager.move_check_sound.play()
                         checkmate_status = False
 
 
-
+            self.board = current_state
             if checkmate_status is True:
-                print('Checkmate!')
+                Manager.game_end_sound.play()
                 self.playing = False
                 break
 
