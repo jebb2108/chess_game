@@ -139,16 +139,25 @@ class Game:
 
     def show_developer_table(self, event, flag):
         if flag:
+            # message: 4
             pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
             selected_info_text = f'Number of\nselected: {[tile for tile in self.linked_rects_dict.values()].count(SELECTED)}'
             cursor_img = self.font.render(selected_info_text, True, DARK_GRAY)
             self.window.blit(cursor_img, (650, 270))
 
+            # Message: 1
             whose_turn_in_num = self.game_mgr.whose_turn_it_is.current_move
             text = f'Whose turn:\n--> {('white', 'black')[whose_turn_in_num-1]} <--'
             text_img = self.font.render(text, True, DARK_GRAY)
             self.window.blit(text_img, (650, 50))
 
+            # message: 5
+            if self.game_mgr.default_message:
+                # text_img = self.font.render('message:\n' + self.game_mgr.default_message, True, DARK_GRAY)
+                text_img = self.font.render(f'Pieces in total: {len(self.game_mgr.all_poss_moves)}', True, DARK_GRAY)
+                self.window.blit(text_img, (650, 350))
+
+            # Message: 3
             if self.cursor or event.type == pygame.MOUSEBUTTONDOWN:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     self.cursor = event.pos
@@ -156,12 +165,15 @@ class Game:
                 cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
                 self.window.blit(cursor_img, (650, 200))
 
+            # Message: 2.1
             if issubclass(type(self.chosen_piece), self.game_mgr.settings.class_mapping['Piece']):
                 class_name = self.chosen_piece.__class__.__name__
                 its_loc = self.chosen_piece.loc
                 text = f'There is {class_name}.\nIts loc: {its_loc}'
                 text_img = self.font.render(text, True, DARK_GRAY)
                 self.window.blit(text_img, (650, 120))
+
+            # Message: 2.2
             else:
                 text = 'NO PIECE'
                 text_img = self.font.render(text, True, DARK_GRAY)

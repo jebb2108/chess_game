@@ -36,6 +36,7 @@ class Manager(BoardUser):
     def __init__(self, window, board_ls=None):
         self.window = window
         self.whose_turn_it_is = WhoMoves()
+        self.default_message = None
         self.object_copies = list()
 
         if not Manager.sounds_loaded:
@@ -82,14 +83,15 @@ class Manager(BoardUser):
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             # self.chosen_piece_object.move_sound.play()
-            if not self.is_end_game():
+            current_board = self.copy_board()
+            if not self.is_end_game(current_board):
                 self.play_sound()
 
 
         else:
             return self.chosen_piece_object.illegal_sound.play()
 
-    def is_end_game(self):
+    def is_end_game(self, copied_board):
 
         """ Метод, который активируется в случае шаха собственному королю,
             сделанному оппонентом на предыдущем ходе """
@@ -103,7 +105,7 @@ class Manager(BoardUser):
         while checkmate_status:
 
             # Тут мне нужно сохранить состояние доски
-            current_state = copy.deepcopy(self.board)
+            # res = self.copy_board()
 
             enemy_color_index = self.chosen_piece_object.enemy_color
             enemy_moves_n_pieces = [(key, key.access_all_moves()) for key
@@ -122,6 +124,7 @@ class Manager(BoardUser):
 
                     if self.is_checked():
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
+                        self.update_all_poss_moves_dict()
 
                     else:
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
@@ -129,8 +132,7 @@ class Manager(BoardUser):
                         Manager.move_check_sound.play()
                         checkmate_status = False
 
-
-            self.board = current_state
+            self.board = copied_board
             if checkmate_status is True:
                 self.end_game_sound_state = True
                 self.playing = False
@@ -138,6 +140,10 @@ class Manager(BoardUser):
                 return True
 
             return False
+
+    def copy_board(self):
+        current_state = copy.copy(self.board)
+        return current_state
 
     def identify_whether_move_is_legal(self, to_where: list) -> bool:
         """ Важный метод для проверки шаха королю. """
@@ -157,18 +163,18 @@ class Manager(BoardUser):
             # Фигура может переместиться и обновиться словарик ходов.
             if (self.place_piece_on_board(to_where)
                     and self.post_check_king(to_where)):
-
-                # success!
                 return True
             else:
                 # self.play_not_allowed_sound()
+                self.make_msg('Move was not\nsuccessful')
                 return False
 
         # 2 - Проверяет, если сделанный ход привел
         # к шаху ИЛИ ушел из под него.
         elif self.remains_checked(to_where):
             # self.play_not_allowed_sound()
-            return False
+            self.update_all_poss_moves_dict()
+            return True
 
         # success!
         return True
@@ -227,6 +233,7 @@ class Manager(BoardUser):
 
         if (self.place_piece_on_board(to_where)
                 and self.post_check_king(to_where)):
+
             return True
 
         return False
@@ -270,3 +277,6 @@ class Manager(BoardUser):
         self.capture_sound_state = False
         self.end_game_sound_state = False
         self.check_move_sound_state = False
+
+    def make_msg(self, msg):
+        self.default_message = msg

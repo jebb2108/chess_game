@@ -232,13 +232,9 @@ class Pawn(Piece, ABC):
             new_pos = tuple([ curr_pos[0] + ((d1r[0]) * self.back_or_forth),  # noqa
                             ternary_for_below_zero ])  # noqa
 
-            # Значение позиции НЕ может быть отрицательным.
-            # Иначе, клетка будет считаться с конца списка!
-            # Тернарным выражением я убедился, что значение всегда положительное.
 
             # Есть два состояния: пешка ходит вперед и пешка съедает.
             # Под каждое состояние - свои условия.
-
             if d1r == (1, 0):
                 if self.allowed_moves == 2:
                     # Эта строка отвечает за направление движения и количество ходов.
@@ -268,7 +264,7 @@ class Pawn(Piece, ABC):
                 if BoardManipulator.get_color(board_list, new_pos) == self.enemy_color:
                     temp_moves.append(new_pos)
 
-                if self.memory.get(new_pos, None) is not None:
+                if self.memory.get(new_pos, False):
                     temp_moves.append(new_pos)
 
 
@@ -306,31 +302,43 @@ class Pawn(Piece, ABC):
         # Проверяет, что заданный ход возможен.
         if to_where in self.moves:
 
-            if BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
-                perhaps_enemy = board_list[to_where[0]][to_where[1]].get_id()
-                self.alien_id = perhaps_enemy
+            """ Три возможных условия перемещения пешки: 
+                  1 - В памяти есть вражеская фигура.
+                  2 - Пешка съедает вражескую фигуру.
+                  3 - Пешка ходит вперед. """
 
-            if self.memory:
+            if self.memory.get(to_where, False):
                 # Передаю переменную кортежа вражеской фигуры
                 # все значения для удаления из общего словаря фигур.
                 enemy_piece = self.memory[to_where]
-                # Удаление вражеской фигуры с поля доски
-                # перед непосредственным передвижением данной фигуры.
                 board_list[enemy_piece.get_y()][enemy_piece.get_x()] = Empty()
+                self.alien_id = enemy_piece.get_id()
+
                 self.memory.clear()
+                self.pre_order_move(board_list, to_where)
+                return self.alien_id
 
+            elif BoardManipulator.get_color(board_list, to_where) == self.enemy_color:
+                self.alien_id = board_list[to_where[0]][to_where[1]].get_id()
+                # self._check_enemy_pawns_passed_by(board_list, to_where)
+                self.pre_order_move(board_list, to_where)
+                return self.alien_id
 
-            self._check_enemy_pawns_passed_by(board_list, to_where)
-            self._finish_move(board_list, to_where)
-            self._is_at_the_edge(board_list)
+            else:
 
-
-            self.allowed_moves = 1
-            self._get_all_moves(board_list)
-            return self.alien_id
+                self._check_enemy_pawns_passed_by(board_list, to_where)
+                self.pre_order_move(board_list, to_where)
+                return self.alien_id
 
         # board_inst.make_msg('E: You cannot move there')
         return False
+
+    def pre_order_move(self, board_list, to_where):
+        self.allowed_moves = 1
+        self._finish_move(board_list, to_where)
+        self._is_at_the_edge(board_list)
+        self._get_all_moves(board_list)
+        return
 
     def _is_valid_move(self, board_list: list, new_pos: tuple) -> bool:
         """ Метод для проверки состояния поля на доске."""

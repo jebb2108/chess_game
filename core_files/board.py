@@ -85,7 +85,6 @@ class BoardUser(Board):
             self.chosen_piece_class = None
             self.chosen_piece_color = None
 
-
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False or Piece]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
         if self.chosen_piece_object._move_object(dest_coords, board_list=self.board) is not False:  # noqa
@@ -107,7 +106,6 @@ class BoardUser(Board):
         self.update_all_poss_moves_dict()
         return False
 
-
     def conduct_change(self, to_where, from_where=None):
         """ Метод изменяет доску, совершая ход и не делая проверки """
 
@@ -125,8 +123,10 @@ class BoardUser(Board):
                 del self.all_poss_moves[enemy_piece]
 
                 orig_y, orig_x = self.chosen_piece_object.loc
-                self.chosen_piece_object.set_loc(to_where)
+                new_y, new_x = to_where
                 self.board[orig_y][orig_x] = Empty()
+                self.chosen_piece_object.set_loc(to_where)
+                self.board[new_y][new_x] = self.chosen_piece_object
 
 
                 if self.chosen_piece_class == 'class.King':
@@ -154,10 +154,10 @@ class BoardUser(Board):
     def conduct_force_change(self, old_pos, new_pos, removed_piece=None) -> [True or False]:
 
         if removed_piece:
-            old_x, old_y = new_pos
-            e_old_y, e_old_x = removed_piece.loc
-            self.board[old_y][old_x] = self.chosen_piece_object
-            self.board[e_old_y][e_old_x] = removed_piece
+            orig_x, orig_y = new_pos
+            enemy_old_y, enemy_old_x = removed_piece.loc
+            self.board[orig_y][orig_x] = self.chosen_piece_object
+            self.board[enemy_old_y][enemy_old_x] = removed_piece
 
             # Помимо этого, надо вернуть фигуру в общий список
             self.all_poss_moves[removed_piece] = removed_piece.access_all_moves()
@@ -168,7 +168,6 @@ class BoardUser(Board):
             if self.chosen_piece_class == 'class.King':
                 self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
 
-            self.update_all_poss_moves_dict()
             return
 
         else:
