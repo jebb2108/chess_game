@@ -8,6 +8,27 @@ from core_files.pieces import Empty, Color, Piece, Pawn, Rock, Knight, Bishop, Q
 
 class Settings:
 
+    hashed_dict_castling = {
+        (0, 2): (0, 0),
+        (0, 6): (0, 7),
+        (7, 2): (7, 0),
+        (7, 6): (7, 7)
+    }
+
+    all_rock_appropriate_moves = {
+        (0, 0): (0, 3),
+        (0, 7): (0, 5),
+        (7, 0): (7, 3),
+        (7, 7): (7, 5)
+    }
+
+    all_king_appropriate_moves = {
+        (0, 4): (0, 1),
+        (0, 4): (0, 6),
+        (7, 4): (7, 1),
+        (7, 4): (7, 6)
+    }
+
     class_mapping = {
         'Empty': Empty,
         'Color': Color,
@@ -104,29 +125,3 @@ class Settings:
         white_king = King(self.window, loc_list[1], Color.white)
         self.all_pieces.extend([black_king, white_king])
         return None
-
-    @staticmethod
-    def get_rock_coords(option=None):
-
-        if option is not None:
-            all_rock_coords = {
-                (0, 2): [0, 0],
-                (0, 6): [0, 7],
-                (7, 2): [7, 0],
-                (7, 6): [7, 7]
-            }
-
-            return dict(all_rock_coords)
-
-    @staticmethod
-    def get_rock_moves(option=None):
-
-        if option is not None:
-            all_rock_possible_moves = {
-                (0, 0): [0, 3],
-                (0, 7): [0, 5],
-                (7, 0): [7, 3],
-                (7, 7): [7, 5]
-            }
-
-            return dict(all_rock_possible_moves)

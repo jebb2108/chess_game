@@ -103,15 +103,15 @@ class Game:
 
         return
 
-    def get_coords_of_chosen_piece(self, mouse_pos):
+    def get_coords_of_chosen_piece(self, mouse_pos) -> tuple:
         try:
             coords = self.chosen_piece.loc
         except AttributeError:
             coords = [self.convert_selected_into_coords(self.board_rects.index(rect))
                       for rect in self.board_rects if rect.collidepoint(mouse_pos)]
-            return coords
+            return tuple(coords)
         else:
-            return coords
+            return tuple(coords)
 
     def appoint_active_piece(self, key_indx):
         try:
@@ -124,8 +124,8 @@ class Game:
 
     @staticmethod
     def convert_selected_into_coords(key):
-        coords = (key // 8, key % 8)
-        return coords
+        coords = [key // 8, key % 8]
+        return tuple(coords)
 
     def show_tiles(self, flag):
         if flag:

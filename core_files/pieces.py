@@ -83,6 +83,7 @@ class Piece(ABC):
     capture_sound = None
     illegal_sound = None
     move_sound = None
+    castling_sound = None
 
     # Каждая фигура должна иметь свой цвет.
     def __init__(self, window, loc: tuple[int, int], color: object):
@@ -96,6 +97,7 @@ class Piece(ABC):
             Piece.capture_sound = pygame.mixer.Sound('sounds/capture.mp3')
             Piece.move_sound = pygame.mixer.Sound('sounds/move-self.mp3')
             Piece.illegal_sound = pygame.mixer.Sound('sounds/illegal.mp3')
+            Piece.castling_sound = pygame.mixer.Sound('sounds/castle.mp3')
             Piece.sounds_loaded = True
 
         self.enemy_color = 1 if self.color == Color.black else 2

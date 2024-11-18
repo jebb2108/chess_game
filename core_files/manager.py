@@ -1,5 +1,4 @@
 import copy
-import sys
 
 import pygame
 
@@ -45,51 +44,41 @@ class Manager(BoardUser):
             Manager.move_check_sound = pygame.mixer.Sound('sounds/move-check.mp3')
             Manager.sounds_loaded = True
 
-        self.move_sound_state = False
-        self.capture_sound_state = False
-        self.check_move_sound_state = False
-        self.end_game_sound_state = False
-
 
         super().__init__(window, board_ls)
 
         self.playing = True
 
 
+    def initiate_move(self, piece: object, to_where: tuple):
 
-    def initiate_move(self, piece, to_where):
-
+        # Три важных действия
+        self.update_sound_states()
         self.chosen_piece_object = piece
-        # Проверяет, если это король и запрашивается рокировка.
-        if self.chosen_piece_class == 'class.King':
-            if self.check_castling_and_move(to_where):
-                self.whose_turn_it_is.change_turn()
-                # self.make_msg('Castling your king went successful')
-                self.update_all_poss_moves_dict(self.all_poss_moves)
-                if not self.is_end_game():
-                    self.play_sound()
-                return
+        current_board = self.copy_board()
 
-            else:
-                # self.make_msg('Castling your king went unsuccessful')
-                self.update_all_poss_moves_dict()
-                if not self.is_end_game():
-                    self.play_sound()
-                return
+        # Проверяет, если это король и запрашивается рокировка.
+        # if self.chosen_piece_class == 'class.King':
+        if self.check_castling_and_move(to_where):
+            self.whose_turn_it_is.change_turn()
+            self.update_all_poss_moves_dict()
+            self.castling_sound_state = True
+            if not self.is_end_game(current_board):
+                self.play_sound(False)
+            return
 
         # Следующее условие. Это не король. Совершает обычный ход
         elif self.identify_whether_move_is_legal(to_where):
-            # Требуется убрать проверки т.к они уже сделаны в check_king функциях
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
-            # self.chosen_piece_object.move_sound.play()
-            current_board = self.copy_board()
             if not self.is_end_game(current_board):
-                self.play_sound()
+                self.play_sound(False)
+            return
 
 
-        else:
-            return self.chosen_piece_object.illegal_sound.play()
+        self.chosen_piece_object = None
+        self.update_all_poss_moves_dict()
+        return self.play_sound(True)
 
     def is_end_game(self, copied_board):
 
@@ -141,11 +130,7 @@ class Manager(BoardUser):
 
             return False
 
-    def copy_board(self):
-        current_state = copy.copy(self.board)
-        return current_state
-
-    def identify_whether_move_is_legal(self, to_where: list) -> bool:
+    def identify_whether_move_is_legal(self, to_where) -> bool:
         """ Важный метод для проверки шаха королю. """
         # Проверяет, кому принадлежит ход.
         if self.whose_turn_it_is.current_move != self.chosen_piece_color:
@@ -260,23 +245,45 @@ class Manager(BoardUser):
 
         # Позволяет пройти проверку.
 
-    def play_sound(self):
-        if self.end_game_sound_state:
-            # Manager.game_end_sound.play()
+    def play_sound(self, flag: bool):
 
-            self.move_sound_state = False
-            self.capture_sound_state = False
+        if flag:
+            piece_class = self.settings.class_mapping['Piece']
+            piece_class.illegal_sound.play()
+            return self.update_sound_states()
+
+
+        elif self.end_game_sound_state:
+            Manager.game_end_sound.play()
+            self.update_sound_states()
+
+        elif self.castling_sound_state and not self.move_sound_state:
+            self.chosen_piece_object.castling_sound.play()
 
         elif self.move_sound_state and not self.capture_sound_state:
             self.chosen_piece_object.move_sound.play()
 
-        elif self.capture_sound_state and not self.check_move_sound_state:
+        elif self.capture_sound_state and not self.illegal_sound_state:
             self.chosen_piece_object.capture_sound.play()
 
+        elif self.illegal_sound_state:
+            piece_class = self.settings.class_mapping['Piece']
+            piece_class.illegal_sound.play()
+
+        return self.update_sound_states()
+
+    def update_sound_states(self):
+        self.illegal_sound_state = False
         self.move_sound_state = False
         self.capture_sound_state = False
+        self.castling_sound_state = False
         self.end_game_sound_state = False
         self.check_move_sound_state = False
+        return
 
     def make_msg(self, msg):
         self.default_message = msg
+
+    def copy_board(self):
+        current_state = copy.copy(self.board)
+        return current_state

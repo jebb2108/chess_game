@@ -1,9 +1,8 @@
 """ Класс шахматной доски """
-import copy
 from abc import ABC
 
 from core_files.settings import Settings
-from core_files.pieces import BoardManipulator, Empty, Piece, King, Rock, Color
+from core_files.pieces import BoardManipulator, Empty, Piece, Color
 
 
 class Board(BoardManipulator, ABC):
@@ -17,6 +16,8 @@ class Board(BoardManipulator, ABC):
         self.all_poss_moves = dict()
         self.settings = Settings(window)
         self.initialize()
+
+        self.illegal_sound_state = False
 
     def initialize(self):
         for piece in self.settings.all_pieces:
@@ -84,6 +85,43 @@ class BoardUser(Board):
             self.__chosen_piece_object = Empty()
             self.chosen_piece_class = None
             self.chosen_piece_color = None
+
+    def check_castling_and_move(self, to_where: tuple) -> [True or False]:
+
+        it_is_king = (self.chosen_piece_class == 'class.King')
+
+        if it_is_king and self.chosen_piece_object.is_not_changed:
+            rock_in_appropriate_place = Settings.hashed_dict_castling.get(to_where, False)
+            if not it_is_king or not rock_in_appropriate_place:
+                self.illegal_sound_state = True
+                return False
+
+            o_king = self.chosen_piece_object
+            o_rock = self.board[rock_in_appropriate_place[0]][rock_in_appropriate_place[1]]
+
+            if o_rock.is_not_changed:
+                dest_for_rock = Settings.all_rock_appropriate_moves[o_rock.loc]
+
+                if dest_for_rock in o_rock.access_all_moves():
+                    # Происходит перестановка фигур и обновление словаря ходов.
+
+                    self.board[o_king.get_y()][o_king.get_x()] = Empty()
+                    self.board[o_rock.get_y()][o_rock.get_x()] = Empty()
+
+                    self.board[to_where[0]][to_where[1]] = o_king
+                    self.board[dest_for_rock[0]][dest_for_rock[1]] = o_rock
+
+                    o_king.set_loc(to_where)
+                    o_king.is_not_changed = False
+                    o_king.safe_zone = to_where
+                    o_rock.set_loc(dest_for_rock)
+                    o_rock.is_not_changed = False
+
+                    self.update_all_poss_moves_dict()
+
+                    return True
+
+        return False
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False or Piece]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """
@@ -171,6 +209,7 @@ class BoardUser(Board):
             return
 
         else:
+
             old_y, old_x = new_pos
             new_y, new_x = old_pos
             self.board[old_y][old_x] = self.chosen_piece_object
@@ -183,38 +222,3 @@ class BoardUser(Board):
 
             self.update_all_poss_moves_dict()
             return
-
-    def check_castling_and_move(self, to_where: list) -> [True or False]:
-
-        if isinstance(self.chosen_piece_object, King):
-
-            # Вытаскиваю из настроек нужные мне значения для рокировки.
-            all_rock_coords = self.settings.get_rock_coords(True)
-            all_rock_possible_moves = self.settings.get_rock_moves(True)
-
-            to_where = tuple(to_where)  # Словарные ключи могут быть только неизменными кортежами.
-            rock_coords = all_rock_coords[to_where]  # Вытаскиваю значение по ключу. Перевожу все в кортежи.
-            # Может быть только один ход для ладьи в рокировке.
-            # Вытаскиваю значение по местонахождению.5
-            rock_possible_move = all_rock_possible_moves[tuple(rock_coords)]
-
-            # Может быть только ладьею на заданной координате.
-            rock = self.pick_piece(rock_coords)
-            if not isinstance(rock, Rock):
-                return False
-
-            # Условие, при котором ладья не может быть тронутой.
-            if rock.is_not_changed and self.chosen_piece_object.is_not_changed:
-                for move in rock.moves:  # noqa
-                    # Ладье должна быть доступна клетка перед королем.
-                    if list(move) in [[0, 3], [0, 5], [7, 3], [7, 5]]:
-                        king_from_where, king_to_where = king.loc, to_where  # noqa
-                        # Происходит перестановка фигур и обновление словаря ходов.
-                        self.conduct_change(rock_possible_move)
-                        self.conduct_force_change(king_from_where, king_to_where)  # noqa
-                        self.update_all_poss_moves_dict()
-                        return True
-                    else:
-                        return False
-
-        return True
