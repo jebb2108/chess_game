@@ -69,16 +69,15 @@ class Manager(BoardUser):
             return
 
         # Следующее условие. Это не король. Совершает обычный ход
-        elif self.identify_whether_move_is_legal(to_where):
+        elif self.identify_whether_move_is_legal(to_where, current_board):
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             if not self.is_end_game(current_board):
                 self.play_sound(False)
             return
 
-
-        self.chosen_piece_object = None
         self.update_all_poss_moves_dict()
+        self.chosen_piece_object = None
         return self.play_sound(True)
 
     def is_end_game(self, copied_board):
@@ -131,7 +130,7 @@ class Manager(BoardUser):
 
             return False
 
-    def identify_whether_move_is_legal(self, to_where) -> bool:
+    def identify_whether_move_is_legal(self, to_where, current_board) -> bool:
         """ Важный метод для проверки шаха королю. """
         # Проверяет, кому принадлежит ход.
         if self.whose_turn_it_is.current_move != self.chosen_piece_color:
@@ -142,27 +141,23 @@ class Manager(BoardUser):
         1 - проверяет, может ли фигура пойти в настоящий момент времени,
         2 - проверяет, если сделанный ход привел к шаху ИЛИ ушел из под него."""
 
-        # 1 - Проверяет, может ли фигура пойти в
-        # настоящий момент времени.
+        # 1 - Проверяет, что фигура НЕ находится под шахом
+        # и пытается переместить ее в выбранную позию.
         if not self.is_checked():
-
-            # Фигура может переместиться и обновиться словарик ходов.
-            if (self.place_piece_on_board(to_where)
-                    and self.post_check_king(to_where)):
-                return True
-            else:
-                # self.play_not_allowed_sound()
-                self.make_msg('Move was not\nsuccessful')
+            # Фигура может переместиться
+            # на выбранную позицию и не попадет под шах.
+            if not self.remains_checked(to_where):
+                # Иначе, возвращает False
                 return False
 
         # 2 - Проверяет, если сделанный ход привел
         # к шаху ИЛИ ушел из под него.
         elif self.remains_checked(to_where):
-            # self.play_not_allowed_sound()
-            self.update_all_poss_moves_dict()
-            return True
+            return False
 
-        # success!
+        # Королю нет представляет никакой угрозы
+        # и фигура просто пытается сделать ход.
+        # self.attempt_piece_to_move(to_where)
         return True
 
     def is_checked(self, enemy_check=False) -> [True or False]:
@@ -188,6 +183,45 @@ class Manager(BoardUser):
         # находится ли король в зоне атаки.
         return either_king.safe_zone in set(sum([value for key, value in self.all_poss_moves.items() if key.color == enemy_color], []))
 
+    def remains_checked(self, to_where):
+
+        """ Этот метод задает такое условие:
+        Хорошо, шах королю объявлен, но является
+        ли предложенный ход избавлением от него? """
+
+        if (self.place_piece_on_board(to_where)
+                and self.post_check_king(to_where)):
+
+            # self.board = current_board
+            self.update_all_poss_moves_dict()
+            return True
+
+        # self.board = current_board
+        self.update_all_poss_moves_dict()
+        return False
+
+    def post_check_king(self, to_where):
+
+        """ Метод включает в себя работу
+            с копиями удаленных фигур """
+
+        if self.is_checked():
+            # Проверка провалена.
+            # Возвращает фигуру на прежнее место.
+            any_deleted = self.object_copies[-1] if self.object_copies else None
+            self.chosen_piece_object.moves.clear()
+            self.conduct_force_change(to_where, self.chosen_piece_object.loc,
+                                      any_deleted)
+
+            # Очищает резервное хранилище.
+            self.object_copies.clear()
+            return False
+
+        self.object_copies.clear()
+        return True
+
+        # Позволяет пройти проверку.
+
     def place_piece_on_board(self, to_where):
 
         """ Предпоследнее действие - пробное совершение хода.
@@ -210,41 +244,6 @@ class Manager(BoardUser):
             self.capture_sound_state = True
 
         return True
-
-    def remains_checked(self, to_where):
-
-        """ Этот метод задает такое условие:
-        Хорошо, шах королю объявлен, но является
-        ли предложенный ход избавлением от него? """
-
-        if (self.place_piece_on_board(to_where)
-                and self.post_check_king(to_where)):
-
-            return True
-
-        return False
-
-    def post_check_king(self, to_where):
-
-        """ Метод является логическим завершением
-            проверки на шах королю и возможности
-            оставить фигуру на ее новом месте. """
-
-        if self.is_checked():
-            # Проверка провалена.
-            # Возвращает фигуру на прежнее место.
-            self.chosen_piece_object.moves.clear()
-            self.conduct_force_change(to_where, self.chosen_piece_object.loc,
-                                      self.object_copies[-1] if self.object_copies else None)
-
-            # Очищает резервное хранилище.
-            self.object_copies.clear()
-            return False
-
-        self.object_copies.clear()
-        return True
-
-        # Позволяет пройти проверку.
 
     def play_sound(self, flag: bool):
 
