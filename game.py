@@ -1,5 +1,6 @@
 # Класс Game
 import pygwidgets
+# import pyghelpers
 
 from core_files.manager import Manager
 from buttons import ChooseTimeButton
@@ -45,8 +46,19 @@ class Game:
         self.chosen_piece = None
         self.cursor = None
 
-    def reset(self, callBack):
-        pass
+    def start(self):
+        if self.game_mgr.game_start_sound_state:
+            self.game_mgr.game_start_sound.play()
+            self.game_mgr.game_start_sound_state = False
+        # timer = pyghelpers.CountDownTimer(10, True)
+        # timer.start()
+        return
+
+    def reset(self, callback):
+        del self.game_mgr
+        self.game_mgr = Manager(self.window)
+        self.start()
+        return
 
     def got_click(self, mouse_pos):
         for rect in self.board_rects:
@@ -201,7 +213,7 @@ class Game:
             pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
             self.checkmate_window.draw()
 
-    def exit(self, CallBack):
+    def exit(self, callback):
         self.playing = True
         Authorization.LOGIN_AWAITING_STATUS = True
         self.window.fill(BLACK)

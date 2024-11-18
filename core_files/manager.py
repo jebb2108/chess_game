@@ -47,6 +47,7 @@ class Manager(BoardUser):
 
         super().__init__(window, board_ls)
 
+        self.game_start_sound_state = True
         self.playing = True
 
 
@@ -277,8 +278,8 @@ class Manager(BoardUser):
         self.move_sound_state = False
         self.capture_sound_state = False
         self.castling_sound_state = False
-        self.end_game_sound_state = False
         self.check_move_sound_state = False
+        self.end_game_sound_state = False
         return
 
     def make_msg(self, msg):

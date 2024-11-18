@@ -53,6 +53,7 @@ while True:
 
         elif o_game.game_mgr.playing:
 
+            o_game.start()
             o_game.checkmate_window.hide()
 
             if event.type == pygame.KEYDOWN:
