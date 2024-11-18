@@ -4,12 +4,10 @@
 import pygwidgets
 import pygame
 
-#
 from constants import *
 
 # список событий мыши, на которые реагирует кнопка
 MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
-
 
 class ChooseTimeButton(pygwidgets.TextButton):
     # время в формате (минуты, секунды)

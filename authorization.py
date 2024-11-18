@@ -41,7 +41,6 @@ class Authorization:
             else:
                 pass
 
-
     def check_authorization(self, callBack):
         if (self.login_input.getValue() + ' ' +
                 self.password_input.getValue() == 'gabriel bouchard'):
@@ -53,7 +52,6 @@ class Authorization:
             return True
         else:
             return False
-
 
     def draw(self):
         self.window.blit(self.BACKGROUND_IMAGE, (-170, 40))

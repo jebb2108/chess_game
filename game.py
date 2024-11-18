@@ -1,4 +1,5 @@
 # Класс Game
+import pygame.image
 import pygwidgets
 # import pyghelpers
 
@@ -60,6 +61,60 @@ class Game:
         self.start()
         return
 
+    def show_promotion(self):
+
+        o_knight = self.game_mgr.settings.class_mapping['Knight']
+        o_bishop = self.game_mgr.settings.class_mapping['Bishop']
+        o_rook = self.game_mgr.settings.class_mapping['Rock']
+        o_queen = self.game_mgr.settings.class_mapping['Queen']
+
+        color = self.game_mgr.whose_turn_it_is.current_move-2
+
+        knight_img = pygame.image.load(f'images/{('white', 'black')[color]}_Knight.png')
+        bishop_img = pygame.image.load(f'images/{('white', 'black')[color]}_Bishop.png')
+        rock_img = pygame.image.load(f'images/{('white', 'black')[color]}_Rock.png')
+        queen_img = pygame.image.load(f'images/{('white', 'black')[color]}_Queen.png')
+
+
+        while self.game_mgr.pawn_awaiting:
+
+            pygame.draw.rect(self.window, WHITE, [196, 260, 118, 118], 0)
+            self.window.blit(knight_img, (200, 264))
+            self.window.blit(bishop_img, (260, 264))
+            self.window.blit(rock_img, (200, 319))
+            self.window.blit(queen_img, (260, 319))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.pos[0] in range(200, 500) and event.pos[1] in range(260, 420):
+
+                        if (event.pos[0] in range(200, 255) and
+                                 event.pos[1] in range(260, 315)):
+                             self.game_mgr.turn_pawn_into_piece = False
+                             return o_knight
+
+                        elif (event.pos[0] in range(260, 315) and
+                                  event.pos[1] in range(260, 315)):
+                             self.game_mgr.turn_pawn_into_piece = False
+                             return o_bishop
+
+                        elif (event.pos[0] in range(200, 255) and
+                                  event.pos[1] in range(319, 374)):
+                            self.game_mgr.turn_pawn_into_piece = False
+                            return o_rook
+
+                        elif (event.pos[0] in range(260, 315) and
+                                  event.pos[1] in range(319, 374)):
+                            self.game_mgr.turn_pawn_into_piece = False
+                            return o_queen
+
+        return None
+
     def got_click(self, mouse_pos):
         for rect in self.board_rects:
             if rect.collidepoint(mouse_pos):
@@ -110,6 +165,7 @@ class Game:
 
             # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
             self.game_mgr.initiate_move(self.chosen_piece, next_move_coords)
+            self.game_mgr.promotion_getter(self.show_promotion(), next_move_coords)
             self.linked_rects_dict = {key: IDLE for key in self.linked_rects_dict}
             self.chosen_piece = None
 
@@ -190,8 +246,6 @@ class Game:
                 text = 'NO PIECE'
                 text_img = self.font.render(text, True, DARK_GRAY)
                 self.window.blit(text_img, (650, 120))
-
-
 
     def attach_pieces_to_board(self):
         for piece in self.game_mgr.all_poss_moves:

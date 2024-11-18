@@ -13,7 +13,6 @@ class Color(object):
     white = 1
     black = 2
 
-
 class Empty(object):
     """ Класс для пустой клетки """
     color = Color.empty
@@ -24,7 +23,6 @@ class Empty(object):
     @staticmethod
     def _get_all_moves():
         return None
-
 
 class BoardManipulator(ABC):
 
@@ -210,9 +208,6 @@ class Piece(ABC):
         screen_loc = pixel_mapping[self.loc]
         self.window.blit(self.image, screen_loc)
 
-
-
-
 class Pawn(Piece, ABC):
     """ Класс пешки """
     def __init__(self, window, loc, color, back_or_forth):
@@ -338,7 +333,6 @@ class Pawn(Piece, ABC):
     def pre_order_move(self, board_list, to_where):
         self.allowed_moves = 1
         self._finish_move(board_list, to_where)
-        self._is_at_the_edge(board_list)
         self._get_all_moves(board_list)
         return
 
@@ -390,44 +384,44 @@ class Pawn(Piece, ABC):
 
         return None
 
-    def _is_at_the_edge(self, board_list: list):
-        # Каждый раз проверяет, что пешки
-        # находятся на ключевой позиции.
-        if self.get_y() in [0, 7]:
-            # Вывод сообщения
-            response = input('Which piece would you like to have instead? '
-                             '"queen", "rock", "knight", or "bishop": ')
-            # Проверка на правильность введенных данных.
-            while True:
-                valid_responses = ['queen', 'rock', 'knight', 'bishop']
-                if response in valid_responses:
-                    break
-                else:
-                    response = input('Wrong input. Please try again: ')
-            # Превращение пешки в выбранную фигуру.
-            return self.__turn_into_piece(board_list, response)
-
-        return None
-
-
-    def __turn_into_piece(self, board_list: list, response):
-        """ Метод для превращения в выбранную
-        фигуру после достижения пешки крайнего поля."""
-        # Запоминает цвет фигуры и кладет в переменную.
-        if self.color in [Color.white, Color.black]:
-            color = Color.white if self.color == 1 else Color.black
-
-            piece_mapping = {
-                'queen': Queen,
-                'rock': Rock,
-                'knight': Knight,
-                'bishop': Bishop,
-            }
-
-            board_list[self.get_y()][self.get_x()] = (
-                piece_mapping[response](self.get_y(), self.get_x(), color))
-
-        return None
+    # def _is_at_the_edge(self, board_list: list):
+    #     # Каждый раз проверяет, что пешки
+    #     # находятся на ключевой позиции.
+    #     if self.get_y() in [0, 7]:
+    #         # Вывод сообщения
+    #         response = input('Which piece would you like to have instead? '
+    #                          '"queen", "rock", "knight", or "bishop": ')
+    #         # Проверка на правильность введенных данных.
+    #         while True:
+    #             valid_responses = ['queen', 'rock', 'knight', 'bishop']
+    #             if response in valid_responses:
+    #                 break
+    #             else:
+    #                 response = input('Wrong input. Please try again: ')
+    #         # Превращение пешки в выбранную фигуру.
+    #         return self.__turn_into_piece(board_list, response)
+    #
+    #     return None
+    #
+    #
+    # def __turn_into_piece(self, board_list: list, response):
+    #     """ Метод для превращения в выбранную
+    #     фигуру после достижения пешки крайнего поля."""
+    #     # Запоминает цвет фигуры и кладет в переменную.
+    #     if self.color in [Color.white, Color.black]:
+    #         color = Color.white if self.color == 1 else Color.black
+    #
+    #         piece_mapping = {
+    #             'queen': Queen,
+    #             'rock': Rock,
+    #             'knight': Knight,
+    #             'bishop': Bishop,
+    #         }
+    #
+    #         board_list[self.get_y()][self.get_x()] = (
+    #             piece_mapping[response](self.get_y(), self.get_x(), color))
+    #
+    #     return None
 
     def _check_move(self, board_list: list, from_where, to_where):
         """ Проверят, если пешка ходит вперед.  """
@@ -440,7 +434,6 @@ class Pawn(Piece, ABC):
             return False
 
         return True
-
 
 class Rock(Piece, ABC):
     def __init__(self, window, loc, color):
@@ -474,7 +467,6 @@ class Rock(Piece, ABC):
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
-
 
 class Knight(Piece, ABC):
     def __init__(self, window, loc, color):
@@ -518,7 +510,6 @@ class Knight(Piece, ABC):
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
 
-
 class Bishop(Piece, ABC):
     def __init__(self, window, loc, color):
         self.ways_to_go = [(1, 1), (-1, 1), (1, -1), (-1, -1)]
@@ -545,7 +536,6 @@ class Bishop(Piece, ABC):
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
-
 
 class Queen(Piece, ABC):
     def __init__(self, window, loc, color):
@@ -574,7 +564,6 @@ class Queen(Piece, ABC):
 
         # BoardManipulator.make_msg('E: You cannot move there')
         return False
-
 
 class King(Piece, ABC):
     def __init__(self, window, loc, color):

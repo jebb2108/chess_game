@@ -55,11 +55,9 @@ class Board(BoardManipulator, ABC):
 
 class BoardUser(Board):
     def __init__(self, window, board_ls):
-
         self.chosen_piece_object = Empty
         self.chosen_piece_class = None
         self.chosen_piece_color = None
-
         super().__init__(window, board_ls)
 
     def pick_piece(self, its_loc_on_board: tuple) -> object:
@@ -122,6 +120,15 @@ class BoardUser(Board):
                     return True
 
         return False
+
+    def check_pawn_at_edge(self, coords: tuple) -> [True or False]:
+        it_is_pawn = (self.chosen_piece_class == 'class.Pawn')
+        if it_is_pawn and self.chosen_piece_object.get_y() in [0, 7]:
+
+            return True
+
+        return False
+
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False or Piece]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """

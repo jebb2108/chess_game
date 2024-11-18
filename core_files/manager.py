@@ -1,9 +1,6 @@
 import copy
-
 import pygame
-
 from core_files.board import BoardUser
-
 
 class WhoMoves(object):
     """ Класс, который следит за очередностью ходов белых и черных. """
@@ -20,7 +17,6 @@ class WhoMoves(object):
         # где в изначальном виде интерпретируются цвета фигуры, что помогает в дальнейших
         # условиях сравнений.
         self.current_move = 1 if self.turn == 1 else 2
-
 
 class Manager(BoardUser):
     """ Класс самого высокого уровня,
@@ -49,6 +45,20 @@ class Manager(BoardUser):
 
         self.game_start_sound_state = True
         self.playing = True
+        self.pawn_awaiting = False
+
+    def promotion_getter(self, piece, dest: tuple):
+        if self.pawn_awaiting:
+            its_y, its_x = dest
+            color = 1 if its_y == 0 else 2
+            self.board[its_y][its_x] = self.settings.class_mapping['Empty']()
+            new_piece = piece(self.window, dest, color)
+            self.board[its_y][its_x] = new_piece
+
+            self.all_poss_moves[new_piece] = new_piece._get_all_moves(self.board)
+            self.pawn_awaiting = False
+
+        return
 
 
     def initiate_move(self, piece: object, to_where: tuple):
@@ -70,6 +80,10 @@ class Manager(BoardUser):
 
         # Следующее условие. Это не король. Совершает обычный ход
         elif self.identify_whether_move_is_legal(to_where, current_board):
+            if self.chosen_piece_class == 'class.Pawn' and self.check_pawn_at_edge(to_where):
+                del self.all_poss_moves[self.chosen_piece_object]
+                self.pawn_awaiting = True
+
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             if not self.is_end_game(current_board):
