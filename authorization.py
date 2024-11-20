@@ -35,11 +35,6 @@ class Authorization:
         else:
             self.login_button.disable()
 
-        if event.type in MOUSE_EVENTS_LIST:
-            if self.reg_button.rect.collidepoint(event.pos):
-                pass
-            else:
-                pass
 
     def check_authorization(self, callBack):
         if (self.login_input.getValue() + ' ' +

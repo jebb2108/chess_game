@@ -8,6 +8,11 @@ from buttons import ChooseTimeButton
 from authorization import Authorization
 from constants import *
 
+class Registry:
+    def get_response(self, the_nickname):
+        if the_nickname == 'tossing girl':
+            return print('Success!!')
+
 
 class Game:
     BACKGROUND_IMAGE = pygame.image.load('images/background.png')
@@ -20,6 +25,9 @@ class Game:
         self.game_mgr = Manager(window)
 
         self.font = pygame.font.Font(None, 40)
+
+        self.tossing_girl = pygwidgets.Animation(window, (550, 100), tossing_girl_list, autoStart=False, loop=True,
+                                        callBack=Registry.get_response, nickname='tossing girl')
 
         self.new_game_button = pygwidgets.TextButton(self.window, (20, 640), 'NEW GAME', width=180, height=45,
                                                      fontSize=22, callBack=self.reset)
@@ -51,6 +59,9 @@ class Game:
         if self.game_mgr.game_start_sound_state:
             self.game_mgr.game_start_sound.play()
             self.game_mgr.game_start_sound_state = False
+
+        self.tossing_girl.show()
+        self.tossing_girl.start()
         # timer = pyghelpers.CountDownTimer(10, True)
         # timer.start()
         return
@@ -58,7 +69,7 @@ class Game:
     def reset(self, callback):
         del self.game_mgr
         self.game_mgr = Manager(self.window)
-        self.start()
+        self.tossing_girl.play()
         return
 
     def show_promotion(self):
@@ -205,7 +216,7 @@ class Game:
 
         return None
 
-    def show_developer_table(self, event, flag):
+    def show_developer_table(self, flag):
         if flag:
             # message: 4
             pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
@@ -226,12 +237,9 @@ class Game:
                 self.window.blit(text_img, (650, 350))
 
             # Message: 3
-            if self.cursor or event.type == pygame.MOUSEBUTTONDOWN:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.cursor = event.pos
-                mouse_pos_text = f'Cursor loc:\n{self.cursor}'
-                cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
-                self.window.blit(cursor_img, (650, 200))
+            mouse_pos_text = f'Cursor loc:\n{self.cursor}'
+            cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
+            self.window.blit(cursor_img, (650, 200))
 
             # Message: 2.1
             if issubclass(type(self.chosen_piece), self.game_mgr.settings.class_mapping['Piece']):
@@ -247,25 +255,28 @@ class Game:
                 text_img = self.font.render(text, True, DARK_GRAY)
                 self.window.blit(text_img, (650, 120))
 
+        return self.show_tiles(flag)
+
     def attach_pieces_to_board(self):
         for piece in self.game_mgr.all_poss_moves:
             piece.draw()
 
-    def draw(self, event, flag=False):
-        if flag is False:
-            flag = False
+    def draw(self):
         self.window.fill(LIGHT_GRAY)
+
+        self.tossing_girl.draw()
+        self.tossing_girl.update()
+
         for button in self.buttons:
             button.draw()
         self.window.blit(self.board, self.board_rect)
-        self.show_tiles(flag)
-        self.show_developer_table(event, flag)
-        self.attach_pieces_to_board()
 
         if self.checkmate_window.visible:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
             pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
             self.checkmate_window.draw()
+
+        self.attach_pieces_to_board()
 
     def exit(self, callback):
         self.playing = True
