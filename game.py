@@ -5,7 +5,6 @@ import pygwidgets
 
 from core_files.manager import Manager
 from buttons import ChooseTimeButton
-from authorization import Authorization
 from constants import *
 
 class Registry:
@@ -19,6 +18,8 @@ class Game:
     BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 
     def __init__(self, window):
+
+        # self.playing = False
 
         self.window = window
 
@@ -38,7 +39,7 @@ class Game:
                                                     fontSize=22)
 
         self.quit_button = pygwidgets.TextButton(self.window, (745, 640), 'QUIT', width=100, height=45, fontSize=22,
-                                                 callBack=self.exit)
+                                                 callBack=self.exit, nickname='quit')
 
         self.checkmate_window = pygwidgets.DisplayText(self.window, (250, 305), 'CHECKMATE', textColor=(200, 0, 0),
                                                        fontSize=50)
@@ -59,11 +60,10 @@ class Game:
         if self.game_mgr.game_start_sound_state:
             self.game_mgr.game_start_sound.play()
             self.game_mgr.game_start_sound_state = False
-
-        self.tossing_girl.show()
-        self.tossing_girl.start()
-        # timer = pyghelpers.CountDownTimer(10, True)
-        # timer.start()
+            self.tossing_girl.show()
+            self.tossing_girl.start()
+            # timer = pyghelpers.CountDownTimer(10, True)
+            # timer.start()
         return
 
     def reset(self, callback):
@@ -275,13 +275,13 @@ class Game:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
             pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
             self.checkmate_window.draw()
+            # self.playing = False
 
         self.attach_pieces_to_board()
 
-    def exit(self, callback):
-        self.playing = True
-        Authorization.LOGIN_AWAITING_STATUS = True
-        self.window.fill(BLACK)
+    def exit(self, the_nickname):
+        if the_nickname == 'quit':
+            return True
 
     @staticmethod
     def create_rects():

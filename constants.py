@@ -8,6 +8,10 @@ DARK_GRAY = (50, 50, 50)
 LIGHT_GRAY = (240, 240, 240)
 WHITE = (250, 250, 250)
 
+STATE_AUTHORIZATION = 'Authorization'
+STATE_PLAYING = 'Playing'
+STATE_CHECKMATE = 'Checkmate'
+
 IDLE = 'idle'
 HOVER = 'hover'
 SELECTED = 'selected'
