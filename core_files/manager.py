@@ -43,9 +43,9 @@ class Manager(BoardUser):
 
         super().__init__(window, board_ls)
 
-        self.game_start_sound_state = True
-        self.playing = True
+        self.checkmate = False
         self.pawn_awaiting = False
+        self.game_start_sound_state = True
 
     def promotion_getter(self, piece, dest: tuple):
         if self.pawn_awaiting:
@@ -138,7 +138,7 @@ class Manager(BoardUser):
             self.board = copied_board
             if checkmate_status is True:
                 self.end_game_sound_state = True
-                self.playing = False
+                self.checkmate = True
                 Manager.game_end_sound.play()
                 return True
 

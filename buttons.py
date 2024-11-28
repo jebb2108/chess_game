@@ -62,10 +62,20 @@ class ChooseTimeButton(pygwidgets.TextButton):
                 break
 
     def display_time(self):
+
+        self.font.set_point_size(42)
         msg = f'{str(self.default_time[0])} + {str(self.default_time[1])}'
         msg_image = self.font.render(msg, True, DARK_GRAY)
-        self.current_text = pygame.transform.scale_by(msg_image, 1.5)
+        msg_rect = msg_image.get_rect()
+        msg_rect.center = self.rect.center
+
+        self.msg_image = pygwidgets.Image(self.window, msg_rect, msg_image)
+        self.msg_image.scale(50, True)
+        self.current_text = False
 
     def draw(self):
         super().draw()
-        self.window.blit(self.current_text, self.new_coords)
+        if self.current_text:
+            self.window.blit(self.current_text, self.new_coords)
+        else:
+            self.msg_image.draw()
