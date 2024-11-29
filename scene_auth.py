@@ -33,7 +33,6 @@ class SceneAuth(pyghelpers.Scene):
     def enter(self, data):
         pass
 
-
     def handleInputs(self, eventsList, keyPressedList):
         self.login_n_psswrd = str(self.login_input.getValue() + ' '
                                   + self.password_input.getValue())

@@ -6,7 +6,7 @@ from scene_play import ScenePlay
 
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 720
-FRAMES_PER_SECOND = 60
+FRAMES_PER_SECOND = 30
 
 pygame.init()
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))

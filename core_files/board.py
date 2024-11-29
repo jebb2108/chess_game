@@ -60,11 +60,6 @@ class BoardUser(Board):
         self.chosen_piece_color = None
         super().__init__(window, board_ls)
 
-    def pick_piece(self, its_loc_on_board: tuple) -> object:
-        coord_y, coord_x = its_loc_on_board
-        the_piece = self.board[coord_y][coord_x]
-        return the_piece
-
     @property
     def chosen_piece_object(self):
         return self.__chosen_piece_object
@@ -83,6 +78,11 @@ class BoardUser(Board):
             self.__chosen_piece_object = Empty()
             self.chosen_piece_class = None
             self.chosen_piece_color = None
+
+    def pick_piece(self, its_loc_on_board: tuple) -> object:
+        coord_y, coord_x = its_loc_on_board
+        the_piece = self.board[coord_y][coord_x]
+        return the_piece
 
     def check_castling_and_move(self, to_where: tuple) -> [True or False]:
 
@@ -128,7 +128,6 @@ class BoardUser(Board):
             return True
 
         return False
-
 
     def attempt_piece_to_move(self, dest_coords: list) -> [True or False or Piece]:
         """ Проверяет, если по правилам шахмат возможно совершить ход с данными координатами """

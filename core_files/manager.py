@@ -60,7 +60,6 @@ class Manager(BoardUser):
 
         return
 
-
     def initiate_move(self, piece: object, to_where: tuple):
 
         # Три важных действия
