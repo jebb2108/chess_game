@@ -72,14 +72,11 @@ class Manager(BoardUser):
         # Проверяет, если это король и запрашивается рокировка.
         # if self.chosen_piece_class == 'class.King':
         if self.check_castling_and_move(to_where):
-
-            # if not self.is_end_game():
-            #     self.play_sound(False)
-
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             self.castling_sound_state = True
-
+            if not self.is_end_game():
+                self.play_sound(False)
             return
 
         # Следующее условие. Это не король. Совершает обычный ход
@@ -88,12 +85,11 @@ class Manager(BoardUser):
                 del self.all_poss_moves[self.chosen_piece_object]
                 self.pawn_awaiting = True
 
-            # if not self.is_end_game():
-            #     self.play_sound(False)
-
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
 
+            if not self.is_end_game():
+                self.play_sound(False)
             return
 
         self.update_all_poss_moves_dict()
@@ -130,9 +126,6 @@ class Manager(BoardUser):
                     eaten_piece = self.conduct_change(new_move, curr_pos)
                     # Обновляет возможные ходы в словаре после перестановки
                     self.update_all_poss_moves_dict()
-
-                    res = self.print_board()
-                    print(res)
 
                     if self.is_checked():
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
@@ -190,7 +183,7 @@ class Manager(BoardUser):
             self.update_all_poss_moves_dict()
             return True
 
-        raise Exception("Something went wrong")
+        return False
 
     def is_checked(self, enemy_check=False) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
@@ -250,7 +243,7 @@ class Manager(BoardUser):
             Manager.game_end_sound.play()
             self.update_sound_states()
 
-        elif self.castling_sound_state and not self.move_sound_state:
+        elif self.castling_sound_state:
             self.chosen_piece_object.castling_sound.play()
 
         elif self.move_sound_state and not self.capture_sound_state:

@@ -65,7 +65,6 @@ class Board(BoardManipulator, ABC):
         return final_res
 
 
-
 class BoardUser(Board):
     def __init__(self, window, board_ls):
         self.chosen_piece_object = Empty
@@ -211,13 +210,13 @@ class BoardUser(Board):
     def conduct_force_change(self, from_where, to_where, removed_piece=None) -> [True or False]:
 
         if removed_piece:
-            orig_x, orig_y = to_where
+            old_y, old_x = to_where
             enemy_old_y, enemy_old_x = removed_piece.loc
-            self.board[orig_y][orig_x] = self.chosen_piece_object
+            self.board[old_y][old_x] = self.chosen_piece_object
             self.board[enemy_old_y][enemy_old_x] = removed_piece
 
             # Помимо этого, надо вернуть фигуру в общий список
-            self.all_poss_moves[removed_piece] = removed_piece.access_all_moves()
+            self.all_poss_moves[removed_piece] = removed_piece._get_all_moves(self.board)
 
             self.chosen_piece_object.set_loc(to_where)
 
