@@ -72,11 +72,14 @@ class Manager(BoardUser):
         # Проверяет, если это король и запрашивается рокировка.
         # if self.chosen_piece_class == 'class.King':
         if self.check_castling_and_move(to_where):
+
+            # if not self.is_end_game():
+            #     self.play_sound(False)
+
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             self.castling_sound_state = True
-            if not self.is_end_game():
-                self.play_sound(False)
+
             return
 
         # Следующее условие. Это не король. Совершает обычный ход
@@ -85,10 +88,12 @@ class Manager(BoardUser):
                 del self.all_poss_moves[self.chosen_piece_object]
                 self.pawn_awaiting = True
 
+            # if not self.is_end_game():
+            #     self.play_sound(False)
+
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
-            if not self.is_end_game():
-                self.play_sound(False)
+
             return
 
         self.update_all_poss_moves_dict()
@@ -126,6 +131,9 @@ class Manager(BoardUser):
                     # Обновляет возможные ходы в словаре после перестановки
                     self.update_all_poss_moves_dict()
 
+                    res = self.print_board()
+                    print(res)
+
                     if self.is_checked():
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
                         self.update_all_poss_moves_dict()
@@ -135,6 +143,11 @@ class Manager(BoardUser):
                         self.update_all_poss_moves_dict()
                         Manager.move_check_sound.play()
                         checkmate_status = False
+                        break
+
+                if checkmate_status is False:
+                    break
+
 
             if checkmate_status is True:
                 self.checkmate = True
@@ -144,19 +157,15 @@ class Manager(BoardUser):
             return False
 
     def identify_whether_move_is_legal(self, to_where) -> bool:
-        """ Важный метод для проверки шаха королю. """
+        """ Важный метод для проверки легитимности хода. """
         # Проверяет, кому принадлежит ход.
         if self.whose_turn_it_is.current_move != self.chosen_piece_color:
-            # self.make_msg('This isn`t your turn')
             return False
 
-        """ Должно выполняться два этапа проверки: 
-        1 - проверяет, может ли фигура пойти в настоящий момент времени,
-        2 - проверяет, если сделанный ход привел к шаху ИЛИ ушел из под него."""
+        curr_loc = copy.copy(self.chosen_piece_object.loc)
 
         # 1 - Проверяет, если фигура находится под шахом.
         if self.is_checked():
-            curr_loc = copy.copy(self.chosen_piece_object.loc)
             if self.place_piece_on_board(to_where):
                 # Если так, то проверяет,
                 # если сделанный ход вывел короля из под него.
@@ -173,7 +182,6 @@ class Manager(BoardUser):
 
         # 2 - Проверяет, если сделанный ход привел к шаху.
         elif self.place_piece_on_board(to_where):
-            curr_loc = copy.copy(self.chosen_piece_object.loc)
             if self.is_checked():
                 # Возврат доски в исходное состояние
                 self.conduct_force_change(to_where, curr_loc)
@@ -183,7 +191,6 @@ class Manager(BoardUser):
             return True
 
         raise Exception("Something went wrong")
-
 
     def is_checked(self, enemy_check=False) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
@@ -207,8 +214,6 @@ class Manager(BoardUser):
         # Возвращает True или False в зависимости от того,
         # находится ли король в зоне атаки.
         return either_king.safe_zone in set(sum([value for key, value in self.all_poss_moves.items() if key.color == enemy_color], []))
-
-    def move_and_check_king(self, to_where):
 
     def place_piece_on_board(self, to_where):
 

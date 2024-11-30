@@ -52,6 +52,19 @@ class Board(BoardManipulator, ABC):
     def get_class_as_str(self, coords):
         return BoardManipulator.get_class(self.board, coords)
 
+    def print_board(self):
+        final_res = []
+        for row in self.board:
+            res = ''
+            for piece in row:
+                if piece.__class__.__name__ == 'Empty':
+                    res += '  x  '
+                    continue
+                res += piece.__class__.__name__ + ' '
+            final_res.append(res)
+        return final_res
+
+
 
 class BoardUser(Board):
     def __init__(self, window, board_ls):
@@ -195,10 +208,10 @@ class BoardUser(Board):
 
         return None
 
-    def conduct_force_change(self, old_pos, new_pos, removed_piece=None) -> [True or False]:
+    def conduct_force_change(self, from_where, to_where, removed_piece=None) -> [True or False]:
 
         if removed_piece:
-            orig_x, orig_y = new_pos
+            orig_x, orig_y = to_where
             enemy_old_y, enemy_old_x = removed_piece.loc
             self.board[orig_y][orig_x] = self.chosen_piece_object
             self.board[enemy_old_y][enemy_old_x] = removed_piece
@@ -206,7 +219,7 @@ class BoardUser(Board):
             # Помимо этого, надо вернуть фигуру в общий список
             self.all_poss_moves[removed_piece] = removed_piece.access_all_moves()
 
-            self.chosen_piece_object.set_loc(new_pos)
+            self.chosen_piece_object.set_loc(to_where)
 
 
             if self.chosen_piece_class == 'class.King':
@@ -216,12 +229,12 @@ class BoardUser(Board):
 
         else:
 
-            old_y, old_x = new_pos
-            new_y, new_x = old_pos
+            old_y, old_x = to_where
+            new_y, new_x = from_where
             self.board[old_y][old_x] = self.chosen_piece_object
             self.board[new_y][new_x] = Empty()
 
-            self.chosen_piece_object.set_loc(new_pos)
+            self.chosen_piece_object.set_loc(to_where)
 
             if self.chosen_piece_class == 'class.King':
                 self.chosen_piece_object.safe_zone = self.chosen_piece_object.loc
