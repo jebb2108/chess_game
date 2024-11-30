@@ -1,6 +1,6 @@
 # Модуль для добавления функциональных кнопок,
 # переназначая свойства базового класса PygWidgetsButton
-
+import pyghelpers
 import pygwidgets
 import pygame
 
@@ -51,6 +51,9 @@ class ChooseTimeButton(pygwidgets.TextButton):
         # вызываем метод родительского класса
         super().handleEvent(event)
 
+    def get_time(self):
+        return self.default_time
+
     def alter_time(self):
         current_time = self.default_time
         for index in range(0, len(ChooseTimeButton.TIMES_LIST)):
@@ -79,3 +82,61 @@ class ChooseTimeButton(pygwidgets.TextButton):
             self.window.blit(self.current_text, self.new_coords)
         else:
             self.msg_image.draw()
+
+class ChessClock():
+    def __init__(self, window, loc, color, time):
+        self.window = window
+        self.loc = loc
+        self.rect = pygame.Rect(self.loc[0], self.loc[1], 100, 45)
+        self.color = color
+        self.time = time[0] * 60
+
+        self.font = pygame.font.Font(None, 24)
+        self.clock = pyghelpers.CountDownTimer(self.time, True)
+        self.clock.start()
+
+
+    def update(self, curr_turn):
+
+        if self.clock.ended():
+            return False
+
+        elif ((self.color == COLOR_WHITE and curr_turn == COLOR_BLACK) or
+                (self.color == COLOR_BLACK and curr_turn == COLOR_WHITE)):
+            self.change_state(True)
+
+            if self.clock.pauseCounter > 0:
+                if self.clock.timePaused:
+                    self.clock.resume()
+
+            return True
+
+        else:
+            self.clock.pause()
+            self.change_state(False)
+            return True
+
+    def change_state(self, active: bool):
+        if active:
+            self.active_color = WHITE if self.color == COLOR_WHITE else BLACK
+            self.text_color = BLACK if self.color == COLOR_WHITE else WHITE
+        else:
+            self.active_color = GRAY
+            self.text_color = LIGHT_GRAY
+
+        text = self.font.render(self.clock.getTimeInHHMMSS(), True, self.text_color)
+        text_rect = text.get_rect()
+        text_rect.center = self.rect.center
+        self.time_as_img = pygwidgets.Image(self.window, text_rect, text)
+
+
+
+
+    def draw(self):
+        pygame.draw.rect(self.window, self.active_color, self.rect, 0, 5)
+        #Граница
+        pygame.draw.rect(self.window, DARK_GRAY, self.rect, 2, 5)
+        self.time_as_img.draw()
+
+
+

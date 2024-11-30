@@ -6,7 +6,7 @@ import pygame
 
 from pygame.locals import *
 from constants import *
-from buttons import ChooseTimeButton
+from buttons import ChooseTimeButton, ChessClock
 from core_files.manager import Manager
 
 
@@ -39,6 +39,12 @@ class ScenePlay(pyghelpers.Scene):
                                                        fontSize=50)
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
+
+        self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, self.choose_time_button.get_time())
+        self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, self.choose_time_button.get_time())
+
+        # self.black_timer_clock = pygwidgets.DisplayText(self.window, (700, 50), '', textColor=DARK_GRAY, fontSize=50)
+        # self.white_timer_clock = pygwidgets.DisplayText(self.window, (800, 50), '', textColor=DARK_GRAY, fontSize=50)
 
         knight_collection = pygwidgets.ImageCollection(self.window, (200, 264),
                                                        {COLOR_WHITE: 'white_Knight.png',
@@ -247,7 +253,14 @@ class ScenePlay(pyghelpers.Scene):
         return None
 
     def update(self):
+
+        current_turn = COLOR_BLACK if self.game_mgr.whose_turn_it_is.get_turn() == 1 else COLOR_WHITE
+
+        self.black_clock.update(current_turn)
+        self.white_clock.update(current_turn)
+
         if not self.game_mgr.checkmate:
+            # self.check_on_clock()
             self.tossing_girl.update()
             mouse_pos = pygame.mouse.get_pos()
             self.run_through_all_rects(mouse_pos)
@@ -255,6 +268,10 @@ class ScenePlay(pyghelpers.Scene):
 
         self.tossing_girl.pause()
         ScenePlay.DEVELOPER_TOOL_ACTIVE = False
+        return
+
+    def check_on_clock(self):
+
         return
 
     def show_developer_table(self):
@@ -328,6 +345,9 @@ class ScenePlay(pyghelpers.Scene):
         self.show_tiles()
 
         self.attach_pieces_to_board()
+
+        self.black_clock.draw()
+        self.white_clock.draw()
 
         if self.game_mgr.checkmate:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)

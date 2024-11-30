@@ -11,6 +11,9 @@ class WhoMoves(object):
         # Текущий ход.
         self.current_move = 1
 
+    def get_turn(self):
+        return self.current_move
+
     def change_turn(self):
         self.turn *= -1
         # Отдельный атрибут 'current_move' помогает выводить два значения 1 и 2,
