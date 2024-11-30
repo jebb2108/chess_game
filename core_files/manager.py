@@ -43,9 +43,9 @@ class Manager(BoardUser):
 
         super().__init__(window, board_ls)
 
-        self.checkmate = False
-        self.pawn_awaiting = False
         self.game_start_sound_state = True
+        self.pawn_awaiting = False
+        self.checkmate = False
 
     def promotion_getter(self, piece, dest: tuple):
         if self.pawn_awaiting:
@@ -62,10 +62,12 @@ class Manager(BoardUser):
 
     def initiate_move(self, piece: object, to_where: tuple):
 
+        if self.checkmate: return
+
         # Три важных действия
         self.update_sound_states()
         self.chosen_piece_object = piece
-        current_board = self.copy_board()
+        # current_board = self.copy_board()
 
         # Проверяет, если это король и запрашивается рокировка.
         # if self.chosen_piece_class == 'class.King':
@@ -73,19 +75,19 @@ class Manager(BoardUser):
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             self.castling_sound_state = True
-            if not self.is_end_game(current_board):
+            if not self.is_end_game():
                 self.play_sound(False)
             return
 
         # Следующее условие. Это не король. Совершает обычный ход
-        elif self.identify_whether_move_is_legal(to_where, current_board):
+        elif self.identify_whether_move_is_legal(to_where):
             if self.chosen_piece_class == 'class.Pawn' and self.check_pawn_at_edge(to_where):
                 del self.all_poss_moves[self.chosen_piece_object]
                 self.pawn_awaiting = True
 
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
-            if not self.is_end_game(current_board):
+            if not self.is_end_game():
                 self.play_sound(False)
             return
 
@@ -93,7 +95,7 @@ class Manager(BoardUser):
         self.chosen_piece_object = None
         return self.play_sound(True)
 
-    def is_end_game(self, copied_board):
+    def is_end_game(self):
 
         """ Метод, который активируется в случае шаха собственному королю,
             сделанному оппонентом на предыдущем ходе """
@@ -134,16 +136,14 @@ class Manager(BoardUser):
                         Manager.move_check_sound.play()
                         checkmate_status = False
 
-            self.board = copied_board
             if checkmate_status is True:
-                self.end_game_sound_state = True
                 self.checkmate = True
                 Manager.game_end_sound.play()
                 return True
 
             return False
 
-    def identify_whether_move_is_legal(self, to_where, current_board) -> bool:
+    def identify_whether_move_is_legal(self, to_where) -> bool:
         """ Важный метод для проверки шаха королю. """
         # Проверяет, кому принадлежит ход.
         if self.whose_turn_it_is.current_move != self.chosen_piece_color:
@@ -154,24 +154,36 @@ class Manager(BoardUser):
         1 - проверяет, может ли фигура пойти в настоящий момент времени,
         2 - проверяет, если сделанный ход привел к шаху ИЛИ ушел из под него."""
 
-        # 1 - Проверяет, что фигура НЕ находится под шахом
-        # и пытается переместить ее в выбранную позию.
-        if not self.is_checked():
-            # Фигура может переместиться
-            # на выбранную позицию и не попадет под шах.
-            if not self.remains_checked(to_where):
-                # Иначе, возвращает False
-                return False
-
-        # 2 - Проверяет, если сделанный ход привел
-        # к шаху ИЛИ ушел из под него.
-        elif self.remains_checked(to_where):
+        # 1 - Проверяет, если фигура находится под шахом.
+        if self.is_checked():
+            curr_loc = copy.copy(self.chosen_piece_object.loc)
+            if self.place_piece_on_board(to_where):
+                # Если так, то проверяет,
+                # если сделанный ход вывел короля из под него.
+                if self.is_checked():
+                    # Возврат доски в исходное состояние
+                    self.conduct_force_change(to_where, curr_loc)
+                    self.update_all_poss_moves_dict()
+                    return False
+                self.update_all_poss_moves_dict()
+                return True
+            # Ход сделать невозможно по другой причине
+            self.update_all_poss_moves_dict()
             return False
 
-        # Королю нет представляет никакой угрозы
-        # и фигура просто пытается сделать ход.
-        # self.attempt_piece_to_move(to_where)
-        return True
+        # 2 - Проверяет, если сделанный ход привел к шаху.
+        elif self.place_piece_on_board(to_where):
+            curr_loc = copy.copy(self.chosen_piece_object.loc)
+            if self.is_checked():
+                # Возврат доски в исходное состояние
+                self.conduct_force_change(to_where, curr_loc)
+                self.update_all_poss_moves_dict()
+                return False
+            self.update_all_poss_moves_dict()
+            return True
+
+        raise Exception("Something went wrong")
+
 
     def is_checked(self, enemy_check=False) -> [True or False]:
         """ Проверка, если король находится в зоне атаки вражеской фигуры. """
@@ -196,44 +208,7 @@ class Manager(BoardUser):
         # находится ли король в зоне атаки.
         return either_king.safe_zone in set(sum([value for key, value in self.all_poss_moves.items() if key.color == enemy_color], []))
 
-    def remains_checked(self, to_where):
-
-        """ Этот метод задает такое условие:
-        Хорошо, шах королю объявлен, но является
-        ли предложенный ход избавлением от него? """
-
-        if (self.place_piece_on_board(to_where)
-                and self.post_check_king(to_where)):
-
-            # self.board = current_board
-            self.update_all_poss_moves_dict()
-            return True
-
-        # self.board = current_board
-        self.update_all_poss_moves_dict()
-        return False
-
-    def post_check_king(self, to_where):
-
-        """ Метод включает в себя работу
-            с копиями удаленных фигур """
-
-        if self.is_checked():
-            # Проверка провалена.
-            # Возвращает фигуру на прежнее место.
-            any_deleted = self.object_copies[-1] if self.object_copies else None
-            self.chosen_piece_object.moves.clear()
-            self.conduct_force_change(to_where, self.chosen_piece_object.loc,
-                                      any_deleted)
-
-            # Очищает резервное хранилище.
-            self.object_copies.clear()
-            return False
-
-        self.object_copies.clear()
-        return True
-
-        # Позволяет пройти проверку.
+    def move_and_check_king(self, to_where):
 
     def place_piece_on_board(self, to_where):
 

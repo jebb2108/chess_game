@@ -247,9 +247,14 @@ class ScenePlay(pyghelpers.Scene):
         return None
 
     def update(self):
-        self.tossing_girl.update()
-        mouse_pos = pygame.mouse.get_pos()
-        self.run_through_all_rects(mouse_pos)
+        if not self.game_mgr.checkmate:
+            self.tossing_girl.update()
+            mouse_pos = pygame.mouse.get_pos()
+            self.run_through_all_rects(mouse_pos)
+            return
+
+        self.tossing_girl.pause()
+        ScenePlay.DEVELOPER_TOOL_ACTIVE = False
         return
 
     def show_developer_table(self):
@@ -319,15 +324,15 @@ class ScenePlay(pyghelpers.Scene):
             button.draw()
         self.window.blit(self.board, self.board_rect)
 
-        if self.game_mgr.checkmate:
-            pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
-            pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
-            self.checkmate_window.draw()
-
         self.show_developer_table()
         self.show_tiles()
 
         self.attach_pieces_to_board()
+
+        if self.game_mgr.checkmate:
+            pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
+            pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
+            self.checkmate_window.draw()
 
     def leave(self):
         self.window.fill(BLACK)
