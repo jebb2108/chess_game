@@ -43,6 +43,8 @@ class ScenePlay(pyghelpers.Scene):
         self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, self.choose_time_button.get_time())
         self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, self.choose_time_button.get_time())
 
+        self.timer_display = pygwidgets.DisplayText(self.window, (660, 27), 'TIMER:', textColor=DARK_GRAY, fontSize=30)
+
         # self.black_timer_clock = pygwidgets.DisplayText(self.window, (700, 50), '', textColor=DARK_GRAY, fontSize=50)
         # self.white_timer_clock = pygwidgets.DisplayText(self.window, (800, 50), '', textColor=DARK_GRAY, fontSize=50)
 
@@ -253,14 +255,8 @@ class ScenePlay(pyghelpers.Scene):
         return None
 
     def update(self):
-
-        current_turn = COLOR_BLACK if self.game_mgr.whose_turn_it_is.get_turn() == 1 else COLOR_WHITE
-
-        self.black_clock.update(current_turn)
-        self.white_clock.update(current_turn)
-
         if not self.game_mgr.checkmate:
-            # self.check_on_clock()
+            self.check_on_clock()
             self.tossing_girl.update()
             mouse_pos = pygame.mouse.get_pos()
             self.run_through_all_rects(mouse_pos)
@@ -271,6 +267,11 @@ class ScenePlay(pyghelpers.Scene):
         return
 
     def check_on_clock(self):
+        current_turn = COLOR_BLACK if\
+            self.game_mgr.whose_turn_it_is.get_turn() == 1\
+            else COLOR_WHITE
+        self.black_clock.update(current_turn)
+        self.white_clock.update(current_turn)
 
         return
 
@@ -348,6 +349,8 @@ class ScenePlay(pyghelpers.Scene):
 
         self.black_clock.draw()
         self.white_clock.draw()
+
+        self.timer_display.draw()
 
         if self.game_mgr.checkmate:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
