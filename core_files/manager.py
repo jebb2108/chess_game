@@ -219,11 +219,13 @@ class Manager(BoardUser):
         # создает переменную со съеденной фигурой, чтобы была
         # возомжность ее вернуть с функцией conduct_force_change
         eaten_piece = self.attempt_piece_to_move(to_where)
-        self.move_sound_state = True
 
         # Если результат отрицательный,
         # происходит выброс из цикла действий.
         if eaten_piece is False: return False
+
+        self.update_sound_states()
+        self.move_sound_state = True
 
         if type(eaten_piece) is not bool:
             # Иначе проверяет, есть ли другое значение от булевых?
@@ -242,11 +244,11 @@ class Manager(BoardUser):
             return self.update_sound_states()
 
 
-        elif self.end_game_sound_state:
+        if self.end_game_sound_state:
             Manager.game_end_sound.play()
-            self.update_sound_states()
+            return self.update_sound_states()
 
-        elif self.castling_sound_state:
+        elif self.castling_sound_state and not self.move_sound_state:
             self.chosen_piece_object.castling_sound.play()
 
         elif self.move_sound_state and not self.capture_sound_state:

@@ -18,6 +18,10 @@ SELECTED = 'selected'
 COLOR_WHITE = 'white'
 COLOR_BLACK = 'black'
 
+STATE_RUNNING = 'Running'
+STATE_STOPPED = 'Stopped'
+STATE_BEGIN = 'Beginning'
+
 # список событий мыши, на которые реагирует кнопка
 MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 

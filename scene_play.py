@@ -6,7 +6,7 @@ import pygame
 
 from pygame.locals import *
 from constants import *
-from buttons import ChooseTimeButton, ChessClock
+from visuals import ChooseTimeButton, ChessClock
 from core_files.manager import Manager
 
 
@@ -40,13 +40,10 @@ class ScenePlay(pyghelpers.Scene):
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
 
-        self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, self.choose_time_button.get_time())
-        self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, self.choose_time_button.get_time())
+        # self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, self.choose_time_button.get_time())
+        # self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, self.choose_time_button.get_time())
 
-        self.timer_display = pygwidgets.DisplayText(self.window, (660, 27), 'TIMER:', textColor=DARK_GRAY, fontSize=30)
-
-        # self.black_timer_clock = pygwidgets.DisplayText(self.window, (700, 50), '', textColor=DARK_GRAY, fontSize=50)
-        # self.white_timer_clock = pygwidgets.DisplayText(self.window, (800, 50), '', textColor=DARK_GRAY, fontSize=50)
+        self.timer_display = pygwidgets.DisplayText(self.window, (668, 27), 'TIMER FOR EACH:', textColor=DARK_GRAY, fontSize=30)
 
         knight_collection = pygwidgets.ImageCollection(self.window, (200, 264),
                                                        {COLOR_WHITE: 'white_Knight.png',
@@ -84,16 +81,24 @@ class ScenePlay(pyghelpers.Scene):
         return SCENE_PLAY
 
     def enter(self, data):
-        self.game_mgr.game_start_sound.play()
         self.tossing_girl.show()
-        self.tossing_girl.start()
-        return self.reset(the_nickname='new game')
+        self.tossing_girl.play()
+        self.current_player = COLOR_WHITE
+
+        return self.reset('new game')
 
     def reset(self, the_nickname):
         if the_nickname == 'new game':
+            self.game_mgr.game_start_sound.play()
+
             del self.game_mgr
             self.game_mgr = Manager(self.window)
-            self.tossing_girl.play()
+
+            new_time = self.choose_time_button.get_time()
+            self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, new_time)
+            self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, new_time)
+            self.white_clock.start(), self.black_clock.start()
+            self.black_clock.pause()
 
         return
 
@@ -104,6 +109,7 @@ class ScenePlay(pyghelpers.Scene):
                 sys.exit()
 
             if event.type == MOUSEBUTTONDOWN:
+                self.cursor = event.pos
                 self.got_click(event.pos)
 
 
@@ -133,14 +139,14 @@ class ScenePlay(pyghelpers.Scene):
     def got_click(self, mouse_pos):
         for rect in self.board_rects:
             if rect.collidepoint(mouse_pos):
-                rect_int = self.board_rects.index(rect)
-                coords = self.convert_selected_into_coords(rect_int)
+                rect_indx = self.board_rects.index(rect)
+                coords = self.convert_selected_into_coords(rect_indx)
 
                 if self.chosen_piece:
-                    self.linked_rects_dict[rect_int] = SELECTED
+                    self.linked_rects_dict[rect_indx] = SELECTED
 
                 elif self.game_mgr.get_class_as_str(coords) != 'Empty':
-                    self.linked_rects_dict[rect_int] = SELECTED
+                    self.linked_rects_dict[rect_indx] = SELECTED
 
         return self.check_selected(mouse_pos)
 
@@ -161,10 +167,11 @@ class ScenePlay(pyghelpers.Scene):
         return
 
     def check_selected(self, mouse_pos):
+
         all_selected_keys = [key for key, value in
                              self.linked_rects_dict.items() if value == SELECTED]
 
-        if 0 < len(all_selected_keys) < 2:
+        if len(all_selected_keys) == 1:
             key = all_selected_keys[0]
             self.appoint_active_piece(key)
 
@@ -176,13 +183,40 @@ class ScenePlay(pyghelpers.Scene):
                  if self.convert_selected_into_coords(num) != chosen_piece_coords][0]
             next_move_coords = self.convert_selected_into_coords(the_other_index)
 
-            # Связанная функция с базовым классом для того, чтобы попытаться сходить фигурой
+            # Связанная функция с внутренним кодом для того, чтобы попытаться сходить фигурой
             self.game_mgr.initiate_move(self.chosen_piece, next_move_coords)
             self.game_mgr.promotion_getter(self.show_promotion(), next_move_coords)
             self.linked_rects_dict = {key: IDLE for key in self.linked_rects_dict}
             self.chosen_piece = None
 
+
         return
+
+    def shift_players_clocks(self):
+
+        if self.current_player == COLOR_WHITE:
+            self.white_clock.resume()
+            self.black_clock.pause()
+        else:
+            self.black_clock.resume()
+            self.white_clock.pause()
+
+        return
+
+    def get_curr_turn(self):
+
+        """ Проверяет, произошло ли изменение в ходе """
+        simple_move_dict = {1: COLOR_WHITE, 2: COLOR_BLACK}
+        this_turn = self.game_mgr.whose_turn_it_is.get_turn()
+        dict_interpretation_of_current_turn = simple_move_dict[this_turn]
+
+        if dict_interpretation_of_current_turn != self.current_player:
+            self.current_player = dict_interpretation_of_current_turn
+            # Да, игрок сходил. Возвращает True
+            return True
+
+        # Ничего не изменилось. Возвращает False
+        return False
 
     def get_coords_of_chosen_piece(self, mouse_pos) -> tuple:
         try:
@@ -255,11 +289,17 @@ class ScenePlay(pyghelpers.Scene):
         return None
 
     def update(self):
+
         if not self.game_mgr.checkmate:
             self.check_on_clock()
             self.tossing_girl.update()
             mouse_pos = pygame.mouse.get_pos()
             self.run_through_all_rects(mouse_pos)
+
+            # Обновление хода
+            if self.get_curr_turn():
+                self.shift_players_clocks()
+
             return
 
         self.tossing_girl.pause()
@@ -267,12 +307,8 @@ class ScenePlay(pyghelpers.Scene):
         return
 
     def check_on_clock(self):
-        current_turn = COLOR_BLACK if\
-            self.game_mgr.whose_turn_it_is.get_turn() == 1\
-            else COLOR_WHITE
-        self.black_clock.update(current_turn)
-        self.white_clock.update(current_turn)
-
+        self.black_clock.set_color()
+        self.white_clock.set_color()
         return
 
     def show_developer_table(self):
@@ -290,11 +326,8 @@ class ScenePlay(pyghelpers.Scene):
             self.window.blit(text_img, (650, 50))
 
             # message: 5
-            if self.game_mgr.default_message:
-                # text_img = self.font.render('message:\n' + self.game_mgr.default_message, True, DARK_GRAY)
-                text_img = self.font.render(f'Pieces in total: {len(self.game_mgr.all_poss_moves)}', True,
-                                            DARK_GRAY)
-                self.window.blit(text_img, (650, 350))
+            text_img = self.font.render(f'Player: {self.current_player}', True, DARK_GRAY)
+            self.window.blit(text_img, (650, 350))
 
             # Message: 3
             mouse_pos_text = f'Cursor loc:\n{self.cursor}'
@@ -342,15 +375,15 @@ class ScenePlay(pyghelpers.Scene):
             button.draw()
         self.window.blit(self.board, self.board_rect)
 
+        self.black_clock.draw()
+        self.white_clock.draw()
+        self.timer_display.draw()
+
         self.show_developer_table()
         self.show_tiles()
 
         self.attach_pieces_to_board()
 
-        self.black_clock.draw()
-        self.white_clock.draw()
-
-        self.timer_display.draw()
 
         if self.game_mgr.checkmate:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
