@@ -27,6 +27,10 @@ class SceneAuth(pyghelpers.Scene):
 
         self.buttons = [self.box_name, self.login_input, self.password_input, self.login_button, self.reg_button]
 
+        self.version_logo = pygwidgets.DisplayText(self.window, (665, 670),
+                                                   'Chess vers: v1.5', textColor=GOLD, fontSize=32)
+
+
     def getSceneKey(self):
         return SCENE_AUTH
 
@@ -37,11 +41,18 @@ class SceneAuth(pyghelpers.Scene):
         self.login_n_psswrd = str(self.login_input.getValue() + ' '
                                   + self.password_input.getValue())
         for event in eventsList:
-            if self.login_n_psswrd == 'gabriel bouchard':
-                if self.login_button.handleEvent(event):
+            if self.login_button.handleEvent(event):
+                if self.login_n_psswrd == 'gabriel bouchard':
                     self.goToScene(SCENE_PLAY)
+
             self.login_input.handleEvent(event)
             self.password_input.handleEvent(event)
+
+        if (keyPressedList[pygame.K_RETURN] and
+                self.login_n_psswrd == 'gabriel bouchard'):
+            self.goToScene(SCENE_PLAY)
+
+        return
 
     def update(self):
         self.check_on_login_button()
@@ -59,6 +70,7 @@ class SceneAuth(pyghelpers.Scene):
         pygame.draw.rect(self.window, GRAY, (635, 40, 220, 180), 0)
         for button in self.buttons:
             button.draw()
+            self.version_logo.draw()
         return
 
     def leave(self):

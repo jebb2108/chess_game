@@ -112,13 +112,16 @@ class ChooseTimeButton(pygwidgets.TextButton):
 
     def __init__(self, window, loc, text, width=180, height=45, fontSize=22):
         self.state = self.STATE_IDLE
-        self.default_time = ChooseTimeButton.TIMES_LIST[0]
+        self.set_default_time()
         self.font = pygame.font.Font(None, 24)
         self.default_text_image = self.font.render('CHOOSE TIME', True, DARK_GRAY)
         super().__init__(window, loc, text, width, height, fontSize)
 
         self.new_coords = self.rect.move(35, 15)
         self.current_text = self.default_text_image
+
+    def set_default_time(self):
+        self.default_time = ChooseTimeButton.TIMES_LIST[0]
 
     def handleEvent(self, event):
 
@@ -196,6 +199,9 @@ class ChessClock(Timer):
         super().__init__(n_seconds, True)
 
         self.rect = None
+
+    def set_increase_time(self, time_increase):
+        self.time_increase = time_increase
 
     def increase_time(self):
         self.remaining_seconds += self.time_increase

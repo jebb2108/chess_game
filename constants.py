@@ -7,6 +7,7 @@ GRAY = (200, 200, 200)
 DARK_GRAY = (50, 50, 50)
 LIGHT_GRAY = (240, 240, 240)
 WHITE = (250, 250, 250)
+GOLD = (244, 196, 48)
 
 SCENE_AUTH = 'Authorization'
 SCENE_PLAY = 'Playing'

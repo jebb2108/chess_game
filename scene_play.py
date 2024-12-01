@@ -40,9 +40,6 @@ class ScenePlay(pyghelpers.Scene):
 
         self.buttons = [self.new_game_button, self.choose_time_button, self.profile_button, self.quit_button]
 
-        # self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, self.choose_time_button.get_time())
-        # self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, self.choose_time_button.get_time())
-
         self.timer_display = pygwidgets.DisplayText(self.window, (668, 27), 'TIMER FOR EACH:', textColor=DARK_GRAY, fontSize=30)
 
         knight_collection = pygwidgets.ImageCollection(self.window, (200, 264),
@@ -71,6 +68,7 @@ class ScenePlay(pyghelpers.Scene):
         self.board_rects = self.create_rects()
         self.linked_rects_dict = dict().fromkeys(range(64), IDLE)
 
+
         self.checkmate_status = False
         self.chosen_piece = None
         self.cursor = None
@@ -85,22 +83,45 @@ class ScenePlay(pyghelpers.Scene):
         self.tossing_girl.play()
         self.current_player = COLOR_WHITE
 
+        default_time = self.choose_time_button.get_time()
+        self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, default_time)
+        self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, default_time)
+        self.white_clock.start(), self.black_clock.start()
+        self.black_clock.pause()
+
         return self.reset('new game')
 
     def reset(self, the_nickname):
         if the_nickname == 'new game':
             self.game_mgr.game_start_sound.play()
-
             del self.game_mgr
             self.game_mgr = Manager(self.window)
+            return self.renew_clocks()
 
-            new_time = self.choose_time_button.get_time()
-            self.white_clock = ChessClock(self.window, (656, 50), COLOR_WHITE, new_time)
-            self.black_clock = ChessClock(self.window, (760, 50), COLOR_BLACK, new_time)
-            self.white_clock.start(), self.black_clock.start()
-            self.black_clock.pause()
+    def renew_clocks(self):
 
-        return
+        # Возвращает ход белым
+        self.current_player = COLOR_WHITE
+
+        # Извлекает и обрабатывает кортеж времени
+        time = self.choose_time_button.get_time()
+        new_time = time[0] * 60
+        increase_time = time[1]
+
+        # Останавливает таймер
+        self.white_clock.stop()
+        self.black_clock.stop()
+
+        # Устанавливает новое значение времени
+        self.white_clock.start(new_time)
+        self.black_clock.start(new_time)
+
+        # Устанавливает новое значение возрастания
+        self.white_clock.set_increase_time(increase_time)
+        self.black_clock.set_increase_time(increase_time)
+
+        # Ставит таймер черных на паузу
+        self.black_clock.pause()
 
     def handleInputs(self, eventsList, keyPressedList):
         for event in eventsList:
@@ -196,9 +217,11 @@ class ScenePlay(pyghelpers.Scene):
 
         if self.current_player == COLOR_WHITE:
             self.white_clock.resume()
+            self.black_clock.increase_time()
             self.black_clock.pause()
         else:
             self.black_clock.resume()
+            self.white_clock.increase_time()
             self.white_clock.pause()
 
         return
@@ -392,6 +415,7 @@ class ScenePlay(pyghelpers.Scene):
 
     def leave(self):
         self.window.fill(BLACK)
+        self.choose_time_button.set_default_time()
 
     @staticmethod
     def create_rects():
