@@ -9,6 +9,7 @@ WINDOW_HEIGHT = 720
 FRAMES_PER_SECOND = 30
 
 pygame.init()
+pygame.display.set_caption('Chess Game')
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 
 scene_auth = SceneAuth(window)

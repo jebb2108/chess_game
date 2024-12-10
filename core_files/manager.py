@@ -50,6 +50,12 @@ class Manager(BoardUser):
         self.pawn_awaiting = False
         self.checkmate = False
 
+    def get_pawn_awaiting_status(self):
+        return self.pawn_awaiting
+
+    def get_checkmate_status(self):
+        return self.checkmate
+
     def promotion_getter(self, piece, dest: tuple):
         if self.pawn_awaiting:
             its_y, its_x = dest

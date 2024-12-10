@@ -14,6 +14,8 @@ class ScenePlay(pyghelpers.Scene):
 
     BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
 
+    WIN_STATE = None
+    CHECKMATE_STATE = False
     DEVELOPER_TOOL_ACTIVE = False
 
     def __init__(self, window):
@@ -96,6 +98,7 @@ class ScenePlay(pyghelpers.Scene):
             self.game_mgr.game_start_sound.play()
             del self.game_mgr
             self.game_mgr = Manager(self.window)
+            ScenePlay.WIN_STATE = None
             return self.renew_clocks()
 
     def renew_clocks(self):
@@ -124,12 +127,14 @@ class ScenePlay(pyghelpers.Scene):
         self.black_clock.pause()
 
     def handleInputs(self, eventsList, keyPressedList):
+
         for event in eventsList:
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if event.type == MOUSEBUTTONDOWN:
+            if (event.type == MOUSEBUTTONDOWN and
+                    ScenePlay.WIN_STATE not in [COLOR_WHITE, COLOR_BLACK]):
                 self.cursor = event.pos
                 self.got_click(event.pos)
 
@@ -267,9 +272,9 @@ class ScenePlay(pyghelpers.Scene):
         o_rook = self.game_mgr.settings.class_mapping['Rock']
         o_queen = self.game_mgr.settings.class_mapping['Queen']
 
-        color = (COLOR_WHITE, COLOR_BLACK)[self.game_mgr.whose_turn_it_is.current_move - 2]
+        color = (COLOR_WHITE, COLOR_BLACK)[self.game_mgr.whose_turn_it_is.get_turn() - 2]
 
-        while self.game_mgr.pawn_awaiting:
+        while self.game_mgr.get_pawn_awaiting_status():
 
             for collection in self.all_four_collections_list:
                 collection.replace(color)
@@ -313,7 +318,11 @@ class ScenePlay(pyghelpers.Scene):
 
     def update(self):
 
-        if not self.game_mgr.checkmate:
+        if self.game_mgr.get_checkmate_status():
+            ScenePlay.CHECKMATE_STATE = True
+
+        if (not ScenePlay.CHECKMATE_STATE and
+                not ScenePlay.WIN_STATE in [COLOR_WHITE, COLOR_BLACK]):
             self.check_on_clock()
             self.tossing_girl.update()
             mouse_pos = pygame.mouse.get_pos()
@@ -323,11 +332,22 @@ class ScenePlay(pyghelpers.Scene):
             if self.get_curr_turn():
                 self.shift_players_clocks()
 
+            if self.black_clock.ended():
+                ScenePlay.WIN_STATE = COLOR_WHITE
+                self.white_clock.pause()
+
+            elif self.white_clock.ended():
+                ScenePlay.WIN_STATE = COLOR_BLACK
+                self.black_clock.pause()
+
+
+
             return
 
         self.tossing_girl.pause()
         ScenePlay.DEVELOPER_TOOL_ACTIVE = False
         return
+
 
     def check_on_clock(self):
         self.black_clock.set_color()
@@ -407,8 +427,14 @@ class ScenePlay(pyghelpers.Scene):
 
         self.attach_pieces_to_board()
 
+        if ScenePlay.WIN_STATE in [COLOR_WHITE, COLOR_BLACK]:
+            pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
+            pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
+            self.checkmate_window.setValue('White wins!' if ScenePlay.WIN_STATE == COLOR_WHITE else 'Black wins!')
+            self.checkmate_window.draw()
 
-        if self.game_mgr.checkmate:
+
+        elif ScenePlay.CHECKMATE_STATE:
             pygame.draw.rect(self.window, LIGHT_GRAY, (196, 260, 314, 120), 0)
             pygame.draw.rect(self.window, BLACK, (196, 260, 314, 120), 4)
             self.checkmate_window.draw()
