@@ -2,7 +2,8 @@ import pyghelpers
 import pygwidgets
 import pygame
 
-from pygame.locals import *
+import sqlite3
+from hashlib import sha256
 from constants import *
 
 
@@ -40,13 +41,19 @@ class SceneAuth(pyghelpers.Scene):
     def handleInputs(self, eventsList, keyPressedList):
         self.login_n_psswrd = str(self.login_input.getValue() + ' '
                                   + self.password_input.getValue())
+
         for event in eventsList:
+
             if self.login_button.handleEvent(event):
-                if self.login_n_psswrd == 'gabriel bouchard':
+                if self.check_db():
                     self.goToScene(SCENE_PLAY)
 
             self.login_input.handleEvent(event)
             self.password_input.handleEvent(event)
+
+
+            if self.reg_button.handleEvent(event):
+                self.goToScene(SCENE_REG)
 
         if (keyPressedList[pygame.K_RETURN] and
                 self.login_n_psswrd == 'gabriel bouchard'):
@@ -58,12 +65,30 @@ class SceneAuth(pyghelpers.Scene):
         self.check_on_login_button()
         return
 
+    def check_db(self):
+        conn = sqlite3.connect('users.db')
+        cur = conn.cursor()
+        cur.execute('SELECT password FROM users')
+        passwords = list(sum(cur.fetchall(), ()))
+        for password in passwords:
+            new_hashed_password = sha256(self.password_input.getValue().encode('utf-8')).hexdigest()
+            if new_hashed_password == password:
+                db_login = cur.execute(f'SELECT login FROM users WHERE password = ?', (password,))
+                result = db_login.fetchone()
+                if self.login_input.getValue() == result[0]:
+                    cur.close()
+                    return True
+
+        cur.close()
+        return False
+
     def check_on_login_button(self):
         if self.login_input.getValue() != '' and self.password_input.getValue() != '':
             self.login_button.enable()
         else:
             self.login_button.disable()
         return
+
 
     def draw(self):
         self.window.blit(SceneAuth.BACKGROUND_IMAGE, (-170, 40))

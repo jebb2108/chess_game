@@ -348,7 +348,6 @@ class ScenePlay(pyghelpers.Scene):
         ScenePlay.DEVELOPER_TOOL_ACTIVE = False
         return
 
-
     def check_on_clock(self):
         self.black_clock.set_color()
         self.white_clock.set_color()

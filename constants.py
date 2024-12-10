@@ -9,19 +9,19 @@ LIGHT_GRAY = (240, 240, 240)
 WHITE = (250, 250, 250)
 GOLD = (244, 196, 48)
 
+WINDOW_WIDTH = 900
+WINDOW_HEIGHT = 720
+
 SCENE_AUTH = 'Authorization'
+SCENE_REG = 'Registration'
 SCENE_PLAY = 'Playing'
 
-IDLE = 'idle'
-HOVER = 'hover'
-SELECTED = 'selected'
+IDLE = 'Idle'
+HOVER = 'Hover'
+SELECTED = 'Selected'
 
-COLOR_WHITE = 'white'
-COLOR_BLACK = 'black'
-
-STATE_RUNNING = 'Running'
-STATE_STOPPED = 'Stopped'
-STATE_BEGIN = 'Beginning'
+COLOR_WHITE = 'White'
+COLOR_BLACK = 'Black'
 
 # список событий мыши, на которые реагирует кнопка
 MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
