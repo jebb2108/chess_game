@@ -1,5 +1,3 @@
-import pygame
-
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -23,9 +21,6 @@ SELECTED = 'Selected'
 
 COLOR_WHITE = 'White'
 COLOR_BLACK = 'Black'
-
-# список событий мыши, на которые реагирует кнопка
-MOUSE_EVENTS_LIST = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
 
 tossing_girl_list = [
     ('images/tossing_girl/f1.png', .05),

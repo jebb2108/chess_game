@@ -55,6 +55,20 @@ class Manager(BoardUser):
     def get_this_piece_moves(self, piece: object):
         return self.all_poss_moves[piece]
 
+    def get_kings_moves(self, king):
+        res1, res2 = None, None
+        self.chosen_piece_object = king
+        if king.color == 1:
+            res1 = (7, 2) if self.check_castling_and_move((7, 2), early_stopper=True) else None
+            res2 = (7, 6) if self.check_castling_and_move((7, 6), early_stopper=True) else None
+
+        elif king.color == 2:
+            res1 = (0, 2) if self.check_castling_and_move((0, 2), early_stopper=True) else None
+            res2 =  (0, 6) if self.check_castling_and_move((0, 6), early_stopper=True) else None
+
+        final_res = [item for item in [res1, res2] if item is not None]
+        return final_res
+
     def get_pawn_awaiting_status(self):
         return self.pawn_awaiting
 
@@ -81,7 +95,6 @@ class Manager(BoardUser):
         # Три важных действия
         self.update_sound_states()
         self.chosen_piece_object = piece
-        # current_board = self.copy_board()
 
         # Проверяет, если это король и запрашивается рокировка.
         # if self.chosen_piece_class == 'class.King':
@@ -89,8 +102,11 @@ class Manager(BoardUser):
             self.whose_turn_it_is.change_turn()
             self.update_all_poss_moves_dict()
             self.castling_sound_state = True
+
             if not self.is_end_game():
                 self.play_sound(False)
+
+            self.chosen_piece_object = None
             return
 
         # Следующее условие. Это не король. Совершает обычный ход
@@ -104,6 +120,8 @@ class Manager(BoardUser):
 
             if not self.is_end_game():
                 self.play_sound(False)
+
+            self.chosen_piece_object = None
             return
 
         self.update_all_poss_moves_dict()
@@ -123,14 +141,16 @@ class Manager(BoardUser):
         # если поставлен мат и это конец игры
         while checkmate_status:
 
-            # Тут мне нужно сохранить состояние доски
-            # res = self.copy_board()
+            reset_status = False
 
             enemy_color_index = self.chosen_piece_object.enemy_color
             enemy_moves_n_pieces = [(key, key.access_all_moves()) for key
                                     in self.all_poss_moves if key.get_color() == enemy_color_index]
 
             for piece, moves in enemy_moves_n_pieces:
+
+                if piece.is_not_changed:
+                    reset_status = True
 
                 # Координаты выбранной фигуры до перестановки
                 curr_pos = tuple([piece.get_y(), piece.get_x()])
@@ -143,10 +163,14 @@ class Manager(BoardUser):
 
                     if self.is_checked():
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
+                        if reset_status:
+                            self.chosen_piece_object.reset()
                         self.update_all_poss_moves_dict()
 
                     else:
                         self.conduct_force_change(new_move, curr_pos, eaten_piece)
+                        if reset_status:
+                            self.chosen_piece_object.reset()
                         self.update_all_poss_moves_dict()
                         Manager.move_check_sound.play()
                         checkmate_status = False
@@ -168,7 +192,9 @@ class Manager(BoardUser):
         # Проверяет, кому принадлежит ход.
         if self.whose_turn_it_is.current_move != self.chosen_piece_color:
             return False
-
+        reset_status = False
+        if self.chosen_piece_object.is_not_changed:
+            reset_status = True
         curr_loc = copy.copy(self.chosen_piece_object.loc)
 
         # 1 - Проверяет, если фигура находится под шахом.
@@ -178,6 +204,8 @@ class Manager(BoardUser):
                 # если сделанный ход вывел короля из под него.
                 if self.is_checked():
                     # Возврат доски в исходное состояние
+                    if reset_status:
+                        self.chosen_piece_object.reset()
                     self.conduct_force_change(to_where, curr_loc)
                     self.update_all_poss_moves_dict()
                     return False
@@ -191,6 +219,8 @@ class Manager(BoardUser):
         elif self.place_piece_on_board(to_where):
             if self.is_checked():
                 # Возврат доски в исходное состояние
+                if reset_status:
+                    self.chosen_piece_object.reset()
                 self.conduct_force_change(to_where, curr_loc)
                 self.update_all_poss_moves_dict()
                 return False

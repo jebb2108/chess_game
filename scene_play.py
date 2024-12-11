@@ -342,6 +342,11 @@ class ScenePlay(pyghelpers.Scene):
         elif self.chosen_piece:
             all_poss_moves = self.game_mgr.get_this_piece_moves(self.chosen_piece)
             self.valid_moves = []
+            if self.chosen_piece.__class__.__name__ == 'King':
+                additional_moves = self.game_mgr.get_kings_moves(self.chosen_piece)
+                for move in additional_moves:
+                    pixel_coords = pixel_mapping[move]
+                    self.valid_moves.append(pixel_coords)
             for move in all_poss_moves:
                 pixel_coords = pixel_mapping[move]
                 self.valid_moves.append(pixel_coords)

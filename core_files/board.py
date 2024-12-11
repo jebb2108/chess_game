@@ -96,7 +96,7 @@ class BoardUser(Board):
         the_piece = self.board[coord_y][coord_x]
         return the_piece
 
-    def check_castling_and_move(self, to_where: tuple) -> [True or False]:
+    def check_castling_and_move(self, to_where: tuple, early_stopper: bool = False) -> [True or False]:
 
         it_is_king = (self.chosen_piece_class == 'class.King')
 
@@ -114,6 +114,9 @@ class BoardUser(Board):
 
                 if dest_for_rock in o_rock.access_all_moves():
                     # Происходит перестановка фигур и обновление словаря ходов.
+
+                    if early_stopper:
+                        return True
 
                     self.board[o_king.get_y()][o_king.get_x()] = Empty()
                     self.board[o_rock.get_y()][o_rock.get_x()] = Empty()

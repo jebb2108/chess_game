@@ -116,6 +116,9 @@ class Piece(ABC):
 
         self.__loc = loc
 
+    def reset(self):
+        self.is_not_changed = True
+
     def get_color(self):
         return self.color
 
@@ -217,6 +220,11 @@ class Pawn(Piece, ABC):
         self.memory = {}
 
         super().__init__(window, loc, color)  # Унаследование от родителя атрибутов.
+
+    def reset(self):
+        self.allowed_moves = 2
+        self.memory.clear()
+        super().reset()
 
 
     def _prep_moves(self, board_list: list, array_dirs):
