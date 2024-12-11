@@ -199,11 +199,14 @@ class ChessClock(Timer):
 
         self.rect = None
 
+    def set_time(self, n_seconds: float):
+        self.remaining_seconds = n_seconds
+
     def set_increase_time(self, time_increase):
         self.time_increase = time_increase
 
     def increase_time(self):
-        self.remaining_seconds += self.time_increase
+        self.seconds_end += self.time_increase
 
     def set_color(self):
 

@@ -30,6 +30,7 @@ class Manager(BoardUser):
     game_start_sound = None
     game_end_sound = None
     move_check_sound = None
+    illegal_sound = None
 
     def __init__(self, window, board_ls=None):
         self.window = window
@@ -41,6 +42,7 @@ class Manager(BoardUser):
             Manager.game_start_sound = pygame.mixer.Sound('sounds/game-start.mp3')
             Manager.game_end_sound = pygame.mixer.Sound('sounds/game-end.mp3')
             Manager.move_check_sound = pygame.mixer.Sound('sounds/move-check.mp3')
+            Manager.illegal_sound = pygame.mixer.Sound('sounds/illegal.mp3')
             Manager.sounds_loaded = True
 
 
@@ -49,6 +51,9 @@ class Manager(BoardUser):
         self.game_start_sound_state = True
         self.pawn_awaiting = False
         self.checkmate = False
+
+    def get_this_piece_moves(self, piece: object):
+        return self.all_poss_moves[piece]
 
     def get_pawn_awaiting_status(self):
         return self.pawn_awaiting
@@ -245,8 +250,7 @@ class Manager(BoardUser):
     def play_sound(self, flag: bool):
 
         if flag:
-            piece_class = self.settings.class_mapping['Piece']
-            piece_class.illegal_sound.play()
+            Manager.illegal_sound.play()
             return self.update_sound_states()
 
 
@@ -264,8 +268,7 @@ class Manager(BoardUser):
             self.chosen_piece_object.capture_sound.play()
 
         elif self.illegal_sound_state:
-            piece_class = self.settings.class_mapping['Piece']
-            piece_class.illegal_sound.play()
+            Manager.illegal_sound.play()
 
         return self.update_sound_states()
 
@@ -277,10 +280,3 @@ class Manager(BoardUser):
         self.check_move_sound_state = False
         self.end_game_sound_state = False
         return
-
-    def make_msg(self, msg):
-        self.default_message = msg
-
-    def copy_board(self):
-        current_state = copy.copy(self.board)
-        return current_state

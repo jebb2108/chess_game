@@ -6,6 +6,7 @@ import pygame
 
 from pygame.locals import *
 from constants import *
+from core_files.pixels import pixel_mapping
 from visuals import ChooseTimeButton, ChessClock
 from core_files.manager import Manager
 
@@ -13,6 +14,7 @@ from core_files.manager import Manager
 class ScenePlay(pyghelpers.Scene):
 
     BOARD_IMAGE = pygame.image.load('images/chess_board.jpg')
+    CHOSEN_RECT_IMAGE = pygame.image.load('images/cross_target.png')
 
     WIN_STATE = None
     CHECKMATE_STATE = False
@@ -91,7 +93,7 @@ class ScenePlay(pyghelpers.Scene):
         self.white_clock.start(), self.black_clock.start()
         self.black_clock.pause()
 
-        return self.reset('new game')
+        return
 
     def reset(self, the_nickname):
         if the_nickname == 'new game':
@@ -108,14 +110,18 @@ class ScenePlay(pyghelpers.Scene):
 
         # Извлекает и обрабатывает кортеж времени
         time = self.choose_time_button.get_time()
-        new_time = time[0] * 60
+        new_time = float(time[0] * 60)
         increase_time = time[1]
 
         # Останавливает таймер
         self.white_clock.stop()
         self.black_clock.stop()
 
-        # Устанавливает новое значение времени
+        # Явно устанавливает время
+        self.white_clock.set_time(new_time)
+        self.black_clock.set_time(new_time)
+
+        # Запускает часы для первого хода
         self.white_clock.start(new_time)
         self.black_clock.start(new_time)
 
@@ -198,8 +204,11 @@ class ScenePlay(pyghelpers.Scene):
                              self.linked_rects_dict.items() if value == SELECTED]
 
         if len(all_selected_keys) == 1:
-            key = all_selected_keys[0]
-            self.appoint_active_piece(key)
+            key = all_selected_keys.pop()
+            if self.approve_selection(key):
+                self.appoint_active_piece(key)
+                return
+            self.linked_rects_dict = {key: IDLE for key in self.linked_rects_dict}
 
         elif len(all_selected_keys) == 2:
 
@@ -217,6 +226,14 @@ class ScenePlay(pyghelpers.Scene):
 
 
         return
+
+    def approve_selection(self, key):
+        coords = self.convert_selected_into_coords(key)
+        the_color = self.game_mgr.get_color(self.game_mgr.board, coords)
+        if the_color == self.game_mgr.whose_turn_it_is.get_turn():
+            return True
+        self.game_mgr.illegal_sound.play()
+        return False
 
     def shift_players_clocks(self):
 
@@ -321,6 +338,14 @@ class ScenePlay(pyghelpers.Scene):
         if self.game_mgr.get_checkmate_status():
             ScenePlay.CHECKMATE_STATE = True
 
+        elif self.chosen_piece:
+            all_poss_moves = self.game_mgr.get_this_piece_moves(self.chosen_piece)
+            self.valid_moves = []
+            for move in all_poss_moves:
+                pixel_coords = pixel_mapping[move]
+                self.valid_moves.append(pixel_coords)
+
+
         if (not ScenePlay.CHECKMATE_STATE and
                 not ScenePlay.WIN_STATE in [COLOR_WHITE, COLOR_BLACK]):
             self.check_on_clock()
@@ -339,9 +364,6 @@ class ScenePlay(pyghelpers.Scene):
             elif self.white_clock.ended():
                 ScenePlay.WIN_STATE = COLOR_BLACK
                 self.black_clock.pause()
-
-
-
             return
 
         self.tossing_girl.pause()
@@ -436,6 +458,14 @@ class ScenePlay(pyghelpers.Scene):
 
         self.show_developer_table()
         self.show_tiles()
+
+        if self.chosen_piece:
+            main_rect = pixel_mapping[self.chosen_piece.loc]
+            # pygame.draw.rect(self.window, BLACK, main_rect, 3)
+            self.window.blit(ScenePlay.CHOSEN_RECT_IMAGE, [main_rect[0]-5, main_rect[1]-5])
+            for rect in self.valid_moves:
+                rect_center = [rect[0] + 29, rect[1] + 29]
+                pygame.draw.circle(self.window, DARK_GRAY, rect_center, 5)
 
         self.attach_pieces_to_board()
 

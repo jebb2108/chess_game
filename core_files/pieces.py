@@ -94,7 +94,6 @@ class Piece(ABC):
         if not Piece.sounds_loaded:
             Piece.capture_sound = pygame.mixer.Sound('sounds/capture.mp3')
             Piece.move_sound = pygame.mixer.Sound('sounds/move-self.mp3')
-            Piece.illegal_sound = pygame.mixer.Sound('sounds/illegal.mp3')
             Piece.castling_sound = pygame.mixer.Sound('sounds/castle.mp3')
             Piece.sounds_loaded = True
 
@@ -161,10 +160,7 @@ class Piece(ABC):
             new_pos = (curr_pos[0] + d1r[0],  # noqa
                             curr_pos[1] + d1r[1])
 
-            if (new_pos[0] < 0 or new_pos[1] < 0) or \
-                    (new_pos[0] > 7 or new_pos[1]) > 7:
-
-                continue
+            if not (0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8): continue
 
             # Цикл продолжает работать пока функция возвращает True.
             while self._is_valid_move(board_list, new_pos):
@@ -179,6 +175,9 @@ class Piece(ABC):
                     # Шаг завершен. Передаю новое значение этой переменной.
                     new_pos = (new_pos[0] + d1r[0],
                                     new_pos[1] + d1r[1])
+
+                    if not (0 <= new_pos[0] < 8 and 0 <= new_pos[1] < 8): break
+
 
         return moves
 

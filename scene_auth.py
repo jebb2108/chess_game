@@ -29,7 +29,7 @@ class SceneAuth(pyghelpers.Scene):
         self.buttons = [self.box_name, self.login_input, self.password_input, self.login_button, self.reg_button]
 
         self.version_logo = pygwidgets.DisplayText(self.window, (665, 670),
-                                                   'Chess vers: v1.5', textColor=GOLD, fontSize=32)
+                                                   'Chess vers: v1.6', textColor=GOLD, fontSize=32)
 
 
     def getSceneKey(self):
@@ -88,7 +88,6 @@ class SceneAuth(pyghelpers.Scene):
         else:
             self.login_button.disable()
         return
-
 
     def draw(self):
         self.window.blit(SceneAuth.BACKGROUND_IMAGE, (-170, 40))
