@@ -101,6 +101,7 @@ class ScenePlay(pyghelpers.Scene):
             del self.game_mgr
             self.game_mgr = Manager(self.window)
             ScenePlay.WIN_STATE = None
+            ScenePlay.CHECKMATE_STATE = False
             return self.renew_clocks()
 
     def renew_clocks(self):
