@@ -20,7 +20,7 @@ class SceneReg(pyghelpers.Scene):
     def __init__(self, window):
         self.window = window
 
-        self.reg_display = pygwidgets.DisplayText(self.window, (350, 200), 'Registration', fontSize=50)
+        self.reg_display = pygwidgets.DisplayText(self.window, (350, 200), 'Registration', textColor=BROWN, fontSize=50)
 
         self.email_input = pygwidgets.InputText(self.window, (350, 280), 'Email', width=200, fontSize=40)
 
