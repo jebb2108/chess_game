@@ -357,32 +357,45 @@ class ScenePlay(pyghelpers.Scene):
         if ScenePlay.DEVELOPER_TOOL_ACTIVE:
             # message: 4
             pygame.draw.rect(self.window, LIGHT_GRAY, [630, 20, 650, 600])
-            selected_info_text = f'Number of\nselected: {[tile for tile in self.linked_rects_dict.values()].count(SELECTED)}'
-            cursor_img = self.font.render(selected_info_text, True, DARK_GRAY)
-            self.window.blit(cursor_img, (650, 270))
+            selected_info_text = f'Number of'
+            selected_img = self.font.render(selected_info_text, True, DARK_GRAY)
+            self.window.blit(selected_img, (650, 270))
+            selected_info_text = f'selected: {[tile for tile in self.linked_rects_dict.values()].count(SELECTED)}'
+            selected_img = self.font.render(selected_info_text, True, DARK_GRAY)
+            self.window.blit(selected_img, (650, 300))
+
 
             # Message: 1
             whose_turn_in_num = self.game_mgr.whose_turn_it_is.current_move
-            text = f'Whose turn:\n--> {('white', 'black')[whose_turn_in_num - 1]} <--'
+            text = f'Whose turn:'
             text_img = self.font.render(text, True, DARK_GRAY)
             self.window.blit(text_img, (650, 50))
+            text = f' --> {('white', 'black')[whose_turn_in_num - 1]} <--'
+            text_img = self.font.render(text, True, DARK_GRAY)
+            self.window.blit(text_img, (650, 80))
 
             # message: 5
             text_img = self.font.render(f'Player: {self.current_player}', True, DARK_GRAY)
             self.window.blit(text_img, (650, 350))
 
             # Message: 3
-            mouse_pos_text = f'Cursor loc:\n{self.cursor}'
+            mouse_pos_text = f'Cursor loc:'
             cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
             self.window.blit(cursor_img, (650, 200))
+            mouse_pos_text = f'{self.cursor}'
+            cursor_img = self.font.render(mouse_pos_text, True, DARK_GRAY)
+            self.window.blit(cursor_img, (650, 230))
 
             # Message: 2.1
             if issubclass(type(self.chosen_piece), self.game_mgr.settings.class_mapping['Piece']):
                 class_name = self.chosen_piece.__class__.__name__
                 its_loc = self.chosen_piece.loc
-                text = f'There is {class_name}.\nIts loc: {its_loc}'
+                text = f'There is {class_name}.'
                 text_img = self.font.render(text, True, DARK_GRAY)
                 self.window.blit(text_img, (650, 120))
+                text= f'Its loc: {its_loc}'
+                text_img = self.font.render(text, True, DARK_GRAY)
+                self.window.blit(text_img, (650, 150))
 
             # Message: 2.2
             else:
