@@ -66,7 +66,7 @@ class SceneAuth(pyghelpers.Scene):
         return
 
     def check_db(self):
-        conn = sqlite3.connect('users.db')
+        conn = sqlite3.connect('db/users.db')
         cur = conn.cursor()
         cur.execute('SELECT password FROM users')
         passwords = list(sum(cur.fetchall(), ()))

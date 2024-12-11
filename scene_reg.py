@@ -114,7 +114,7 @@ class SceneReg(pyghelpers.Scene):
 
         hashed_password = sha256(password.encode('utf-8')).hexdigest()
 
-        con = sqlite3.connect('users.db')
+        con = sqlite3.connect('db/users.db')
         cur = con.cursor()
 
         cur.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT, login TEXT, password TEXT)')
