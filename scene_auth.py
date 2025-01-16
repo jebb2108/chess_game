@@ -1,3 +1,5 @@
+import os
+
 import pyghelpers
 import pygwidgets
 import pygame
@@ -55,8 +57,7 @@ class SceneAuth(pyghelpers.Scene):
             if self.reg_button.handleEvent(event):
                 self.goToScene(SCENE_REG)
 
-        if (keyPressedList[pygame.K_RETURN] and
-                self.login_n_psswrd == 'gabriel bouchard'):
+        if keyPressedList[pygame.K_RETURN] and self.check_db():
             self.goToScene(SCENE_PLAY)
 
         return
@@ -66,6 +67,8 @@ class SceneAuth(pyghelpers.Scene):
         return
 
     def check_db(self):
+        if os.path.exists('db/users.db') is False:
+            return False
         conn = sqlite3.connect('db/users.db')
         cur = conn.cursor()
         cur.execute('SELECT password FROM users')

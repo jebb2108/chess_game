@@ -40,8 +40,6 @@ class SceneReg(pyghelpers.Scene):
         self.buttons = [ self.register_button, self.go_back_button ]
 
         if SceneReg.BACKGROUND_IMAGE is None:
-            img = Image.open('images/background.png').filter(ImageFilter.GaussianBlur(radius=5))
-            img.save('images/background_blur.png')
             SceneReg.BACKGROUND_IMAGE = pygame.image.load('images/background_blur.png')
 
     def getSceneKey(self):
